@@ -1,0 +1,1 @@
+add_library(MaybeMonad STATIC maybeMonadUseCase.cpp)
