@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory(designPattern/25.maybeMonad MaybeMonad)
 
-list(APPEND EXTRA_LIBS MaybeMonad)
+list(APPEND EXTRA_LIBS MaybeMonad Interpreter)
 
 add_executable(PlayGround main.cpp)
 
