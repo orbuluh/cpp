@@ -5,7 +5,7 @@ project(PlayGround VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_subdirectory(designPattern MaybeMonad)
+add_subdirectory(designPattern/25.maybeMonad MaybeMonad)
 
 list(APPEND EXTRA_LIBS MaybeMonad)
 
@@ -17,4 +17,3 @@ set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 
 include(CPack)
-#target_include_directories(designPattern PUBLIC "${PROJECT_BINARY_DIR}")
