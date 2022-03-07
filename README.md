@@ -7,6 +7,7 @@ cd build
 cmake ..
 
 # going forward
-cmake --build .
-./PlayGround
+cd build
+cmake --build . #rebuild
+ctest
 ```
