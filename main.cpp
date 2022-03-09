@@ -1,3 +1,4 @@
+#include "designPattern/20.observer/observerUseCase.h"
 #include "designPattern/25.maybeMonad/maybeMonadUseCase.h"
 #include <gtest/gtest.h>
 #include <iostream>
@@ -12,5 +13,6 @@
 }*/
 
 int main() {
-    maybemonad::demo();
+    //maybemonad::demo();
+    observer::demo();
 }

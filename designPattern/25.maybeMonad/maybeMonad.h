@@ -1,4 +1,7 @@
 #pragma once
+
+template <typename T> 
+auto maybe(T* context);
 template <typename T> struct Maybe {
     T* context_;
     Maybe(T* context) : context_(context) {};

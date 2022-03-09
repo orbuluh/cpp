@@ -13,8 +13,10 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+add_subdirectory(designPattern/20.observer Observer)
 add_subdirectory(designPattern/25.maybeMonad MaybeMonad)
-list(APPEND EXTRA_LIBS MaybeMonad)
+
+list(APPEND EXTRA_LIBS MaybeMonad Observer)
 
 add_executable(PlayGround main.cpp)
 target_link_libraries(PlayGround PUBLIC ${EXTRA_LIBS} gtest_main gtest)
