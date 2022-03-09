@@ -1,10 +1,4 @@
 #pragma once
-
-template <typename T> struct Maybe;
-
-template <typename T> 
-auto maybe(T* context) { return Maybe<T>(context); }
-
 template <typename T> struct Maybe {
     T* context_;
     Maybe(T* context) : context_(context) {};
@@ -24,3 +18,10 @@ template <typename T> struct Maybe {
         return *this;
     }
 };
+
+// Given a Person* p, we cannot make a Maybe(p) due to 
+// our inability to deduce class template parameters
+// from arguments passed in the constructor. So we need
+// a helper function here.
+template <typename T> 
+auto maybe(T* context) { return Maybe<T>(context); }
