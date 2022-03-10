@@ -4,10 +4,14 @@
 # after clone, at root
 mkdir build
 cd build
-cmake ..
+cmake .. #compile build folder for cmake
 
 # going forward
 cd build
-cmake --build . #rebuild
+cmake --build . #(re)build
+
+# then run program
+./PlayGround [-d {dp|boost|test}]
+# or run ...
 ctest
 ```
