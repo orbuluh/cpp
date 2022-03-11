@@ -4,15 +4,9 @@ set(CMAKE_CXX_COMPILER  "/usr/bin/clang++")
 cmake_minimum_required(VERSION 3.14)
 project(PlayGround VERSION 0.1.0)
 
-
-
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-
-#set(Boost_USE_STATIC_LIBS ON)
-#set(Boost_USE_MULTITHREADED ON)
-#set(Boost_USE_STATIC_RUNTIME ON)
 
 #--------------GTest--------------
 include(FetchContent)
@@ -32,7 +26,6 @@ add_subdirectory(designPattern/25.maybeMonad MaybeMonad)
 list(APPEND EXTRA_LIBS MaybeMonad Observer)
 list(APPEND EXTRA_LIBS gtest_main gtest)
 #list(APPEND EXTRA_LIBS ${Boost_LIBRARIES})
-#message("Boost_LIBRARIES: ${Boost_LIBRARIES}")
 list(APPEND EXTRA_LIBS Boost::program_options)
 
 
