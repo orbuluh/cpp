@@ -7,11 +7,10 @@ cd build
 cmake .. #compile build folder for cmake
 
 # going forward
-cd build
-cmake --build . #(re)build
+cmake --build build #(re)build
 
 # then run program
-./PlayGround [-d {dp|boost|test}]
+./build/PlayGround [-d {dp|boost|test}]
 # or run ...
 ctest
 ```

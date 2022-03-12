@@ -32,6 +32,8 @@ int main(int argc, char* argv[]) {
     std::string demoType;
     desc.add_options()
         ("demoType,d", opt::value<std::string>(&demoType), "what demo to run")
+        //("requiredArg,r", opt::value<std::string>()->required(), "how to define required field.")
+        //("optionalArg,o", opt::value<std::string>()->default_value("option"), "how to define optional field.")
         ;
     opt::variables_map vm;
     try {
