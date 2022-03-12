@@ -1,0 +1,1 @@
+namespace boost_any { void demo(); }

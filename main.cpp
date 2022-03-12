@@ -1,6 +1,6 @@
 #include "designPattern/20.observer/observerUseCase.h"
 #include "designPattern/25.maybeMonad/maybeMonadUseCase.h"
-
+#include "boost/cookbook.h"
 #include <boost/program_options.hpp>
 
 #include <gtest/gtest.h>
@@ -23,7 +23,7 @@ void runDesignPatternDemo() {
 }
 
 void runBoostDemo() {
-
+    boost_any::demo();
 }
 
 int main(int argc, char* argv[]) {

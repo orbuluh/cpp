@@ -17,16 +17,19 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 #--------------boost--------------
-find_package(Boost 1.78.0 REQUIRED program_options)
+find_package(Boost 1.78.0 COMPONENTS program_options REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 #---------------------------------
 add_subdirectory(designPattern/20.observer Observer)
 add_subdirectory(designPattern/25.maybeMonad MaybeMonad)
+add_subdirectory(boost BoostCookBook)
 
 list(APPEND EXTRA_LIBS MaybeMonad Observer)
+list(APPEND EXTRA_LIBS BoostCookBook)
 list(APPEND EXTRA_LIBS gtest_main gtest)
-#list(APPEND EXTRA_LIBS ${Boost_LIBRARIES})
-list(APPEND EXTRA_LIBS Boost::program_options)
+list(APPEND EXTRA_LIBS ${Boost_LIBRARIES})
+#list(APPEND EXTRA_LIBS Boost::program_options)
+#list(APPEND EXTRA_LIBS Boost::any)
 
 
 add_executable(PlayGround main.cpp)
