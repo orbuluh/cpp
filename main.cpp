@@ -1,4 +1,5 @@
 #include "designPattern/20.observer/observerUseCase.h"
+#include "designPattern/21.state/stateUseCase.h"
 #include "designPattern/25.maybeMonad/maybeMonadUseCase.h"
 #include "boost/cookbook.h"
 #include <boost/program_options.hpp>
@@ -19,7 +20,8 @@ TEST(HelloTest, BasicAssertions) {
 
 void runDesignPatternDemo() {
     //maybemonad::demo();
-    observer::demo();
+    //observer::demo();
+    state::demo();
 }
 
 void runBoostDemo() {
