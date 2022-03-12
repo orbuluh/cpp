@@ -26,31 +26,25 @@ void runBoostDemo() {
 
 }
 
-void runAllTest() {
-
-}
-
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);
-    opt::options_description desc("...");
-    std::string runMode;
+    opt::options_description desc("specify -d");
+    std::string demoType;
     desc.add_options()
-        ("demoType,d", opt::value<std::string>(&runMode), "what demo to run");
+        ("demoType,d", opt::value<std::string>(&demoType), "what demo to run")
+        ;
     opt::variables_map vm;
     try {
         opt::store(opt::parse_command_line(argc, argv, desc), vm);
     } catch (UnknownOptionException& e) {
-        std::cerr << e.what() << "... ignored" << std::endl;
+        std::cerr << e.what() << "..." << std::endl;
     }
     opt::notify(vm);
-    if (vm.count("help")) {
-        std::cout << desc << "\n"; return 1;
-    }
-    if (runMode == "dp") {
+    if (demoType == "dp") {
         runDesignPatternDemo();
-    } else if (runMode == "boost") {
+    } else if (demoType == "boost") {
         runBoostDemo();
-    } else if (runMode == "test") {
+    } else if (demoType == "test") {
         return RUN_ALL_TESTS();
     }
     return 0;
