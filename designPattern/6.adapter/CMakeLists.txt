@@ -1,0 +1,1 @@
+add_library(Adapter STATIC adapterUseCase.cpp)

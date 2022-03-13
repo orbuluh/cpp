@@ -10,7 +10,7 @@ if [ -z $2 ]; then
     exit
 fi
 
-patternName=$1
+patternName=$(echo $1 | tr '[:upper:]' '[:lower:]')
 chapter=$2
 
 # upper case first char for $patternName
@@ -29,7 +29,8 @@ echo "Adding these to ../CMakeList.txt"
 echo "\tadd_subdirectory(designPattern/$folder $PatternName)"
 echo "\tAPPEND EXTRA_LIBS(... $PatternName)"
 echo "\nAdding these to ../main.cpp"
-echo "\t#include "designPattern/$folder/${patternName}UseCase.h""
+echo "\t#include \"designPattern/$folder/${patternName}UseCase.h\""
+echo "\t${patternName}::demo();"
 echo "\nAppend designPattern/README.md"
 echo "\t[$chapter. $PatternName]($folder)"
 

@@ -2,6 +2,7 @@
 - [Design Patterns in Modern C++ Reusable Approaches for Object-Oriented Software Design](https://www.amazon.com/Design-Patterns-Modern-Approaches-Object-Oriented/dp/1484236025)
 
 # Structural Patterns
+- [6. Adapter](6.adapter)
 - [7. Bridge](7.bridge)
 # Behavior Patterns
 - [20. Observer](20.observer)

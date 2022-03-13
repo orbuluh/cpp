@@ -1,3 +1,4 @@
+#include "designPattern/6.adapter/adapterUseCase.h"
 #include "designPattern/7.bridge/bridgeUseCase.h"
 #include "designPattern/20.observer/observerUseCase.h"
 #include "designPattern/21.state/stateUseCase.h"
@@ -23,7 +24,8 @@ void runDesignPatternDemo() {
     //maybemonad::demo();
     //observer::demo();
     //state::demo();
-    bridge::demo();
+    //bridge::demo();
+    adapter::demo();
 }
 
 void runBoostDemo() {
