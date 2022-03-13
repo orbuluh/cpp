@@ -31,7 +31,7 @@ echo "\tAPPEND EXTRA_LIBS(... $PatternName)"
 echo "\nAdding these to ../main.cpp"
 echo "\t#include "designPattern/$folder/${patternName}UseCase.h""
 echo "\nAppend designPattern/README.md"
-echo "\t[$chapter. $PatternName]($folder/README.md)"
+echo "\t[$chapter. $PatternName]($folder)"
 
 
 
