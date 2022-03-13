@@ -14,9 +14,9 @@ struct placeholder {
     virtual ~placeholder() {}
     virtual const std::type_info& type() const = 0;
 };
-template<typename ValueType> 
+template<typename ValueType>
 struct holder : public placeholder {
-    virtual const std::type_info& type() const { 
+    virtual const std::type_info& type() const {
         return typeid(ValueType);
         // any_cast<T> will eventually call this and compare with type(T)
         // and if it's the same type, return `static_cast<holder<T>*>(ptr)->held`

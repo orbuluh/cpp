@@ -25,7 +25,8 @@ void runDesignPatternDemo() {
 }
 
 void runBoostDemo() {
-    boost_any::demo();
+    //boost_any::demo();
+    boost_msm::demo();
 }
 
 int main(int argc, char* argv[]) {

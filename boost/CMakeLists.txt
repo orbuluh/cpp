@@ -1,1 +1,4 @@
-add_library(BoostCookBook STATIC any.cpp)
+add_library(BoostCookBook STATIC
+    Any/any.cpp
+    MSM/meta_state_machine.cpp
+)
