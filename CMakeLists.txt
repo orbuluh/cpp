@@ -20,12 +20,14 @@ FetchContent_MakeAvailable(googletest)
 find_package(Boost 1.78.0 COMPONENTS program_options REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 #---------------------------------
+add_subdirectory(designPattern/7.bridge Bridge)
 add_subdirectory(designPattern/20.observer Observer)
 add_subdirectory(designPattern/21.state State)
 add_subdirectory(designPattern/25.maybeMonad MaybeMonad)
 add_subdirectory(boost BoostCookBook)
 
 list(APPEND EXTRA_LIBS
+    Bridge
     State
     Observer
     MaybeMonad
