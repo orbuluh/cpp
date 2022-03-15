@@ -5,6 +5,7 @@
 mkdir build
 cd build
 cmake .. #compile build folder for cmake
+# <NOTE: DON'T TRY TO RUN cmake . without cd into build!!!>
 
 # going forward
 cmake --build build #(re)build
