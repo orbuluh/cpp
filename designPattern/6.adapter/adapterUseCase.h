@@ -1,36 +1,35 @@
 #pragma once
 #include <iostream>
-namespace adapter {
+#include <type_traits>
 
-template <typename GameProfile>
-struct SwitchController { // e.g. the Adapter
-    // XBox controller:
-    //    X
-    //  Y   A
-    //    B
-    void pressA() { GameProfile::pressA(); }
-    void pressB() { GameProfile::pressB(); }
-    void pressX() { GameProfile::pressX(); }
-    void pressY() { GameProfile::pressY(); }
-    SwitchController() {
-        std::cout << "Playing: " << GameProfile::name() << std::endl;
+namespace adapter {
+struct LegacyCriticalApp {
+    void doXinLegacyStyle() {
+        std::cout << "do X in legacy style\n";
+    }
+};
+struct RefactoredCriticalApp {
+    void doXinRefactoredStyle() {
+        std::cout << "do X in refactored style\n";
     }
 };
 
-struct PokemonUnite {
-    static std::string name() { return "PokemonUnite"; }
-    static void pressA() { std::cout << "Attack" << std::endl; }
-    static void pressB() { std::cout << "Cancel Move" << std::endl; }
-    static void pressX() { std::cout << "Score" << std::endl; }
-    static void pressY() { std::cout << "Battle Item" << std::endl; }
-};
-
-struct  PokemonArceus{
-    static std::string name() { return "PokemonArceus"; }
-    static void pressA() { std::cout << "Investigate or talk" << std::endl; }
-    static void pressB() { std::cout << "Crounch or rise" << std::endl; }
-    static void pressX() { std::cout << "Ready an item or Pokemon" << std::endl; }
-    static void pressY() { std::cout << "Dodge" << std::endl; }
+template<typename App>
+struct BackwardCompatibleAdapter {
+    void doX() {
+        // NOTE: you have to do compile time branching here,
+        // otherwise you will get compile error like:
+        // error: no member named 'doXinRefactoredStyle' in 'adapter::LegacyCriticalApp'
+        //    criticalApp.doXinRefactoredStyle();
+        if constexpr (std::is_same_v<App, LegacyCriticalApp>) {
+            criticalApp.doXinLegacyStyle();
+        } else if constexpr (std::is_same_v<App, RefactoredCriticalApp>) {
+            criticalApp.doXinRefactoredStyle();
+        } else {
+            std::cout << "App doesn't support doing X!\n";
+        }
+    }
+    App criticalApp;
 };
 
 void demo();
