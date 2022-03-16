@@ -1,5 +1,6 @@
 #include "designPattern/6.adapter/adapterUseCase.h"
 #include "designPattern/7.bridge/bridgeUseCase.h"
+#include "designPattern/10.facade/facadeUseCase.h"
 #include "designPattern/20.observer/observerUseCase.h"
 #include "designPattern/21.state/stateUseCase.h"
 #include "designPattern/25.maybeMonad/maybeMonadUseCase.h"
@@ -25,7 +26,8 @@ void runDesignPatternDemo() {
     //observer::demo();
     //state::demo();
     //bridge::demo();
-    adapter::demo();
+    //adapter::demo();
+    facade::demo();
 }
 
 void runBoostDemo() {

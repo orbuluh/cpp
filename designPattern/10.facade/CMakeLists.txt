@@ -1,0 +1,1 @@
+add_library(Facade STATIC facadeUseCase.cpp)
