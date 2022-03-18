@@ -1,12 +1,15 @@
 #include "designPattern/6.adapter/adapterUseCase.h"
 #include "designPattern/7.bridge/bridgeUseCase.h"
 #include "designPattern/10.facade/facadeUseCase.h"
+#include "designPattern/17.mediator/mediatorUseCase.h"
 #include "designPattern/20.observer/observerUseCase.h"
 #include "designPattern/21.state/stateUseCase.h"
 #include "designPattern/25.maybeMonad/maybeMonadUseCase.h"
 #include "boost/cookbook.h"
-#include <boost/program_options.hpp>
 
+#include "std-Aha/binarySearch.h"
+
+#include <boost/program_options.hpp>
 #include <gtest/gtest.h>
 #include <iostream>
 
@@ -27,12 +30,17 @@ void runDesignPatternDemo() {
     //state::demo();
     //bridge::demo();
     //adapter::demo();
-    facade::demo();
+    //facade::demo();
+    mediator::demo();
 }
 
 void runBoostDemo() {
     //boost_any::demo();
     boost_msm::demo();
+}
+
+void runStdDemo() {
+    std_binary_search::demo();
 }
 
 int main(int argc, char* argv[]) {
@@ -55,6 +63,8 @@ int main(int argc, char* argv[]) {
         runDesignPatternDemo();
     } else if (demoType == "boost") {
         runBoostDemo();
+    } else if (demoType == "std") {
+        runStdDemo();
     } else if (demoType == "test") {
         return RUN_ALL_TESTS();
     }

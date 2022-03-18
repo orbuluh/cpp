@@ -7,6 +7,7 @@
 - [7. Bridge](7.bridge)
 - [10. Facade](10.facade)
 # Behavior Patterns
+- [17. Mediator](17.mediator)
 - [20. Observer](20.observer)
 - [21. State](21.state)
 - [25. MaybeMonad](25.maybeMonad)
