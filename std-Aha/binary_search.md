@@ -26,3 +26,6 @@
     - binary predicate which returns ​true if the first argument is less than (i.e. is ordered before) the second.
     - The types Type1 and Type2 must be such that an object of *type T* can be implicitly converted to *both Type1 and Type2*,
     - An object of type ForwardIt can be dereferenced and then implicitly converted to *both Type1 and Type2*.​
+
+# Nice question to apply ...
+[Snapshot Array](https://leetcode.com/problems/snapshot-array/)

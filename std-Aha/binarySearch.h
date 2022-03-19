@@ -26,6 +26,7 @@ void demo() {
     std::cout << "\nlower_bound" << std::endl;
     auto lowerComp = [](const SnapData& d1, int tgt) { return d1.snapIdx < tgt; };
 
+    // snapVec {{0, 10}, {2, 5}, {3, 7}, {3, 6}, {8, 4}};
     // finding first index with snapIdx >= target
     it = std::lower_bound(snapVec.begin(), snapVec.end(), 1, lowerComp);
     std::cout << (it - snapVec.begin()) << std::endl; // print index 1
@@ -42,9 +43,10 @@ void demo() {
     std::cout << "\nupper_bound" << std::endl;
     auto upperComp = [](int tgt, const SnapData& d1) { return tgt < d1.snapIdx ; };
 
+    // snapVec {{0, 10}, {2, 5}, {3, 7}, {3, 6}, {8, 4}};
     // finding first index with snapIdx > target
     it = std::upper_bound(snapVec.begin(), snapVec.end(), 1, upperComp);
-    std::cout << (it - snapVec.begin()) << std::endl; // print index 2
+    std::cout << (it - snapVec.begin()) << std::endl; // print index 1
 
     it = std::upper_bound(snapVec.begin(), snapVec.end(), 2, upperComp);
     std::cout << (it - snapVec.begin()) << std::endl; // print index 2

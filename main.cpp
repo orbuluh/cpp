@@ -8,6 +8,7 @@
 #include "boost/cookbook.h"
 
 #include "std-Aha/binarySearch.h"
+#include "std-Aha/vector_ops.h"
 
 #include <boost/program_options.hpp>
 #include <gtest/gtest.h>
@@ -40,7 +41,8 @@ void runBoostDemo() {
 }
 
 void runStdDemo() {
-    std_binary_search::demo();
+    //std_binary_search::demo();
+    std_vector_ops::demo();
 }
 
 int main(int argc, char* argv[]) {
