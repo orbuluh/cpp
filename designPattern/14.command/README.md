@@ -1,0 +1,5 @@
+# Quick fact
+- The Command design pattern is simple: what it basically suggests is that objects can communicate with one another using special objects that encapsulate instructions, rather than specifying those same instructions as arguments to a method.
+- It turns a request into a stand-alone object that contains all information about the request. This transformation lets you parameterize methods with different requests, delay or queue a request’s execution, and support undoable operations.
+- Sometimes, you don’t want such an object to mutate the target or cause it to do something specific; instead you want to use such an object to inquire a value from the target, in which case we typically call such an object a Query.
+- Commands are used a lot in UI systems to encapsulate typical actions (e.g., Copy or Paste) and then allow a single command to be invoked by several different means.
