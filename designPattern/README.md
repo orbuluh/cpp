@@ -1,6 +1,6 @@
 # Notes/practices from book:
-- [Design Patterns in Modern C++ Reusable Approaches for Object-Oriented Software Design](https://www.amazon.com/Design-Patterns-Modern-Approaches-Object-Oriented/dp/1484236025)
-- [Dive Into Design Patterns](https://refactoring.guru/design-patterns/book)
+- DP: [Design Patterns in Modern C++ Reusable Approaches for Object-Oriented Software Design](https://www.amazon.com/Design-Patterns-Modern-Approaches-Object-Oriented/dp/1484236025)
+- DIDP: [Dive Into Design Patterns](https://refactoring.guru/design-patterns/book)
 
 # Structural Patterns
 - [6. Adapter](6.adapter)
@@ -13,6 +13,8 @@
 - [21. State](21.state)
 - [25. MaybeMonad](25.maybeMonad)
 
+# TODO
+- Read the "Relations with Other Patterns" in each chapter of DIDP after finish them all!!
 
 ## to create sample note folder
 ```bash
