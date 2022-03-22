@@ -1,6 +1,7 @@
 #include "designPattern/6.adapter/adapterUseCase.h"
 #include "designPattern/7.bridge/bridgeUseCase.h"
 #include "designPattern/10.facade/facadeUseCase.h"
+#include "designPattern/13.chainofresp/chainofrespUseCase.h"
 #include "designPattern/14.command/commandUseCase.h"
 #include "designPattern/17.mediator/mediatorUseCase.h"
 #include "designPattern/20.observer/observerUseCase.h"
@@ -34,7 +35,8 @@ void runDesignPatternDemo() {
     //adapter::demo();
     //facade::demo();
     //mediator::demo();
-    command::demo();
+    //command::demo();
+    chainofresp::demo();
 }
 
 void runBoostDemo() {

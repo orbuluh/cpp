@@ -7,6 +7,7 @@
 - [7. Bridge](7.bridge)
 - [10. Facade](10.facade)
 # Behavior Patterns
+- [13. ChainOfResponsibility](13.chainofresp)
 - [14. Command](14.command)
 - [17. Mediator](17.mediator)
 - [20. Observer](20.observer)
