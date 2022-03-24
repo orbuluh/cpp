@@ -1,0 +1,1 @@
+add_library(Decorator STATIC decoratorUseCase.cpp)

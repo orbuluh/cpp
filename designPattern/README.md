@@ -5,6 +5,7 @@
 # Structural Patterns
 - [6. Adapter](6.adapter)
 - [7. Bridge](7.bridge)
+- [9. Decorator](9.decorator)
 - [10. Facade](10.facade)
 # Behavior Patterns
 - [13. ChainOfResponsibility](13.chainofresp)
