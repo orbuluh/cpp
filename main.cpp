@@ -1,6 +1,6 @@
 #include "designPattern/6.adapter/adapterUseCase.h"
 #include "designPattern/7.bridge/bridgeUseCase.h"
-#include "designPattern/9.decorator/decoratorUseCase.h
+#include "designPattern/9.decorator/decoratorUseCase.h"
 #include "designPattern/10.facade/facadeUseCase.h"
 #include "designPattern/13.chainofresp/chainofrespUseCase.h"
 #include "designPattern/14.command/commandUseCase.h"
