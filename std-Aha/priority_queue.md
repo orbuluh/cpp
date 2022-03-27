@@ -11,6 +11,36 @@ template<
     class Compare = std::less<typename Container::value_type>
 > class priority_queue;
 ```
+# `Compare`
+- `Compare` is A type providing a strict weak ordering.
+- Note that the `Compare` parameter is defined such that *it returns true if its first argument comes before its second argument in a weak ordering.*
+- But because the *priority queue outputs largest elements first, the elements that "come before" are actually output last.*
+- That is, the front of the queue contains the "last" element according to the weak ordering imposed by Compare.
+
+# Example, customized comparator to create min-heap
+```cpp
+struct RowProfile {
+    int score{0};
+    int idx{-1};
+};
+
+// to make a min heap, need to define the relationship as such
+// that first argument is stronger than second argument:
+auto comp = [](const RowProfile& r1, const RowProfile& r2) {
+return (r1.score != r2.score)? (r1.score > r2.score) : (r1.idx > r2.idx); };
+
+std::priority_queue<RowProfile, std::vector<RowProfile>, decltype(comp)> pq(comp);
+
+// the above could be replacing with std::greater for std::pair, as pair's < operator
+// would only compare second element < if first element eq
+
+using RowProfile = std::pair<int, int>;
+std::priority_queue<RowProfile, std::vector<RowProfile>, std::greater<RowProfile>> pq();
+
+// on the contrary, by default, this will be a max-heap
+// e.g. comparator is implicitly std::less<RowProfile> basically
+std::priority_queue<RowProfile> pq();
+```
 
 # Example, customized comparator
 [Max Value of Equation](https://leetcode.com/problems/max-value-of-equation/)
@@ -43,10 +73,9 @@ public:
             if (!pq.empty()) {
                 // if pq not empty, and because we pop invalid max node already,
                 // the top node must be qualified to form the answer.
-                curMax = max(curMax, p.x + p.y + pq.top().y - pq.top().x);                
+                curMax = max(curMax, p.x + p.y + pq.top().y - pq.top().x);
             }
             pq.emplace(std::move(p));
-            
         }
         return curMax;
     }
