@@ -1,26 +1,11 @@
+#include "dynamicDecorator.h"
+#include "staticDecorator.h"
 #include "decoratorUseCase.h"
-#include <iostream>
 
 namespace decorator {
 
-void FileDataSource::writeData(std::string_view rawdata) {
-    std::cout << "FileDataSource write: " << rawdata << " to " << filename_ << '\n';
-}
-
-void EncryptionDecorator::writeData(std::string_view rawdata) {
-    auto encryptData = std::string{rawdata.rbegin(), rawdata.rend()};
-    std::cout << "Encrypt " << rawdata << " to " << encryptData << '\n';
-    wrappee_->writeData(encryptData);
-}
-
-void CompressionDecorator::writeData(std::string_view rawdata) {
-    auto compressData = std::string{rawdata.begin(), rawdata.begin() + 2};
-    std::cout << "Compress " << rawdata << " to " << compressData << '\n';
-    wrappee_->writeData(compressData);
-}
-
 void demoDynamicDecorator() {
-    std::cout << "demo: DynamicDecoratorn\n";
+    std::cout << "demo: DynamicDecorator\n";
     std::cout << "--------------------\n";
     FileDataSource fds("app_output.txt");
     const auto rawData = "ABCD";
@@ -36,7 +21,28 @@ void demoDynamicDecorator() {
     std::cout << "--------------------\n";
 }
 
+void demoStaticDecorator() {
+    std::cout << "demo: staticDecorator\n";
+    std::cout << "--------------------\n";
+    const auto fileName = "app_output.txt";
+    const auto encryptFlavor = "reverseEncryption";
+    const auto rawData = "ABCD";
+    EncryptionStaticDecorator<FileDataSource> encryptFds(encryptFlavor, fileName);
+    encryptFds.writeData(rawData);
+
+    const auto compressFlavor = "takeFirst2Compression";
+    CompressionStaticDecorator<FileDataSource> compressFds(compressFlavor, fileName);
+    compressFds.writeData(rawData);
+
+    CompressionStaticDecorator<EncryptionStaticDecorator<FileDataSource>>
+        encryptAndCompressFds(compressFlavor, encryptFlavor, fileName);
+
+    encryptAndCompressFds.writeData(rawData);
+    std::cout << "--------------------\n";
+}
+
 void demo() {
     demoDynamicDecorator();
+    demoStaticDecorator();
 }
 } // namespace decorator

@@ -1,20 +1,7 @@
 #pragma once
-#include <string_view>
-#include <string>
+#include "fileDataSource.h"
 
 namespace decorator {
-
-struct IDataSource {
-    virtual ~IDataSource() = default;
-    virtual void writeData(std::string_view rawdata) = 0;
-};
-
-struct FileDataSource : public IDataSource {
-    FileDataSource(std::string_view filename) : filename_(filename) {}
-    ~FileDataSource() override = default;
-    void writeData(std::string_view rawdata) override;
-    std::string filename_;
-};
 
 struct DataSourceDecorator : public IDataSource {
     DataSourceDecorator(IDataSource* src) : wrappee_(src) {};
@@ -26,13 +13,21 @@ struct DataSourceDecorator : public IDataSource {
 struct EncryptionDecorator : public DataSourceDecorator {
     EncryptionDecorator(IDataSource* src) : DataSourceDecorator(src) {};
     ~EncryptionDecorator() override = default;
-    void writeData(std::string_view rawdata) override;
+    void writeData(std::string_view rawdata) override {
+        auto encryptData = std::string{rawdata.rbegin(), rawdata.rend()};
+        std::cout << "Encrypt " << rawdata << " to " << encryptData << '\n';
+        wrappee_->writeData(encryptData);
+    }
 };
 
 struct CompressionDecorator : public DataSourceDecorator {
     CompressionDecorator(IDataSource* src) : DataSourceDecorator(src) {};
     ~CompressionDecorator() override = default;
-    void writeData(std::string_view rawdata) override;
+    void writeData(std::string_view rawdata) override {
+        auto compressData = std::string{rawdata.begin(), rawdata.begin() + 2};
+        std::cout << "Compress " << rawdata << " to " << compressData << '\n';
+        wrappee_->writeData(compressData);
+    }
 };
 
 } // namespace decorator
