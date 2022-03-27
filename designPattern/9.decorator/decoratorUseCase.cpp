@@ -1,5 +1,6 @@
 #include "dynamicDecorator.h"
 #include "staticDecorator.h"
+#include "functionDecorator.h"
 #include "decoratorUseCase.h"
 
 namespace decorator {
@@ -41,8 +42,15 @@ void demoStaticDecorator() {
     std::cout << "--------------------\n";
 }
 
+void dummyFunction(int a, int b) {
+    for (int i = 0; i < 1000; ++i) {
+        a += b;
+    }
+}
+
 void demo() {
     demoDynamicDecorator();
     demoStaticDecorator();
+    timeTheFunctor(dummyFunction, 10, 1);
 }
 } // namespace decorator

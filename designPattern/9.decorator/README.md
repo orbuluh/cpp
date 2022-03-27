@@ -7,11 +7,11 @@
 - Make sure your business domain can be represented as a primary component with multiple optional layers over it.
 
 # Different types of decorator
-- Dynamic decorators can store references (or even store the entire values, if you want!) of the decorated objects and provide dynamic (runtime) composability, at the expense of not being able to access the underlying objects’ own members.
-- Static decorators use mixin inheritance (a technique where the class inheriting from its template parameter) to compose decorators at compile-time.
+- [Dynamic decorators](dynamicDecorator.h) can store references (or even store the entire values, if you want!) of the decorated objects and provide dynamic (runtime) composability, at the expense of not being able to access the underlying objects’ own members.
+- [Static decorators](staticDecorator.h) use mixin inheritance (a technique where the class inheriting from its template parameter) to compose decorators at compile-time.
     - This loses any sort of runtime flexibility (you cannot recompose objects) but gives you access to the underlying object’s members.
     - These objects are also fully initializable through constructor forwarding.
-- Functional decorators can wrap either blocks of code or particular functions to allow composition of behaviors.
+- [Functional decorators](functionDecorator.h) can wrap either blocks of code or particular functions to allow composition of behaviors.
 
 # Comparisons
 - Adapter provides a different interface to the wrapped object, Proxy provides it with the same interface, and Decorator provides it with an enhanced interface.
