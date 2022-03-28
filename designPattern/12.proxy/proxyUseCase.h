@@ -2,22 +2,34 @@
 #include <typeinfo>
 #include <iostream>
 namespace proxy {
+struct IQueryDB {
+    virtual int queryDB(std::string_view key) = 0;
+    virtual ~IQueryDB() = default;
+};
 
+struct HeavyDBLoad : public IQueryDB {
+    HeavyDBLoad() {
+        std::cout << "\tHeavy DBLoad in contructor that you can't change in ctor of HeavyDBLoad\n";
+    }
+    ~HeavyDBLoad() override = default;
+    int queryDB(std::string_view key) override {
+        return 42;
+    }
+};
 
-template <typename T>
-struct Property {
-    T value_;
-    Property(const T initialVal) {
-        std::cout << "Invoke ctor for T=" << typeid(T).name() << " val=" << initialVal << '\n';
-        *this = initialVal;
+struct LazyInitProxyOfHeavyDBLoad : public IQueryDB {
+    LazyInitProxyOfHeavyDBLoad() = default;
+    ~LazyInitProxyOfHeavyDBLoad() override = default;
+
+    int queryDB(std::string_view key) override {
+        if (!db_) {
+            std::cout << "lazy init during query!\n";
+            db_ = std::make_unique<HeavyDBLoad>();
+        }
+        return db_->queryDB(key);
     }
-    operator T() {
-        std::cout << "Invoke T() for T=" << typeid(T).name() << " val=" << value_ << '\n';
-        return value_;
-    }
-    T operator=(T newVal) {
-        return value_ = newVal;
-    }
+
+    std::unique_ptr<HeavyDBLoad> db_;
 };
 
 void demo();
