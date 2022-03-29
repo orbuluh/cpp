@@ -2,6 +2,7 @@
 #include "designPattern/7.bridge/bridgeUseCase.h"
 #include "designPattern/9.decorator/decoratorUseCase.h"
 #include "designPattern/10.facade/facadeUseCase.h"
+#include "designPattern/11.flyweight/flyweightUseCase.h"
 #include "designPattern/12.proxy/proxyUseCase.h"
 #include "designPattern/13.chainofresp/chainofrespUseCase.h"
 #include "designPattern/14.command/commandUseCase.h"
@@ -40,7 +41,8 @@ void runDesignPatternDemo() {
     //command::demo();
     //chainofresp::demo();
     //decorator::demo();
-    proxy::demo();
+    //proxy::demo();
+    flyweight::demo();
 }
 
 void runBoostDemo() {

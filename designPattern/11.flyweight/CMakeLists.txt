@@ -1,0 +1,1 @@
+add_library(Flyweight STATIC flyweightUseCase.cpp)

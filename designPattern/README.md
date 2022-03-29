@@ -7,6 +7,7 @@
 - [7. Bridge](7.bridge)
 - [9. Decorator](9.decorator)
 - [10. Facade](10.facade)
+- [11. Flyweight](11.flyweight)
 - [12. Proxy](12.proxy)
 # Behavior Patterns
 - [13. ChainOfResponsibility](13.chainofresp)

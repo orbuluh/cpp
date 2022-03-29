@@ -24,6 +24,7 @@ add_subdirectory(designPattern/6.adapter Adapter)
 add_subdirectory(designPattern/7.bridge Bridge)
 add_subdirectory(designPattern/9.decorator Decorator)
 add_subdirectory(designPattern/10.facade Facade)
+add_subdirectory(designPattern/11.flyweight Flyweight)
 add_subdirectory(designPattern/12.proxy Proxy)
 add_subdirectory(designPattern/13.chainofresp Chainofresp)
 add_subdirectory(designPattern/14.command Command)
@@ -39,6 +40,7 @@ list(APPEND EXTRA_LIBS
     Decorator
     Facade
     State
+    Flyweight
     Proxy
     Chainofresp
     Command
