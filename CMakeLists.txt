@@ -29,6 +29,7 @@ add_subdirectory(designPattern/12.proxy Proxy)
 add_subdirectory(designPattern/13.chainofresp Chainofresp)
 add_subdirectory(designPattern/14.command Command)
 add_subdirectory(designPattern/17.mediator Mediator)
+add_subdirectory(designPattern/18.memento Memento)
 add_subdirectory(designPattern/20.observer Observer)
 add_subdirectory(designPattern/21.state State)
 add_subdirectory(designPattern/25.maybeMonad MaybeMonad)
@@ -44,6 +45,7 @@ list(APPEND EXTRA_LIBS
     Proxy
     Chainofresp
     Command
+    Memento
     Mediator
     Observer
     MaybeMonad

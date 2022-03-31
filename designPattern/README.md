@@ -13,6 +13,7 @@
 - [13. ChainOfResponsibility](13.chainofresp)
 - [14. Command](14.command)
 - [17. Mediator](17.mediator)
+- [18. Memento](18.memento)
 - [20. Observer](20.observer)
 - [21. State](21.state)
 - [25. MaybeMonad](25.maybeMonad)

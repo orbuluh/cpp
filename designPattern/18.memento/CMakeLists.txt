@@ -1,0 +1,1 @@
+add_library(Memento STATIC mementoUseCase.cpp)

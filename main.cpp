@@ -7,6 +7,7 @@
 #include "designPattern/13.chainofresp/chainofrespUseCase.h"
 #include "designPattern/14.command/commandUseCase.h"
 #include "designPattern/17.mediator/mediatorUseCase.h"
+#include "designPattern/18.memento/mementoUseCase.h"
 #include "designPattern/20.observer/observerUseCase.h"
 #include "designPattern/21.state/stateUseCase.h"
 #include "designPattern/25.maybeMonad/maybeMonadUseCase.h"
@@ -42,7 +43,8 @@ void runDesignPatternDemo() {
     //chainofresp::demo();
     //decorator::demo();
     //proxy::demo();
-    flyweight::demo();
+    //flyweight::demo();
+    memento::demo()
 }
 
 void runBoostDemo() {
