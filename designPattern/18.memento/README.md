@@ -9,7 +9,8 @@
 - The pattern suggests storing the copy of the object’s state in a special object called **memento**.
 - The contents of the memento aren’t accessible to any other object except the one that produced it. 
 - Other objects must communicate with mementos using** a limited interface** which may allow fetching the snapshot’s metadata (creation time, the name of the performed operation, etc.), but **not the original object’s state contained in the snapshot**.
+- Use the Memento pattern when you want to produce snapshots of the object’s state to be able to restore a previous state of the object.
+- Use the pattern when direct access to the object’s fields/getters/setters violates its encapsulation.
 
-
-stores the state of the system and returns it as a dedicated, read-only object with no behavior of its own. This “token,” if you will, can be used only for feeding it back into the system to restore it to the state it represents.
-The Memento class is immutable. Imagine if you could, in fact, change the balance: you could roll back the account to a state it was never in!
+- You can use Command and Memento together when implementing “undo”. In this case, commands are responsible for performing various operations over a target object, while mementos save the state of that object just before a command gets executed.
+- Sometimes Prototype can be a simpler alternative to Memento. This works if the object, the state of which you want to store in the history, is fairly straightforward and doesn’t have links to external resources, or the links are easy to re-establish.
