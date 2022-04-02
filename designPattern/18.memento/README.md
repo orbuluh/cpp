@@ -8,7 +8,9 @@
     - Other classes would become dependent on every little change to the snapshot class, which would otherwise happen within private fields and methods without affecting outer classes.
 - The pattern suggests storing the copy of the object’s state in a special object called **memento**.
 - The contents of the memento aren’t accessible to any other object except the one that produced it. 
-- Other objects must communicate with mementos using** a limited interface** which may allow fetching the snapshot’s metadata (creation time, the name of the performed operation, etc.), but **not the original object’s state contained in the snapshot**.
+- Other objects must communicate with mementos using **a limited interface** which may allow fetching the snapshot’s metadata (creation time, the name of the performed operation, etc.), but **not the original object’s state contained in the snapshot**.
+
+
 - Use the Memento pattern when you want to produce snapshots of the object’s state to be able to restore a previous state of the object.
 - Use the pattern when direct access to the object’s fields/getters/setters violates its encapsulation.
 
