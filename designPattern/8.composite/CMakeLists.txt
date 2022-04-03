@@ -1,0 +1,1 @@
+add_library(Composite STATIC compositeUseCase.cpp)

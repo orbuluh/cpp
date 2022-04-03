@@ -22,6 +22,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 #---------------------------------
 add_subdirectory(designPattern/6.adapter Adapter)
 add_subdirectory(designPattern/7.bridge Bridge)
+add_subdirectory(designPattern/8.composite Composite)
 add_subdirectory(designPattern/9.decorator Decorator)
 add_subdirectory(designPattern/10.facade Facade)
 add_subdirectory(designPattern/11.flyweight Flyweight)
@@ -38,6 +39,7 @@ add_subdirectory(boost BoostCookBook)
 list(APPEND EXTRA_LIBS
     Adapter
     Bridge
+    Composite
     Decorator
     Facade
     State

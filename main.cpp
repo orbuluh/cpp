@@ -1,5 +1,6 @@
 #include "designPattern/6.adapter/adapterUseCase.h"
 #include "designPattern/7.bridge/bridgeUseCase.h"
+#include "designPattern/8.composite/compositeUseCase.h"
 #include "designPattern/9.decorator/decoratorUseCase.h"
 #include "designPattern/10.facade/facadeUseCase.h"
 #include "designPattern/11.flyweight/flyweightUseCase.h"
@@ -44,7 +45,8 @@ void runDesignPatternDemo() {
     //decorator::demo();
     //proxy::demo();
     //flyweight::demo();
-    memento::demo();
+    //memento::demo();
+    composite::demo();
 }
 
 void runBoostDemo() {
