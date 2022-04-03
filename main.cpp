@@ -44,7 +44,7 @@ void runDesignPatternDemo() {
     //decorator::demo();
     //proxy::demo();
     //flyweight::demo();
-    memento::demo()
+    memento::demo();
 }
 
 void runBoostDemo() {

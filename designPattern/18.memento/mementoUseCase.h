@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include <memory>
+#include <stack>
 namespace memento {
 
 class Editor;
@@ -21,10 +21,11 @@ class Editor {
 public:
     void setText(std::string_view s) { text = s; }
     void setCursor(int x, int y) { curX = x; curY = y; }
-    void selectionWidth(int width) { selectionWidth = width; }
-    std::unique_ptr<Snapshot> createSnapshot() {
-        return std::make_unique<Snapshot>(this, text, curX, curY, selectionWidth);
+    void setSelectionWidth(int width) { selectionWidth = width; }
+    Snapshot createSnapshot() {
+        return Snapshot(this, text, curX, curY, selectionWidth);
     }
+    void printInternal() const;
 private:
     std::string text;
     int curX;
@@ -33,17 +34,19 @@ private:
 };
 
 class Command {
+public:
     Command(Editor& editor) : editor(editor) {}
     void makeBackup() {
-        backup = std::move(editor.createSnapshot());
+        backups.push(std::move(editor.createSnapshot()));
     }
     void undo() {
-        if (backup) {
-            backup->restore();
+        if (!backups.empty()) {
+            backups.top().restore();
+            backups.pop();
         }
     }
 private:
-    std::unique_ptr<Snapshot> backup;
+    std::stack<Snapshot> backups;
     Editor& editor;
 };
 void demo();
