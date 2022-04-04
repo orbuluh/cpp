@@ -1,0 +1,1 @@
+add_library(Prototype STATIC prototypeUseCase.cpp)

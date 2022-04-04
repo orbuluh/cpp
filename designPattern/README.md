@@ -3,6 +3,7 @@
 - DIDP: [Dive Into Design Patterns](https://refactoring.guru/design-patterns/book)
 
 # Structural Patterns
+- [4. Prototype](4.prototype)
 - [6. Adapter](6.adapter)
 - [7. Bridge](7.bridge)
 - [8. Composite](8.composite)
