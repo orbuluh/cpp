@@ -1,4 +1,4 @@
-#include "designPattern/4.prototype/prototypeUseCase.h"
+//#include "designPattern/4.prototype/prototypeUseCase.h" // example showned in composite::demo()
 #include "designPattern/6.adapter/adapterUseCase.h"
 #include "designPattern/7.bridge/bridgeUseCase.h"
 #include "designPattern/8.composite/compositeUseCase.h"
@@ -47,8 +47,7 @@ void runDesignPatternDemo() {
     //proxy::demo();
     //flyweight::demo();
     //memento::demo();
-    //composite::demo();
-    prototype::demo();
+    composite::demo(); // also show how prototype is used
 }
 
 void runBoostDemo() {

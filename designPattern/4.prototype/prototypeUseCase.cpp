@@ -1,8 +1,5 @@
 #include "prototypeUseCase.h"
-#include <iostream>
 
 namespace prototype {
-void demo() {
-    
-}
+std::once_flag GoodsFactory::initialized;
 } // namespace prototype

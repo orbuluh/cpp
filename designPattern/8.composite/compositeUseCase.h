@@ -1,4 +1,5 @@
 #pragma once
+#include "../4.prototype/prototypeUseCase.h"
 #include <iostream>
 #include <map>
 #include <memory>
@@ -9,18 +10,7 @@
 
 namespace composite {
 
-class IGoods {
-public:
-    IGoods(std::string_view name, float price) : name_(name), price_(price) {}
-    virtual ~IGoods() = default;
-    virtual float value() { return price_; };
-    std::string_view name() { return name_; }
-protected:
-    std::string name_;
-    float price_;
-};
-
-class Box : public IGoods {
+class Box : public prototype::IGoods {
 public:
     Box(std::string_view packageName) : IGoods(packageName, 0) {}
     ~Box() override = default;
@@ -28,12 +18,13 @@ public:
                    , goods_{std::move(box.goods_)}
                    , IGoods{box.name(), 0} {}
 
-    void addItem(std::string name, float price) {
+    void addItem(std::unique_ptr<IGoods>&& item) {
+        auto name = std::string{item->name()};
         auto it = qtyMap_.find(name);
         if (it == qtyMap_.end()) {
             std::cout << "Box(" << name_ << ") adding item: " << name
-                << " for price: " << price << '\n';
-            goods_.emplace_back(std::make_unique<IGoods>(name, price));
+                << " for price: " << item->value() << '\n';
+            goods_.emplace_back(std::move(item));
         }
         qtyMap_[name] += 1;
     }

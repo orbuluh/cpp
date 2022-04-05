@@ -4,11 +4,11 @@
 namespace composite {
 void demo() {
     auto birthdayPresent = std::make_unique<Box>("birthdayPresent");
-    birthdayPresent->addItem("NikePg5EpSonyPS5Edition", 1357.0);
-    birthdayPresent->addItem("NikeBasketBallSocks", 79);
-    birthdayPresent->addItem("NikeBasketBallSocks", 79);
+    birthdayPresent->addItem(prototype::GoodsFactory::create(prototype::Item::NikePg5EpSonyPS5Edition));
+    birthdayPresent->addItem(prototype::GoodsFactory::create(prototype::Item::NikeBasketBallSocks));
+    birthdayPresent->addItem(prototype::GoodsFactory::create(prototype::Item::NikeBasketBallSocks));
     auto forHoo = std::make_unique<Box>("forHoo");
-    forHoo->addItem("NikeWaffleDebut", 599);
+    forHoo->addItem(prototype::GoodsFactory::create(prototype::Item::NikeWaffleDebut));
     auto fedexPackage = std::make_unique<Box>("WholePackage");
     fedexPackage->addBox(std::move(birthdayPresent));
     fedexPackage->addBox(std::move(forHoo));
