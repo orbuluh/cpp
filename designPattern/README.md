@@ -14,6 +14,7 @@
 # Behavior Patterns
 - [13. ChainOfResponsibility](13.chainofresp)
 - [14. Command](14.command)
+- [16. Iterator](16.iterator)
 - [17. Mediator](17.mediator)
 - [18. Memento](18.memento)
 - [20. Observer](20.observer)

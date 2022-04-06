@@ -8,6 +8,7 @@
 #include "designPattern/12.proxy/proxyUseCase.h"
 #include "designPattern/13.chainofresp/chainofrespUseCase.h"
 #include "designPattern/14.command/commandUseCase.h"
+#include "designPattern/16.iterator/iteratorUseCase.h"
 #include "designPattern/17.mediator/mediatorUseCase.h"
 #include "designPattern/18.memento/mementoUseCase.h"
 #include "designPattern/20.observer/observerUseCase.h"
@@ -47,7 +48,8 @@ void runDesignPatternDemo() {
     //proxy::demo();
     //flyweight::demo();
     //memento::demo();
-    composite::demo(); // also show how prototype is used
+    //composite::demo(); // also show how prototype is used
+    iterator::demo();
 }
 
 void runBoostDemo() {
