@@ -3,6 +3,7 @@
 - by default, `top()` return the maximum value.
 - ops: `top()`, `push`, `emplace()`, `pop()`
 - If you want to customized comparator, it's the third argument. You have to specify container type.
+- maintain a minPQ with size k, then the top() element is the k-th largest number.
 
 ```cpp
 template<
