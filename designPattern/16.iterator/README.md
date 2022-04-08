@@ -13,6 +13,5 @@
 - Use the Iterator when you want your code to be able to traverse different data structures or when types of these structures are unknown beforehand.
   - The pattern provides a couple of generic interfaces for both collections and iterators. Given that your code now uses these interfaces, it’ll still work if you pass it various kinds of collections and iterators that implement these interfaces.
 
-
 # Coroutines
 - Coroutines fix some of the issues present in iterators: they allow state to be preserved between calls—something that other languages (e.g., C#) have implemented a long time ago. As a consequence, coroutines allow us to write recursive algorithms.
