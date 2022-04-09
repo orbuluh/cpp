@@ -3,8 +3,19 @@
 - by default, `top()` return the maximum value.
 - ops: `top()`, `push`, `emplace()`, `pop()`
 - If you want to customized comparator, it's the third argument. You have to specify container type.
-- maintain a minPQ with size k, then the top() element is the k-th largest number.
 
+# Applicability
+- maintain a minPQ with size k, then the top() element is the k-th largest number.
+- say you have an array and you want to keep the k most largest number -> [Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/)
+  - you can maintain a maxPQ with size being `size(array) - k`, and whenever you push t o the maxPQ while the size exceed `size(array) - k`, then the top must be one of the number among the k most largest.
+  - ```cpp
+        // say maxQ {6, 5, 4, 3, 2, 1}
+        // k == 2 -> then the last 6 - k == 4 elements doesn't matter
+        // or to put it other way - whenever pq's size is larger than 4
+        // the top of the PQ must be one of the number we want
+  ```
+
+# Customized comparator
 ```cpp
 template<
     class T,
