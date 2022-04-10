@@ -1,0 +1,1 @@
+add_library(Visitor STATIC visitorUseCase.cpp)

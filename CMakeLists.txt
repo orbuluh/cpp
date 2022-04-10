@@ -35,6 +35,7 @@ add_subdirectory(designPattern/17.mediator Mediator)
 add_subdirectory(designPattern/18.memento Memento)
 add_subdirectory(designPattern/20.observer Observer)
 add_subdirectory(designPattern/21.state State)
+add_subdirectory(designPattern/24.visitor Visitor)
 add_subdirectory(designPattern/25.maybeMonad MaybeMonad)
 add_subdirectory(boost BoostCookBook)
 
@@ -54,6 +55,7 @@ list(APPEND EXTRA_LIBS
     Iterator
     Mediator
     Observer
+    Visitor
     MaybeMonad
 )
 

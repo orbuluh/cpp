@@ -13,6 +13,7 @@
 #include "designPattern/18.memento/mementoUseCase.h"
 #include "designPattern/20.observer/observerUseCase.h"
 #include "designPattern/21.state/stateUseCase.h"
+#include "designPattern/24.visitor/visitorUseCase.h"
 #include "designPattern/25.maybeMonad/maybeMonadUseCase.h"
 #include "boost/cookbook.h"
 
@@ -49,7 +50,8 @@ void runDesignPatternDemo() {
     //flyweight::demo();
     //memento::demo();
     //composite::demo(); // also show how prototype is used
-    iterator::demo();
+    //iterator::demo();
+    visitor::demo();
 }
 
 void runBoostDemo() {
