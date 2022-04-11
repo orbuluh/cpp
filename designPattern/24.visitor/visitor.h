@@ -2,6 +2,8 @@
 
 namespace visitor {
 
+// Reference: [stackoverflow](https://stackoverflow.com/a/11802080/4924135)
+
 // variadic template declaration for sfinae
 template<typename... Types>
 class Visitor;
@@ -22,13 +24,13 @@ public:
 };
 
 template<typename... Types>
-class VisitableElement { // The visitable
+class Visitable { // The visitable
 public:
     virtual void accept(Visitor<Types...>& visitor) = 0;
 };
 
 template<typename Derived, typename... Types>
-class ElementImpl : public VisitableElement<Types...> {
+class VisitableImpl : public Visitable<Types...> {
 public:
     virtual void accept(Visitor<Types...>& visitor) {
         visitor.visit(static_cast<Derived&>(*this));
