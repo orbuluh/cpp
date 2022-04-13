@@ -1,0 +1,1 @@
+add_library(Strategy STATIC strategyUseCase.cpp)

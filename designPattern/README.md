@@ -19,6 +19,7 @@
 - [18. Memento](18.memento)
 - [20. Observer](20.observer)
 - [21. State](21.state)
+- [22. Strategy](22.strategy)
 - [24. Visitor](24.visitor)
 - [25. MaybeMonad](25.maybeMonad)
 
