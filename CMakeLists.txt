@@ -40,6 +40,7 @@ add_subdirectory(designPattern/24.visitor Visitor)
 add_subdirectory(designPattern/25.maybeMonad MaybeMonad)
 add_subdirectory(boost BoostCookBook)
 
+
 list(APPEND EXTRA_LIBS
     Prototype
     Adapter

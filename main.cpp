@@ -52,7 +52,7 @@ void runDesignPatternDemo() {
     //memento::demo();
     //composite::demo(); // also show how prototype is used
     //iterator::demo();
-    visitor::demo();
+    //visitor::demo();
     strategy::demo();
 }
 
