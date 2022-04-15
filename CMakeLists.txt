@@ -36,6 +36,7 @@ add_subdirectory(designPattern/18.memento Memento)
 add_subdirectory(designPattern/20.observer Observer)
 add_subdirectory(designPattern/21.state State)
 add_subdirectory(designPattern/22.strategy Strategy)
+add_subdirectory(designPattern/23.templatemethod Templatemethod)
 add_subdirectory(designPattern/24.visitor Visitor)
 add_subdirectory(designPattern/25.maybeMonad MaybeMonad)
 add_subdirectory(boost BoostCookBook)
@@ -58,6 +59,7 @@ list(APPEND EXTRA_LIBS
     Mediator
     Observer
     Strategy
+    Templatemethod
     Visitor
     MaybeMonad
 )

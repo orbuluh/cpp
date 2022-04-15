@@ -14,6 +14,7 @@
 #include "designPattern/20.observer/observerUseCase.h"
 #include "designPattern/21.state/stateUseCase.h"
 #include "designPattern/22.strategy/strategyUseCase.h"
+#include "designPattern/23.templatemethod/templatemethodUseCase.h"
 #include "designPattern/24.visitor/visitorUseCase.h"
 #include "designPattern/25.maybeMonad/maybeMonadUseCase.h"
 #include "boost/cookbook.h"
@@ -53,7 +54,8 @@ void runDesignPatternDemo() {
     //composite::demo(); // also show how prototype is used
     //iterator::demo();
     //visitor::demo();
-    strategy::demo();
+    //strategy::demo();
+    templatemethod::demo();
 }
 
 void runBoostDemo() {

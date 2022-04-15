@@ -20,6 +20,7 @@
 - [20. Observer](20.observer)
 - [21. State](21.state)
 - [22. Strategy](22.strategy)
+- [23. Templatemethod](23.templatemethod)
 - [24. Visitor](24.visitor)
 - [25. MaybeMonad](25.maybeMonad)
 

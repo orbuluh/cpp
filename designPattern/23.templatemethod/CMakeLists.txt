@@ -1,0 +1,1 @@
+add_library(Templatemethod STATIC templatemethodUseCase.cpp)
