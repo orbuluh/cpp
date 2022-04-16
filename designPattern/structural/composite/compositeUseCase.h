@@ -1,5 +1,5 @@
 #pragma once
-#include "../4.prototype/prototypeUseCase.h"
+#include "../../creational/prototype/prototypeUseCase.h"
 #include <iostream>
 #include <map>
 #include <memory>

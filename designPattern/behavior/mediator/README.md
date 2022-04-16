@@ -3,7 +3,7 @@
     - there are situations when you don’t want objects to be necessarily aware of each other’s presence.
     - Or, perhaps you do want them to be aware of one another, but you still don’t want them to communicate through pointers or references
 - The pattern restricts direct communications between the objects and forces them to collaborate only via a mediator object.
-![mediator concept](../../src/images/mediator.png)
+![mediator concept](../../../src/images/mediator.png)
 - The mediator itself needs to be accessible to every component taking part, maybe a reference that gets injected into every component.
 - The Mediator pattern suggests that 
     - you should cease all direct communication between the components which you want to make independent of each other. 

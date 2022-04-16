@@ -1,28 +1,29 @@
 # Notes/practices from book:
-- DP: [Design Patterns in Modern C++ Reusable Approaches for Object-Oriented Software Design](https://www.amazon.com/Design-Patterns-Modern-Approaches-Object-Oriented/dp/1484236025)
+- DP: [Design Patterns in Modern C++ Reusable Approaches for Object-Oriented Software Design](https://www.amazon.com/Design-Patterns-Modern-Approaches-Object-Oriented/dp/
 - DIDP: [Dive Into Design Patterns](https://refactoring.guru/design-patterns/book)
 
+# Creational Patterns
+- [Prototype](creational/prototype/README.md)
 # Structural Patterns
-- [4. Prototype](4.prototype)
-- [6. Adapter](6.adapter)
-- [7. Bridge](7.bridge)
-- [8. Composite](8.composite)
-- [9. Decorator](9.decorator)
-- [10. Facade](10.facade)
-- [11. Flyweight](11.flyweight)
-- [12. Proxy](12.proxy)
+- [Adapter](structural/adapter/README.md)
+- [Bridge](structural/bridge/README.md)
+- [Composite](structural/composite/README.md)
+- [Decorator](structural/decorator/README.md)
+- [Facade](structural/facade/README.md)
+- [Flyweight](structural/flyweight/README.md)
+- [Proxy](structural/proxy/README.md)
 # Behavior Patterns
-- [13. ChainOfResponsibility](13.chainofresp)
-- [14. Command](14.command)
-- [16. Iterator](16.iterator)
-- [17. Mediator](17.mediator)
-- [18. Memento](18.memento)
-- [20. Observer](20.observer)
-- [21. State](21.state)
-- [22. Strategy](22.strategy)
-- [23. Templatemethod](23.templatemethod)
-- [24. Visitor](24.visitor)
-- [25. MaybeMonad](25.maybeMonad)
+- [ChainOfResponsibility](behavior/chainofresp/README.md)
+- [Command](behavior/command/README.md)
+- [Iterator](behavior/iterator/README.md)
+- [Mediator](behavior/mediator/README.md)
+- [Memento](behavior/memento/README.md)
+- [Observer](behavior/observer/README.md)
+- [State](behavior/state/README.md)
+- [Strategy](behavior/strategy/README.md)
+- [Templatemethod](behavior/templatemethod/README.md)
+- [Visitor](behavior/visitor/README.md)
+- [MaybeMonad](behavior/maybeMonad/README.md)
 
 # TODO
 - Read the "Relations with Other Patterns" in each chapter of DIDP after finish them all!!

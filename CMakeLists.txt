@@ -19,50 +19,8 @@ FetchContent_MakeAvailable(googletest)
 #--------------boost--------------
 find_package(Boost 1.78.0 COMPONENTS program_options REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
-#---------------------------------
-add_subdirectory(designPattern/4.prototype Prototype)
-add_subdirectory(designPattern/6.adapter Adapter)
-add_subdirectory(designPattern/7.bridge Bridge)
-add_subdirectory(designPattern/8.composite Composite)
-add_subdirectory(designPattern/9.decorator Decorator)
-add_subdirectory(designPattern/10.facade Facade)
-add_subdirectory(designPattern/11.flyweight Flyweight)
-add_subdirectory(designPattern/12.proxy Proxy)
-add_subdirectory(designPattern/13.chainofresp Chainofresp)
-add_subdirectory(designPattern/14.command Command)
-add_subdirectory(designPattern/16.iterator Iterator)
-add_subdirectory(designPattern/17.mediator Mediator)
-add_subdirectory(designPattern/18.memento Memento)
-add_subdirectory(designPattern/20.observer Observer)
-add_subdirectory(designPattern/21.state State)
-add_subdirectory(designPattern/22.strategy Strategy)
-add_subdirectory(designPattern/23.templatemethod Templatemethod)
-add_subdirectory(designPattern/24.visitor Visitor)
-add_subdirectory(designPattern/25.maybeMonad MaybeMonad)
 add_subdirectory(boost BoostCookBook)
 
-
-list(APPEND EXTRA_LIBS
-    Prototype
-    Adapter
-    Bridge
-    Composite
-    Decorator
-    Facade
-    State
-    Flyweight
-    Proxy
-    Chainofresp
-    Command
-    Memento
-    Iterator
-    Mediator
-    Observer
-    Strategy
-    Templatemethod
-    Visitor
-    MaybeMonad
-)
 
 list(APPEND EXTRA_LIBS BoostCookBook)
 list(APPEND EXTRA_LIBS gtest_main gtest)
