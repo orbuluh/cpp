@@ -1,3 +1,5 @@
+#include "creational/factory/factoryUseCase.h"
+#include "creational/abstractfactory/abstractfactoryUseCase.h"
 //#include "creational/prototype/prototypeUseCase.h" // example showned in composite::demo()
 #include "structural/adapter/adapterUseCase.h"
 #include "structural/bridge/bridgeUseCase.h"
@@ -36,6 +38,8 @@ int main(int argc, char* argv[]) {
     //iterator::demo();
     //visitor::demo();
     //strategy::demo();
-    templatemethod::demo();
+    //templatemethod::demo();
+    factory::demo();
+    abstractfactory::demo();
     return 0;
 }

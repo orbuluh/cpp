@@ -1,0 +1,1 @@
+add_library(Factory STATIC factoryUseCase.cpp)

@@ -1,0 +1,1 @@
+add_library(Abstractfactory STATIC abstractfactoryUseCase.cpp)

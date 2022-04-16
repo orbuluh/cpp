@@ -3,6 +3,8 @@
 - DIDP: [Dive Into Design Patterns](https://refactoring.guru/design-patterns/book)
 
 # Creational Patterns
+- [Factory](creational/factory/README.md)
+- [Abstractfactory](creational/factory/abstractfactory/README.md)
 - [Prototype](creational/prototype/README.md)
 # Structural Patterns
 - [Adapter](structural/adapter/README.md)
