@@ -1,6 +1,7 @@
 # Notes/practices from book:
-- DP: [Design Patterns in Modern C++ Reusable Approaches for Object-Oriented Software Design](https://www.amazon.com/Design-Patterns-Modern-Approaches-Object-Oriented/dp/
 - DIDP: [Dive Into Design Patterns](https://refactoring.guru/design-patterns/book)
+  - so much better than the DP book...
+- DP: [Design Patterns in Modern C++ Reusable Approaches for Object-Oriented Software Design](https://www.amazon.com/Design-Patterns-Modern-Approaches-Object-Oriented/dp/1484236025)
 
 # Creational Patterns
 - [Factory](creational/factory/README.md)

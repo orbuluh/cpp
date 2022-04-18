@@ -8,11 +8,11 @@ project(concurrency VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-#add_subdirectory(creational/factory Factory)
+add_subdirectory(ch2.managing_threads ManagingThreads)
 
-#list(APPEND EXTRA_LIBS
-#    Factory
-#)
+list(APPEND EXTRA_LIBS
+    ManagingThreads
+)
 
 add_executable(concurrency main.cpp)
 
