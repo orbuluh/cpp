@@ -4,6 +4,7 @@
 - DP: [Design Patterns in Modern C++ Reusable Approaches for Object-Oriented Software Design](https://www.amazon.com/Design-Patterns-Modern-Approaches-Object-Oriented/dp/1484236025)
 
 # Creational Patterns
+- [Builder](creational/builder/README.md)
 - [Factory](creational/factory/README.md)
 - [Abstractfactory](creational/factory/abstractfactory/README.md)
 - [Prototype](creational/prototype/README.md)

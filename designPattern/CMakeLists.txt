@@ -7,6 +7,7 @@ project(designPattern VERSION 0.1.0)
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+add_subdirectory(creational/builder Builder)
 add_subdirectory(creational/factory Factory)
 add_subdirectory(creational/abstractfactory Abstractfactory)
 add_subdirectory(creational/prototype Prototype)
@@ -30,6 +31,7 @@ add_subdirectory(behavior/visitor Visitor)
 add_subdirectory(behavior/maybeMonad MaybeMonad)
 
 list(APPEND EXTRA_LIBS
+    Builder
     Factory
     Abstractfactory
     Prototype
