@@ -24,3 +24,9 @@
 - That’s why all seasoned developers try to provide for possible future changes when designing an application’s architecture.
 
 # Design principles
+## Encapsulate What Varies
+- Identify the aspects of your application that vary and separate them from what stays the same.
+- The main goal of this principle is to minimize the effect caused by changes.
+- Through this, you can isolate the parts of the program that vary in independent modules, protecting the rest of the code from adverse effects.
+- As a result, you spend less time getting the program back into working shape, implementing and testing the changes.
+- The less time you spend making changes, the more time you have for implementing features.
