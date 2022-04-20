@@ -1,17 +1,22 @@
-# Random Cpp learning notes
+# Random Cpp related learning notes
+- [Boost quick reference](boost/README.md)
+- [Concurrency](concurrency/README.md)
+- [Design pattern with my practices in cpp](designPattern/README.md)
+- [Random cpp language/std groceries](std-Aha/README.md)
 
+# Quick reference for cmake
 ```
-# after clone, at root
+# after clone, at folder root
 mkdir build
 cd build
 cmake .. #compile build folder for cmake
 # <NOTE: DON'T TRY TO RUN cmake . without cd into build!!!>
 
-# going forward
-cmake --build build #(re)build
+#(re)build going forward
+cmake --build build
 
 # then run program
-./build/PlayGround [-d {dp|boost|std|test}]
-# or run ...
+./build/PlayGround [-d {boost|std|test}]
+# or run
 ctest
 ```
