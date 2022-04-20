@@ -1,7 +1,8 @@
 # Notes/practices from book:
-- DIDP: [Dive Into Design Patterns](https://refactoring.guru/design-patterns/book)
-  - so much better than the DP book...
-- DP: [Design Patterns in Modern C++ Reusable Approaches for Object-Oriented Software Design](https://www.amazon.com/Design-Patterns-Modern-Approaches-Object-Oriented/dp/1484236025)
+- [Dive Into Design Patterns](https://refactoring.guru/design-patterns/book)
+  - so much better than next book...
+- [Design Patterns in Modern C++ Reusable Approaches for Object-Oriented Software Design](https://www.amazon.com/Design-Patterns-Modern-Approaches-Object-Oriented/dp/1484236025)
+  - Can't really recommend this one after reading these 2 side by side tbh...
 
 # Design Principles
 - [General](design_principles/general/README.md)
@@ -34,11 +35,3 @@
 - [Templatemethod](behavior/templatemethod/README.md)
 - [Visitor](behavior/visitor/README.md)
 - [MaybeMonad](behavior/maybeMonad/README.md)
-
-# TODO
-- Read the "Relations with Other Patterns" in each chapter of DIDP after finish them all!!
-
-## to create sample note folder
-```bash
-./genNoteChapter.sh pattern chapter
-```
