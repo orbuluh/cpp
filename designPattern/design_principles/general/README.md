@@ -30,3 +30,7 @@
 - Through this, you can isolate the parts of the program that vary in independent modules, protecting the rest of the code from adverse effects.
 - As a result, you spend less time getting the program back into working shape, implementing and testing the changes.
 - The less time you spend making changes, the more time you have for implementing features.
+
+## Program to an Interface, not an Implementation
+- Depend on abstractions, not on concrete classes.
+- You can tell that the design is flexible enough if you can easily extend it without breaking any existing code.
