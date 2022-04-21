@@ -34,3 +34,11 @@
 ## Program to an Interface, not an Implementation
 - Depend on abstractions, not on concrete classes.
 - You can tell that the design is flexible enough if you can easily extend it without breaking any existing code.
+
+## Favor Composition Over Inheritance
+- inheritance comes with caveats that often become apparent only after your program already has tons of classes and changing anything is pretty hard.
+- A subclass can’t reduce the interface of the superclass. You have to implement all abstract methods of the parent class even if you won’t be using them.
+- When overriding methods you need to make sure that the new behavior is compatible with the base one. It’s important because objects of the subclass may be passed to any code that expects objects of the superclass and you don’t want that code to break.
+- Inheritance breaks encapsulation of the superclass because the internal details of the parent class become available to the subclass. There might be an opposite situation where a programmer makes a superclass aware of some details of subclasses for the sake of making further extension easier.
+- Subclasses are tightly coupled to superclasses. Any change in a superclass may break the functionality of subclasses.
+- Trying to reuse code through inheritance can lead to creating parallel inheritance hierarchies. Inheritance usually takes place in a single dimension. But whenever there are two or more dimensions, you have to create lots of class combinations, bloating the class hierarchy to a ridiculous size.
