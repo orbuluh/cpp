@@ -20,3 +20,4 @@ target_link_libraries(concurrency LINK_PUBLIC ${EXTRA_LIBS})
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "playground")

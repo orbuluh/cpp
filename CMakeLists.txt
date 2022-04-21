@@ -2,7 +2,7 @@ set(CMAKE_C_COMPILER    "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER  "/usr/bin/clang++")
 
 cmake_minimum_required(VERSION 3.14)
-project(PlayGround VERSION 0.1.0)
+project(GTestExample VERSION 0.1.0)
 
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 20)
@@ -16,27 +16,17 @@ FetchContent_Declare(
 )
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
-#--------------boost--------------
-find_package(Boost 1.78.0 COMPONENTS program_options REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-add_subdirectory(boost BoostCookBook)
 
-
-list(APPEND EXTRA_LIBS BoostCookBook)
 list(APPEND EXTRA_LIBS gtest_main gtest)
-list(APPEND EXTRA_LIBS ${Boost_LIBRARIES})
-#list(APPEND EXTRA_LIBS Boost::program_options)
-#list(APPEND EXTRA_LIBS Boost::any)
 
-
-add_executable(PlayGround main.cpp)
-
-target_link_libraries(PlayGround LINK_PUBLIC ${EXTRA_LIBS})
+add_executable(GTestExample main.cpp)
+target_link_libraries(GTestExample LINK_PUBLIC ${EXTRA_LIBS})
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "playground")
 
 include(CPack)
 include(GoogleTest)
 include(CTest)
-gtest_discover_tests(PlayGround)
+gtest_discover_tests(GTestExample)
