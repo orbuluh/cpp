@@ -26,3 +26,6 @@ public:
     //...
 };
 ```
+
+# Related topic
+- [Heterogenous lookup](heterogenous_lookup.md)
