@@ -1,6 +1,13 @@
 # Quick fact
 * `std::find` doesn't take customized comparator - `std::find_if` or `std::find_if_not` does.
-* `find_if` predicate example - input type is the element type of the container.
+* not that when you find, you specify `InputIt first, InputIt last` ...
+  * the search range is `[first, last)` - not including the last
+  * when not found, it returns `last`
+    *  e.g. when you specify last not being the arr.end, and when the result is not found, the return val is the last, not the arr.end
+    *  check [code](find_example.h)
+
+# `find_if` predicate example
+- input type is the element type of the container.
 ```cpp
 class NaiveHashMap {
     static constexpr int bucketCnt_ = 23;

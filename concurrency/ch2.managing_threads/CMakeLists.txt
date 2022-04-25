@@ -1,1 +1,1 @@
-add_library(ManagingThreads parallelAccumulate.cpp)
+add_library(ManagingThreads parallelAccumulate.cpp raiiThreadExample.cpp)

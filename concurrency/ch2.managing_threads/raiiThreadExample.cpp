@@ -1,8 +1,9 @@
-#pragma once
+#include "RaiiThread.h"
 
 namespace managing::threads::examples {
 
-void parallelAccumulateDemo();
-void raiiThreadDemo();
+void raiiThreadDemo() {
+
+}
 
 } // managing::threads::examples
