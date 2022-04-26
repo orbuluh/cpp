@@ -12,7 +12,7 @@ public:
     void start(Fnc fnc) {
         t_ = std::make_unique<std::thread>(fnc);
     }
-
+    RaiiThread() = default;
     ~RaiiThread() {
         cleanup();
     }
@@ -20,20 +20,22 @@ public:
     RaiiThread(const RaiiThread&) = delete;
     RaiiThread& operator=(const RaiiThread&) = delete;
 
-    RaiiThread(const RaiiThread&& rhs) {
+    RaiiThread(RaiiThread&& rhs) {
         cleanup();
         t_ = std::move(rhs.t_);
     }
 
-    RaiiThread& operator=(const RaiiThread&& rhs) {
+    RaiiThread& operator=(RaiiThread&& rhs) {
         cleanup();
         t_ = std::move(rhs.t_);
+        return *this;
     }
 
 private:
     void cleanup() {
         if (t_ && t_->joinable()) {
             t_->join();
+            t_.reset();
         }
     }
 };

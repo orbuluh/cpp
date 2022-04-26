@@ -19,4 +19,4 @@
 - the call to `join()` is liable to be skipped if an exception is thrown after the thread has been started but before the call to `join()`.
 - To avoid your application being terminated when an exception is thrown, you therefore need to make a decision about what to do in this case.
 - In general, if you were intending to call `join()` in a non-exceptional case, you also need to call `join()` in the presence of an exception to avoid accidental lifetime problems.
-- It’s important to ensure this is the case for all possible exit paths, whether normal or exceptional, and it’s desirable to provide a simple, concise mechanism for doing so - Ideally, RAII.
+- It’s important to ensure this is the case for all possible exit paths, whether normal or exceptional, and it’s desirable to provide a simple, concise mechanism for doing so - Ideally, RAII - check [example](RaiiThread.h)
