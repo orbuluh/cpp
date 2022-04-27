@@ -2,6 +2,7 @@
 - `#include <queue>`
 - by default, `top()` return the **maximum** value (e.g. the default comparator is `std::less`)
 - To make it a min queue, you need to explicitly use `std::greater<T>` as the third template parameter.
+  - or you could have stored the negative value to reverse it basically
 - ops: `top()`, `push`, `emplace()`, `pop()`
 - If you want to customized comparator, it's the third argument. You have to specify container type.
 

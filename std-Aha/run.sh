@@ -4,11 +4,11 @@ bin=$bld_folder/playground
 cur_dir=$(pwd)
 if [ ! -d "$bld_folder" ]; then
     mkdir $bld_folder
-    cd build
+    cd $bld_folder
     cmake ..
 fi
 rm $bin
 cd "$cur_dir"
-cmake --build build
+cmake --build $bld_folder
 echo "================="
 $bin
