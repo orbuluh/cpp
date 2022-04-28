@@ -36,4 +36,38 @@
   2. It may make sense to use a detached thread where there’s another mechanism for identifying when the thread has completed or where the thread is used for a **fire-and-forget** task.
 - you can only call `t.detach()` for a `std::thread` object `t` when `t.joinable()` returns true.
 
-#TBC: Ch 2.2
+# Passing arguments to a thread
+- By default, the arguments are **copied** into internal storage, **and then** passed to the callable object or function **as rvalues** as if they were temporaries.
+  - Note there is an "and then" - these are 2 steps.
+```cpp
+void f(int i, std::string const& s);
+// buffer pointer is copied into internal
+// storage first, and then before passing
+// into f(...), it needs to be converted to
+// std::string -> which could happen after
+// oops exit - which cause buffer to be
+// destroyed before conversion and crash!
+void oops(int some_param)
+{
+  char buffer[1024];
+  sprintf(buffer, "%i", some_param);
+	std::thread t(f, 3, buffer);
+  t.detach();
+}
+```
+  - To fix above, you need to cast to do: `std::thread t(f, 3, std::string(buffer));`, so it cast and copy before passing into thread internal storage for the input parameters.
+
+## Pass reference to thread so input would change? `std::ref()`
+- Note the aforementioned 2 steps, your input is passed as rvalue to the callable - this means that your callable can't have a signature with non-const lvalue reference - as **rvalue can't bind to a non-const lvalue reference.**
+- The solution is that you need to wrap the arguments that need to be references in `std::ref`
+
+## Pass move-only data to thread?
+```cpp
+void process_big_object(std::unique_ptr<big_object>);
+std::unique_ptr<big_object> p(new big_object);
+//...
+std::thread t(process_big_object, std::move(p));
+```
+* When such source object is temporary, the move is automatic, but where the source is a named value, the transfer must be requested directly by invoking `std::move()`
+
+#TBC: Ch 2.3
