@@ -70,4 +70,9 @@ std::thread t(process_big_object, std::move(p));
 ```
 * When such source object is temporary, the move is automatic, but where the source is a named value, the transfer must be requested directly by invoking `std::move()`
 
+# Transferring ownership of a thread
+* many resource-owning types in the C++ Standard Library, such as std::ifstream and std::unique_ptr, are movable but not copyable, and std::thread is one of them.
+* 
+
+
 #TBC: Ch 2.3
