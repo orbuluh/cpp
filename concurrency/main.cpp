@@ -2,5 +2,6 @@
 
 int main() {
     //managing::threads::examples::parallelAccumulateDemo();
+    //managing::threads::examples::threadOutOfScopeFailDemo();
     managing::threads::examples::raiiThreadDemo();
 }

@@ -72,7 +72,47 @@ std::thread t(process_big_object, std::move(p));
 
 # Transferring ownership of a thread
 * many resource-owning types in the C++ Standard Library, such as std::ifstream and std::unique_ptr, are movable but not copyable, and std::thread is one of them.
-* 
+```cpp
+std::thread t1(some_function);
+std::thread t2 = std::move(t1); // t1 no longer has an associated thread of execution
+t1 = std::thread(some_other_function); // temporary is rvalue, no need to move here.
+std::thread t3;
+t3 = std::move(t2); // t3 associated to run some_function
+t1 = std::move(t3); // This assignment will terminate the program!
+```
+* The `move` support in `std::thread` means that ownership can readily be transferred out of a function.
+```cpp
+std::thread fnc_return_thread()
+{
+	void some_other_function(int);
+	std::thread t(some_other_function, 42);
+	return t;
+}
+```
+* Ownership can be transferred into a function, it can accept an instance of std::thread by value as one of the parameter
+```cpp
+void f(std::thread t);
+
+void g() {
+	void some_function();
+	f(std::thread(some_function));
+	std::thread t(some_function);
+	f(std::move(t));
+}
+```
+* You can also put `std::thread` into container like this:
+```cpp
+void do_work(unsigned id) {}
+
+void f() {
+    std::vector<std::thread> threads;
+    for (unsigned i = 0; i < 20; ++i) {
+        threads.emplace_back(std::thread(do_work, i)); // spawns threads
+    }
+    std::for_each(threads.begin(), threads.end(),
+                  std::mem_fn(&std::thread::join));
+}
+```
 
 
-#TBC: Ch 2.3
+# TBC: Ch 2.4

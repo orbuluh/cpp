@@ -5,39 +5,40 @@
 
 namespace managing::threads::examples {
 
-class RaiiThread {
-    std::unique_ptr<std::thread> t_;
-public:
-    template <typename Fnc>
-    void start(Fnc fnc) {
-        t_ = std::make_unique<std::thread>(fnc);
-    }
-    RaiiThread() = default;
-    ~RaiiThread() {
-        cleanup();
-    }
+class joining_thread {
+    std::thread t;
 
-    RaiiThread(const RaiiThread&) = delete;
-    RaiiThread& operator=(const RaiiThread&) = delete;
+  public:
+    joining_thread() noexcept = default;
+    template <typename Callable, typename... Args>
+    explicit joining_thread(Callable&& func, Args&&... args)
+        : t(std::forward<Callable>(func), std::forward<Args>(args)...) {}
 
-    RaiiThread(RaiiThread&& rhs) {
-        cleanup();
-        t_ = std::move(rhs.t_);
-    }
+    explicit joining_thread(std::thread t_) noexcept : t(std::move(t_)) {}
+    joining_thread(joining_thread&& other) noexcept : t(std::move(other.t)) {}
 
-    RaiiThread& operator=(RaiiThread&& rhs) {
-        cleanup();
-        t_ = std::move(rhs.t_);
+    joining_thread& operator=(joining_thread&& other) noexcept {
+        if (joinable())
+            join();
+        t = std::move(other.t);
         return *this;
     }
-
-private:
-    void cleanup() {
-        if (t_ && t_->joinable()) {
-            t_->join();
-            t_.reset();
-        }
+    joining_thread& operator=(std::thread other) noexcept {
+        if (joinable())
+            join();
+        t = std::move(other);
+        return *this;
     }
+    ~joining_thread() noexcept {
+        if (joinable())
+            join();
+    }
+    void swap(joining_thread& other) noexcept { t.swap(other.t); }
+    std::thread::id get_id() const noexcept { return t.get_id(); }
+    bool joinable() const noexcept { return t.joinable(); }
+    void join() { t.join(); }
+    void detach() { t.detach(); }
+    std::thread& as_thread() noexcept { return t; }
+    const std::thread& as_thread() const noexcept { return t; }
 };
-
 } // managing::threads::examples
