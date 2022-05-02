@@ -1,6 +1,10 @@
 # On going
-[C: Classes and class hierarchies](C.md)
-# My notes
+[C:      Classes and class hierarchies](C.md)
+[C.hier: Class hierarchies (OOP)](C.hier.md)
+[C.over: Overloading and overloaded operators](C.over.md)
+[NL:     Naming and layout rules](NL.md)
+
+# Completed
 
 # TO READ
 [Cpp Core guidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
