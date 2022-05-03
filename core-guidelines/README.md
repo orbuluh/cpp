@@ -1,10 +1,14 @@
 # On going
-[C:      Classes and class hierarchies](C.md)
-[C.hier: Class hierarchies (OOP)](C.hier.md)
-[C.over: Overloading and overloaded operators](C.over.md)
-[NL:     Naming and layout rules](NL.md)
-
+- [C:          Classes and class hierarchies](C.md)
+- [C.ctor:     Constructors, assignments, and destructors](C.ctor.md)
+- [C.hier:     Class hierarchies (OOP)](C.hier.md)
+- [C.over:     Overloading and overloaded operators](C.over.md)
+- [NL:         Naming and layout rules](NL.md)
 # Completed
+- [C.concrete: Concrete types](C.concrete.md)
+
+
+
 
 # TO READ
 [Cpp Core guidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
