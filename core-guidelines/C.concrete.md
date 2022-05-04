@@ -1,3 +1,7 @@
+- [C.concrete: Concrete types](#cconcrete-concrete-types)
+  - [C.10: Prefer concrete types over class hierarchies](#c10-prefer-concrete-types-over-class-hierarchies)
+  - [C.11: Make concrete types regular](#c11-make-concrete-types-regular)
+  - [C.12: Don't make data members const or references](#c12-dont-make-data-members-const-or-references)
 
 # C.concrete: Concrete types
 
