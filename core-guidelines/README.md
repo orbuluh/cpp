@@ -5,7 +5,7 @@
 - [C.hier:     Class hierarchies (OOP)](C.hier.md)
 - [C.over:     Overloading and overloaded operators](C.over.md)
 - [NL:         Naming and layout rules](NL.md)
-
+- [R:          Resource management](R.md)
 # Completed
 - [C.concrete: Concrete types](C.concrete.md)
 - [C.defop:    Default Operations](C.defop.md)
