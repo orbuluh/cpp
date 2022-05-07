@@ -1,7 +1,6 @@
 # On going
 - [C:          Classes and class hierarchies](C.md)
 - [C.ctor:     Constructors, assignments, and destructors](C.ctor.md)
-- [C.dtor:     Destructors](C.dtor.md)
 - [C.hier:     Class hierarchies (OOP)](C.hier.md)
 - [C.over:     Overloading and overloaded operators](C.over.md)
 - [NL:         Naming and layout rules](NL.md)
@@ -9,6 +8,7 @@
 # Completed
 - [C.concrete: Concrete types](C.concrete.md)
 - [C.defop:    Default Operations](C.defop.md)
+- [C.dtor:     Destructors](C.dtor.md)
 
 
 # TO READ

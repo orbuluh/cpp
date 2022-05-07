@@ -112,3 +112,16 @@ X::~X() noexcept
   - The destructor could send a message (somehow) to the responsible part of the system, consider that to have closed the connection, and return normally.
 - If a destructor uses operations that could fail, it can catch exceptions and in some cases still complete successfully (e.g., by using a different clean-up mechanism from the one that threw an exception).
 
+
+C.37: Make destructors `noexcept`
+- If a destructor tries to exit with an exception, it's a bad design error and the program had better terminate.
+- A destructor (either user-defined or compiler-generated) is implicitly declared `noexcept` (independently of what code is in its body) if all of the members of its class have noexcept destructors.
+- By explicitly marking destructors `noexcept`, an author guards against the destructor becoming implicitly `noexcept(false)` through the addition or modification of a class member.
+- Not all destructors are noexcept by default; one throwing member poisons the whole class hierarchy. So, if in doubt, declare a destructor noexcept.
+```cpp
+struct X {
+    Details x;  // happens to have a throwing destructor
+    // ...
+    ~X() { }    // implicitly noexcept(false); aka can throw
+};
+```

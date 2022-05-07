@@ -53,3 +53,4 @@ Data data{ /* ctor param */ };
 # [C.concrete](C.concrete.md)
 # [C.hier](C.hier.md)
 # [C.over](C.over.md)
+# [C.ctor](C.ctor.intro.md)
