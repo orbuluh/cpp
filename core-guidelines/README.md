@@ -1,18 +1,22 @@
+[Cpp Core guidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
+- A fork with my simplified reading notes.
+
 # On going
 - [C:          Classes and class hierarchies](C.md)
-- [C.ctor:     Constructors, assignments, and destructors](C.ctor.md)
 - [C.hier:     Class hierarchies (OOP)](C.hier.md)
 - [C.over:     Overloading and overloaded operators](C.over.md)
+- [C.copy:     Copy and move](C.copy.md)
 - [NL:         Naming and layout rules](NL.md)
 - [R:          Resource management](R.md)
+
 # Completed
 - [C.concrete: Concrete types](C.concrete.md)
 - [C.defop:    Default Operations](C.defop.md)
 - [C.dtor:     Destructors](C.dtor.md)
+- [C.ctor:     Constructors, assignments, and destructors](C.ctor.md)
 
 
 # TO READ
-[Cpp Core guidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
 - P: Philosophy
 - I: Interfaces
 - F: Functions
