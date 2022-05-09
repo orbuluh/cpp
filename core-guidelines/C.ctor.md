@@ -163,7 +163,7 @@ void f()
 - **Statically allocated objects of built-in types are by default initialized to 0, but local built-in variables are not.**
   - Beware that your compiler might default initialize local built-in variables, whereas an optimized build will not.
   - Thus, code like the example above might appear to work, but it relies on undefined behavior. Assuming that you want initialization, an explicit default initialization can help:
-```
+```cpp
 struct X {
     string s;
     int i {};   // default initialize (to 0)
