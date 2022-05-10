@@ -21,4 +21,17 @@ public:
 };
 ```
 - If pointer semantics are required (e.g., because the return type needs to refer to a base class of a class hierarchy (an interface)), return a "smart pointer."
-- 
+
+## R.20: Use `unique_ptr` or `shared_ptr` to represent ownership
+- Consider:
+```cpp
+void f()
+{
+    X x;
+    X* p1 { new X };              // will leak!
+    std::unique_ptr<X> p2 { new X };   // unique ownership; see also ???
+    std::shared_ptr<X> p3 { new X };   // shared ownership; see also ???
+    auto p4 = std::make_unique<X>();   // unique_ownership, preferable to the explicit use "new"
+    auto p5 = std::make_shared<X>();   // shared ownership, preferable to the explicit use "new"
+}
+```

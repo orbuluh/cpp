@@ -2,6 +2,16 @@
 - Concrete types should generally be copyable, but interfaces in a class hierarchy should not.
 - Resource handles might or might not be copyable. Types can be defined to move for logical as well as performance reasons.
 
+- [C.copy: Copy and move](#ccopy-copy-and-move)
+  - [C.60: Make copy assignment non-virtual, take the parameter by `const&`, and return by `non-const&`](#c60-make-copy-assignment-non-virtual-take-the-parameter-by-const-and-return-by-non-const)
+  - [C.61: A copy operation should copy](#c61-a-copy-operation-should-copy)
+  - [C.62: Make copy assignment safe for self-assignment](#c62-make-copy-assignment-safe-for-self-assignment)
+  - [C.63: Make move assignment non-virtual, take the parameter by `&&`, and return by `non-const&`](#c63-make-move-assignment-non-virtual-take-the-parameter-by--and-return-by-non-const)
+  - [C.64: A `move` operation should move and leave its source in a valid state](#c64-a-move-operation-should-move-and-leave-its-source-in-a-valid-state)
+  - [C.65: Make move assignment safe for self-assignment](#c65-make-move-assignment-safe-for-self-assignment)
+  - [C.66: Make move operations `noexcept`](#c66-make-move-operations-noexcept)
+  - [C.67 A polymorphic class should suppress public copy/move](#c67-a-polymorphic-class-should-suppress-public-copymove)
+
 
 ## C.60: Make copy assignment non-virtual, take the parameter by `const&`, and return by `non-const&`
 ```cpp
@@ -158,6 +168,113 @@ void use() {
 - **The standard requires only that the moved-from object can be destroyed.**
 - Often, we can easily and cheaply do better: **The standard library assumes that it is possible to assign to a moved-from object.** Always leave the moved-from object in some **(necessarily specified) valid state.**
 
+## C.65: Make move assignment safe for self-assignment
+- If `x = x` changes the value of x, people will be surprised and bad errors can occur. However, people don't usually directly write a self-assignment that turn into a `move`, but it can occur.
+- However, `std::swap` is implemented using `move` operations so if you accidentally do `swap(a, b)` where a and b refer to the same object, failing to handle self-move could be a serious and subtle error.
+- The one-in-a-million argument against `if (this == &a) return *this;` tests from the discussion of self-assignment is even more relevant for self-move.
+```cpp
+class Foo {
+    string s;
+    int i;
 
+  public:
+    Foo& operator=(Foo&& a);
+    // ...
+};
 
+Foo& Foo::operator=(Foo&& a) noexcept // OK, but there is a cost
+{
+    if (this == &a)
+        return *this; // this line is redundant
+    s = std::move(a.s);
+    i = a.i;
+    return *this;
+}
+```
+- There is no known general way of avoiding an `if (this == &a) return *this; `test for a move assignment and still get a correct answer (i.e., after x = x the value of x is unchanged).
+- The ISO standard guarantees only a "valid but unspecified" state for the standard-library containers. The rule here is more caution and insists on complete safety.
+
+## C.66: Make move operations `noexcept`
+- A throwing move violates most people's reasonable assumptions. A non-throwing move will be used more efficiently by standard-library and language facilities.
+```cpp
+template <typename T> class Vector {
+  public:
+    Vector(Vector&& a) noexcept : elem{a.elem}, sz{a.sz} {
+        a.sz = 0;
+        a.elem = nullptr;
+    }
+    Vector& operator=(Vector&& a) noexcept {
+        elem = a.elem;
+        sz = a.sz;
+        a.sz = 0;
+        a.elem = nullptr; // make a back to a valid state #65
+    }
+    // ...
+  private:
+    T* elem;
+    int sz;
+};
+```
+```cpp
+template <typename T> class Bad {
+  public:
+    // Not just inefficient, but since a vector copy requires allocation, it can throw!!!
+    Bad(Bad&& a) { *this = a; }            // just use the copy
+    Bad& operator=(Bad&& a) { *this = a; } // just use the copy
+    // ...
+  private:
+    T* elem;
+    int sz;
+};
+```
 ## C.67 A polymorphic class should suppress public copy/move
+- A polymorphic class is a class that defines or inherits at least one virtual function.
+- It is likely that it will be used as a base class for other derived classes with polymorphic behavior.
+- If it is accidentally passed by value, **with the implicitly generated copy constructor and assignment, we risk slicing:** only the base portion of a derived object will be copied, and the polymorphic behavior will be corrupted.
+- If the class has no data, `=delete` the copy/move functions. Otherwise, make them `protected`.
+
+```cpp
+class B { // BAD: polymorphic base class doesn't suppress copying
+  public:
+    virtual char m() { return 'B'; }
+    // ... nothing about copy operations, so uses default ...
+};
+
+class D : public B {
+  public:
+    char m() override { return 'D'; }
+    // ...
+};
+
+void f(B& b) {
+    auto b2 = b; // oops, slices the object; b2.m() will return 'B'
+}
+
+D d;
+f(d);
+```
+```cpp
+class B { // GOOD: polymorphic class suppresses copying
+  public:
+    B() = default;
+    B(const B&) = delete;
+    B& operator=(const B&) = delete;
+    virtual char m() { return 'B'; }
+    // ...
+};
+
+class D : public B {
+  public:
+    char m() override { return 'D'; }
+    // ...
+};
+
+void f(B& b) {
+    auto b2 = b; // ok, compiler will detect inadvertent copying, and protest
+}
+
+D d;
+f(d);
+```
+- If you need to create deep copies of polymorphic objects, use clone() functions: see [C.130](C.hier.md#c130-for-making-deep-copies-of-polymorphic-classes-prefer-a-virtual-clone-function-instead-of-public-copy-constructionassignment).
+- Exceptions: Classes that represent exception objects need both to be polymorphic and copy-constructible.
