@@ -3,6 +3,7 @@
 
 # On going
 - [C:          Classes and class hierarchies](C.md)
+- [C.other:    Other default operation rules](C.other.md)
 - [C.hier:     Class hierarchies (OOP)](C.hier.md)
 - [C.over:     Overloading and overloaded operators](C.over.md)
 - [NL:         Naming and layout rules](NL.md)
