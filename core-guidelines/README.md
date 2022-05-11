@@ -6,6 +6,7 @@
 - [C.other:    Other default operation rules](C.other.md)
 - [C.hier:     Class hierarchies (OOP)](C.hier.md)
 - [C.over:     Overloading and overloaded operators](C.over.md)
+- [E:          Error handling](E.md)
 - [NL:         Naming and layout rules](NL.md)
 - [R:          Resource management](R.md)
 
@@ -27,7 +28,6 @@
 - ES: Expressions and statements
 - Per: Performance
 - CP: Concurrency and parallelism
-- E: Error handling
 - Con: Constants and immutability
 - T: Templates and generic programming
 - CPL: C-style programming
