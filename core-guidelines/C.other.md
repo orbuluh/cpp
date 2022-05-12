@@ -107,3 +107,70 @@ class Foo {
 void swap(Foo& a, Foo& b) { a.swap(b); }
 ```
 - Consider using `swap` to implement copy assignment in terms of copy construction. [E.16: Destructors, deallocation, and swap must never fail](E.md#e16-destructors-deallocation-and-swap-must-never-fail)
+
+## C.84: A swap function must not fail
+- `swap` is widely used **in ways that are assumed never to fail** and programs cannot easily be written to work correctly in the presence of a failing `swap`.
+- The standard-library containers and algorithms will not work correctly if a `swap` of an element type fails.
+
+```cpp
+void swap(My_vector& x, My_vector& y) {
+    auto tmp = x; // copy elements
+    x = y;
+    y = tmp;
+}
+```
+- Above is not just slow - if a memory allocation occurs for the elements in `tmp`, this `swap` could throw and would make STL algorithms fail if used with them.
+
+## C.85: Make `swap` `noexcept`
+- If a swap tries to exit with an exception, it's a bad design error and the program had better terminate. See [C.84](#c84-a-swap-function-must-not-fail)
+
+
+## C.86: Make `==` symmetric with respect to operand types and `noexcept`
+- Asymmetric treatment of operands is surprising and a source of errors where conversions are possible.
+- `==` is a fundamental operation and programmers should be able to use it without fear of failure.
+```cpp
+class B {
+    string name;
+    int number;
+    bool operator==(const B& a) const {
+        return name == a.name && number == a.number;
+    }
+    // ...
+};
+```
+- If a class has a failure state, like `double`'s `NaN`, there is a temptation to make a comparison against the failure state throw.
+- The alternative is to make two failure states compare equal and any valid state compare false against the failure state.
+- This rule applies to all the usual comparison operators: !=, <, <=, >, and >=.
+
+## C.87: Beware of == on base classes
+- It is really hard to write a foolproof and useful == for a hierarchy.
+```cpp
+class B {
+    string name;
+    int number;
+    virtual bool operator==(const B& a) const {
+        return name == a.name && number == a.number;
+    }
+    // ...
+};
+
+class D : B {
+    char character;
+    virtual bool operator==(const D& a) const {
+        return name == a.name && number == a.number && character == a.character;
+    }
+    // ...
+};
+
+B b = ...
+D d = ...
+b == d; // compares name and number, ignores d's character
+d == b; // error: no == defined
+D d2;
+d == d2; // compares name, number, and character
+B& b2 = d2;
+b2 == d; // compares name and number, ignores d2's and d's character
+```
+- Of course there are ways of making == work in a hierarchy, but the naive approaches do not scale
+- This rule applies to all the usual comparison operators: !=, <, <=, >, >=, and <=>.
+
