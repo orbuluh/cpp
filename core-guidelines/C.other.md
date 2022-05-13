@@ -1,4 +1,15 @@
 # C.other: Other default operation rules
+- [C.other: Other default operation rules](#cother-other-default-operation-rules)
+  - [C.80: Use `=default` if you have to be explicit about using the default semantics](#c80-use-default-if-you-have-to-be-explicit-about-using-the-default-semantics)
+  - [C.81: Use `=delete` when you want to disable default behavior (without wanting an alternative)](#c81-use-delete-when-you-want-to-disable-default-behavior-without-wanting-an-alternative)
+  - [C.82: Don't call virtual functions in constructors and destructors](#c82-dont-call-virtual-functions-in-constructors-and-destructors)
+  - [C.83: For value-like types, consider providing a `noexcept` `swap` function](#c83-for-value-like-types-consider-providing-a-noexcept-swap-function)
+  - [C.84: A swap function must not fail](#c84-a-swap-function-must-not-fail)
+  - [C.85: Make `swap` `noexcept`](#c85-make-swap-noexcept)
+  - [C.86: Make `==` symmetric with respect to operand types and `noexcept`](#c86-make--symmetric-with-respect-to-operand-types-and-noexcept)
+  - [C.87: Beware of == on base classes](#c87-beware-of--on-base-classes)
+  - [C.89: Make a `hash` `noexcept`](#c89-make-a-hash-noexcept)
+  - [C.90: Rely on constructors and assignment operators, not `memset` and `memcpy`](#c90-rely-on-constructors-and-assignment-operators-not-memset-and-memcpy)
 
 ## C.80: Use `=default` if you have to be explicit about using the default semantics
 - The compiler is more likely to get the default semantics right and you cannot implement these functions better than the compiler.
@@ -174,3 +185,35 @@ b2 == d; // compares name and number, ignores d2's and d's character
 - Of course there are ways of making == work in a hierarchy, but the naive approaches do not scale
 - This rule applies to all the usual comparison operators: !=, <, <=, >, >=, and <=>.
 
+## C.89: Make a `hash` `noexcept`
+- Users of hashed containers use hash indirectly and don't expect simple access to throw. It's a standard-library requirement.
+- If you have to define a hash specialization, try simply to let it combine standard-library hash specializations with `^` (xor). That tends to work better than "cleverness" for non-specialists.
+
+## C.90: Rely on constructors and assignment operators, not `memset` and `memcpy`
+- The standard C++ mechanism to construct an instance of a type is to call its constructor.
+- As specified in guideline [C.41](C.ctor.md#c41-a-constructor-should-create-a-fully-initialized-object): a constructor should create a fully initialized object. No additional initialization, such as by `memcpy`, should be required.
+- A type will provide a copy constructor and/or copy assignment operator to appropriately make a copy of the class, preserving the type's invariants.
+- Using `memcpy` to copy a non-trivially copyable type has undefined behavior. Frequently this results in slicing, or data corruption.
+- Example, good
+```cpp
+struct base {
+    virtual void update() = 0;
+    std::shared_ptr<int> sp;
+};
+
+struct derived : public base {
+    void update() override {}
+};
+```
+- Example, bad. These are type-unsafe and overwrites the vtable.
+```cpp
+void init(derived& a)
+{
+    memset(&a, 0, sizeof(derived));
+}
+
+void copy(derived& a, derived& b)
+{
+    memcpy(&a, &b, sizeof(derived));
+}
+```

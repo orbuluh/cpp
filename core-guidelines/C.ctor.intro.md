@@ -12,6 +12,8 @@ These are default operations:
 - The default operations are a set of related operations that together implement the lifecycle semantics of an object.
 - By default, C++ treats classes as value-like types, but not all types are value-like.
 
-- [C.defop: Default Operations](C.defop.md)
 - [C.dtor: Destructors](C.dtor.md)
 - [C.ctor: Constructors](C.ctor.md)
+- [C.copy: Copy and move](C.copy.md)
+- [C.defop: Default Operations](C.defop.md)
+- [C.other: Other default operation rules](C.other.md)
