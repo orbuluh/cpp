@@ -3,7 +3,7 @@
 
 # On going
 - [C:          Classes and class hierarchies](C.md)
-- [C.con:      Containers and other resource handles](C.con.md)
+
 - [C.hier:     Class hierarchies (OOP)](C.hier.md)
 - [C.over:     Overloading and overloaded operators](C.over.md)
 - [E:          Error handling](E.md)
@@ -17,6 +17,8 @@
 - [C.ctor:     Constructors, assignments, and destructors](C.ctor.md)
 - [C.copy:     Copy and move](C.copy.md)
 - [C.other:    Other default operation rules](C.other.md)
+- [C.con:      Containers and other resource handles](C.con.md)
+
 
 # TO READ
 - P: Philosophy
