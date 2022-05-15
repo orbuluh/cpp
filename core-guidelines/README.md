@@ -8,6 +8,7 @@
 - [E:          Error handling](E.md)
 - [ES:         Expressions and statements](ES.md)
 - [F:          Functions](F.md)
+- [I:          Interfaces](I.md)
 - [NL:         Naming and layout rules](NL.md)
 - [R:          Resource management](R.md)
 
@@ -24,7 +25,7 @@
 
 # TO READ
 - P: Philosophy
-- I: Interfaces
+- 
 - C: Classes and class hierarchies
 - Enum: Enumerations
 - Per: Performance
