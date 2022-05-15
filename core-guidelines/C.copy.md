@@ -276,5 +276,5 @@ void f(B& b) {
 D d;
 f(d);
 ```
-- If you need to create deep copies of polymorphic objects, use clone() functions: see [C.130](C.hier.md#c130-for-making-deep-copies-of-polymorphic-classes-prefer-a-virtual-clone-function-instead-of-public-copy-constructionassignment).
+- If you need to create deep copies of polymorphic objects, use clone() functions: see [C.130](C.hierclass.md#c130-for-making-deep-copies-of-polymorphic-classes-prefer-a-virtual-clone-function-instead-of-public-copy-constructionassignment).
 - Exceptions: Classes that represent exception objects need both to be polymorphic and copy-constructible.

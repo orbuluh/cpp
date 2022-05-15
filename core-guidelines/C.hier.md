@@ -1,46 +1,84 @@
 # C.hier: Class hierarchies (OOP)
+- A class hierarchy is constructed to represent a set of hierarchically organized concepts (only).
+- Typically base classes act as interfaces. There are two major uses for hierarchies, often named **implementation inheritance** and **interface inheritance**
+
+## C.120: Use class hierarchies to represent concepts with inherent hierarchical structure (only)
+- Direct representation of ideas in code eases comprehension and maintenance.
+- Make sure the **idea represented in the base class exactly matches all derived types and there is not a better way to express it than using the tight coupling of inheritance.**
+- Do not use inheritance when simply having a data member will do.
+  - Usually this means that the derived type needs to override a base virtual function or needs access to a protected member.
+```cpp
+// Example bad: Do not represent non-hierarchical domain concepts as class hierarchies.
+template <typename T> class Container {
+  public:
+    // list operations:
+    virtual T& get() = 0;
+    virtual void put(T&) = 0;
+    virtual void insert(Position) = 0;
+    // ...
+    // vector operations:
+    virtual T& operator[](int) = 0;
+    virtual void sort() = 0;
+    // ...
+    // tree operations:
+    virtual void balance() = 0;
+    // ...
+};
+```
+- Here most overriding classes cannot implement most of the functions required in the interface well. Thus the base class becomes an implementation burden.
+- Furthermore, the user of Container cannot rely on the member functions actually performing meaningful operations reasonably efficiently; it might throw an exception instead.
+- Thus users have to resort to run-time checking and/or not using this (over)general interface in favor of a particular interface found by a run-time type inquiry (e.g., a `dynamic_cast`).
+
+```cpp
+// Example that using inheritance makes sense
+class DrawableUIElement {
+  public:
+    virtual void render() const = 0;
+    // ...
+};
+
+class AbstractButton : public DrawableUIElement {
+  public:
+    virtual void onClick() = 0;
+    // ...
+};
+
+class PushButton : public AbstractButton {
+    void render() const override;
+    void onClick() override;
+    // ...
+};
+
+class Checkbox : public AbstractButton {
+    // ...
+};
+```
 
 ## C.121: If a base class is used as an interface, make it a pure abstract class
 - A class is more stable if it does not contain data. Interfaces should normally be composed **entirely of public pure virtual functions and a default/empty virtual destructor.**
 
-
-## C.130: For making deep copies of polymorphic classes prefer a virtual clone function instead of public copy construction/assignment
-- Copying a polymorphic class is discouraged due to the slicing problem, see [C.67](C.copy.md#c67-a-polymorphic-class-should-suppress-public-copymove).
-- If you really need copy semantics, copy deeply: Provide a `virtual clone` function that will copy the actual most-derived type and return an owning pointer to the new object, and then in derived classes return the derived type (use a covariant return type).
+## C.122: Use abstract classes as interfaces when complete separation of interface and implementation is needed
+- Such as on an ABI (link) boundary.
+  - A user can now use `D1`s and `D2`s interchangeably through the interface provided by `Device`. 
+  - Furthermore, we can update `D1` and `D2` in ways that are not binary compatible with older versions as long as all access goes through `Device`.
 ```cpp
-class B {
-  public:
-    B() = default;
-    virtual ~B() = default;
-    virtual gsl::owner<B*> clone() const = 0;
-
-  protected: // C.67
-    B(const B&) = default;
-    B& operator=(const B&) = default;
-    B(B&&) = default;
-    B& operator=(B&&) = default;
-    // ...
+struct Device {
+    virtual ~Device() = default;
+    virtual void write(span<const char> outbuf) = 0;
+    virtual void read(span<char> inbuf) = 0;
 };
 
-class D : public B {
-  public:
-    gsl::owner<D*> clone() const override { return new D{*this}; };
+class D1 : public Device {
+    // ... data ...
+
+    void write(span<const char> outbuf) override;
+    void read(span<char> inbuf) override;
+};
+
+class D2 : public Device {
+    // ... different data ...
+
+    void write(span<const char> outbuf) override;
+    void read(span<char> inbuf) override;
 };
 ```
-- Generally, it is recommended to use smart pointers to represent ownership (see [R.20](R.md#r20-use-uniqueptr-or-sharedptr-to-represent-ownership)).
-- However, because of language rules, the covariant return type cannot be a smart pointer: `D::clone` can't return a `unique_ptr<D>` while `B::clone` returns `unique_ptr<B>`.
-- Therefore, you either need to consistently return `unique_ptr<B>` in all overrides, or use `owner<>` utility from the Guidelines Support Library.
-
-
-
-
-## C.133: Avoid protected data
-- `protected` data is a source of complexity and errors. protected data complicates the statement of invariants.
-- `protected` data inherently violates the guidance against putting data in base classes, which usually leads to having to deal with virtual inheritance as well.
-- It is up to every derived class to manipulate the protected data correctly. This has been popular, but also a major source of maintenance problems.
-  - In a large class hierarchy, the consistent use of protected data is hard to maintain because there can be a lot of code, spread over a lot of classes.
-  - The set of classes that can touch that data is open: anyone can derive a new class and start manipulating the protected data.
-  - Often, it is not possible to examine the complete set of classes, so any change to the representation of the class becomes infeasible.
-  - There is no enforced invariant for the protected data; it is much like a set of global variables. The protected data has de facto become global to a large body of code.
-  - Protected data often looks tempting to enable arbitrary improvements through derivation. Often, what you get is unprincipled changes and errors. Prefer private data with a well-specified and enforced invariant. Alternative, and often better, [keep data out of any class used as an interface](#c121-if-a-base-class-is-used-as-an-interface-make-it-a-pure-abstract-class).
-
