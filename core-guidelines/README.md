@@ -3,10 +3,11 @@
 
 # On going
 - [C:          Classes and class hierarchies](C.md)
-
 - [C.hier:     Class hierarchies (OOP)](C.hier.md)
 - [C.over:     Overloading and overloaded operators](C.over.md)
 - [E:          Error handling](E.md)
+- [ES:         Expressions and statements](ES.md)
+- [F:          Functions](F.md)
 - [NL:         Naming and layout rules](NL.md)
 - [R:          Resource management](R.md)
 
@@ -18,7 +19,7 @@
 - [C.copy:     Copy and move](C.copy.md)
 - [C.other:    Other default operation rules](C.other.md)
 - [C.con:      Containers and other resource handles](C.con.md)
-
+- [C.lambdas:  Function objects and lambdas](C.lambdas.md)
 
 # TO READ
 - P: Philosophy
