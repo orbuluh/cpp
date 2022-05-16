@@ -21,13 +21,253 @@ class Circle : public Shape {
 - In extremely rare cases, you might find it reasonable for an abstract class to have a bit of data shared by all derived classes (e.g., use statistics data, debug information, etc.); such classes tend to have constructors.
   - But be warned: Such classes also tend to be prone to requiring virtual inheritance.
 
+## C.127: A class with a virtual function should have a virtual or protected destructor
+- A class with a virtual function is usually (and in general) used via a pointer to base. Usually, the last user has to call delete on a pointer to base, often via a smart pointer to base, so the destructor should be public and virtual.
+- Less commonly, if deletion through a pointer to base is not intended to be supported, the destructor should be protected and non-virtual; see [C.35](C.dtor.md#c35-a-base-class-destructor-should-be-either-public-and-virtual-or-protected-and-non-virtual).
+```cpp
+struct B {
+    virtual int f() = 0;
+    // ... no user-written destructor, defaults to public non-virtual ...
+};
 
+// bad: derived from a class without a virtual destructor
+struct D : B {
+    string s{"default"};
+    // ...
+};
 
+void use() {
+    unique_ptr<B> p = make_unique<D>();
+    // ...
+} // undefined behavior, might call B::~B only and leak the string
+```
 
+## C.128: Virtual functions should specify exactly one of `virtual`, `override`, or `final`
+- Readability. Detection of mistakes. Writing explicit `virtual`, `override`, or `final` is self-documenting and enables the compiler to catch mismatch of types and/or names between base and derived classes.
+  - `virtual` means **exactly and only "this is a new virtual function."**
+  - `override` means **exactly and only "this is a non-final overrider."**
+  - `final` means **exactly and only "this is a final overrider."**
+- However, writing more than one of these three is both redundant and a potential source of errors.
 
+```cpp
+struct B {
+    void f1(int);
+    virtual void f2(int) const;
+    virtual void f3(int);
+    // ...
+};
 
+struct D : B {
+    void f1(int); // bad (hope for a warning): D::f1() hides B::f1()
+    void
+    f2(int) const;   // bad (but conventional and valid): no explicit override
+    void f3(double); // bad (hope for a warning): D::f3() hides B::f3()
+    // ...
+};
+```
+```cpp
+struct Better : B {
+    void f1(int) override; // error (caught): Better::f1() hides B::f1()
+    void f2(int) const override;
+    void f3(double) override; // error (caught): Better::f3() hides B::f3()
+    // ...
+};
+```
+- Note: Use `final` on functions sparingly. **It does not necessarily lead to optimization, and it precludes further overriding.**
 
+## C.129: When designing a class hierarchy, distinguish between **implementation inheritance** and **interface inheritance**
+- **Implementation details in an interface make the interface brittle; that is, make its users vulnerable to having to recompile after changes in the implementation.**
+- **Data in a base class increases the complexity of implementing the base and can lead to replication of code.**
+- Definition:
+  - **interface inheritance** is the use of inheritance to separate users from implementations, in particular to allow derived classes to be added and changed without affecting the users of base classes.
+  - **implementation inheritance** is the use of inheritance to simplify implementation of new facilities by making useful operations available for implementers of related new operations (sometimes called **"programming by difference"**).
+- A pure interface class is simply a set of pure virtual functions; see [I.25](I.md#i25-prefer-empty-abstract-classes-as-interfaces-to-class-hierarchies).
+- The importance of keeping the two kinds of inheritance increases
+  - with the size of a hierarchy (e.g., dozens of derived classes),
+  - with the length of time the hierarchy is used (e.g., decades), and
+  - with the number of distinct organizations in which a hierarchy is used (e.g., it can be difficult to distribute an update to a base class)
+- Bad example:
+  - Problems:
+    - As the hierarchy grows and more data is added to Shape, the constructors get harder to write and maintain.
+    - Why calculate the center for the Triangle? we might never use it.
+    - Add a data member to Shape (e.g., drawing style or canvas) and all classes derived from Shape and all code using Shape will need to be reviewed, possibly changed, and probably recompiled.
+    - The implementation of` Shape::move()` is an example of implementation inheritance: we have defined `move()` once and for all for all derived classes. The more code there is in such base class member function implementations and the more data is shared by placing it in the base, the more benefits we gain - and the less stable the hierarchy is.
+```cpp
+class Shape { // BAD, mixed interface and implementation
+  public:
+    Shape();
+    Shape(Point ce = {0, 0}, Color co = none) : cent{ce}, col{co} { /* ... */
+    }
 
+    Point center() const { return cent; }
+    Color color() const { return col; }
+
+    virtual void rotate(int) = 0;
+    virtual void move(Point p) {
+        cent = p;
+        redraw();
+    }
+
+    virtual void redraw();
+
+    // ...
+  private:
+    Point cent;
+    Color col;
+};
+
+class Circle : public Shape {
+  public:
+    Circle(Point c, int r) : Shape{c}, rad{r} { /* ... */
+    }
+
+    // ...
+  private:
+    int rad;
+};
+
+class Triangle : public Shape {
+  public:
+    Triangle(Point p1, Point p2, Point p3); // calculate center
+    // ...
+};
+```
+- This Shape hierarchy can be rewritten using interface inheritance: The interface is now less brittle, but there is more work in implementing the member functions. For example, center has to be implemented by every class derived from Shape.
+
+```cpp
+class Shape { // pure interface
+  // Note that a pure interface rarely has constructors: there is nothing to construct.
+  public:
+    virtual Point center() const = 0;
+    virtual Color color() const = 0;
+
+    virtual void rotate(int) = 0;
+    virtual void move(Point p) = 0;
+
+    virtual void redraw() = 0;
+
+    // ...
+};
+class Circle : public Shape {
+  public:
+    Circle(Point c, int r, Color c) : cent{c}, rad{r}, col{c} { /* ... */
+    }
+
+    Point center() const override { return cent; }
+    Color color() const override { return col; }
+
+    // ...
+  private:
+    Point cent;
+    int rad;
+    Color col;
+};
+```
+- **Dual hierarchies** has the benefit of stable hierarchies from implementation hierarchies and the benefit of implementation reuse from implementation inheritance. One way of implementing is multiple-inheritance variant.
+  - This can be useful when the implementation class has members that are not offered in the abstract interface or if direct use of a member offers optimization opportunities (e.g., if an implementation member function is `final`).
+  - Another (related) technique for separating interface and implementation is [Pimpl](I.md#i27-for-stable-library-abi-consider-the-pimpl-idiom).
+- To make this interface useful, we must provide its implementation classes (here, named equivalently, but in the Impl namespace).
+```cpp
+
+namespace Interface {
+class Shape { // pure interface
+  public:
+    virtual Point center() const = 0;
+    virtual Color color() const = 0;
+
+    virtual void rotate(int) = 0;
+    virtual void move(Point p) = 0;
+
+    virtual void redraw() = 0;
+
+    // ...
+};
+
+class Circle : public virtual Shape { // pure interface
+  public:
+    virtual int radius() = 0;
+    // ...
+};
+
+} // namespace Interface
+namespace Impl {
+class Shape : public virtual Interface::Shape { // implementation
+  public:
+    // constructors, destructor
+    // ...
+    Point center() const override { /* ... */
+    }
+    Color color() const override { /* ... */
+    }
+
+    void rotate(int) override { /* ... */
+    }
+    void move(Point p) override { /* ... */
+    }
+
+    void redraw() override { /* ... */
+    }
+
+    // ...
+};
+
+class Circle : public virtual Interface::Circle,
+               public Impl::Shape { // implementation
+  public:
+    // constructors, destructor
+
+    int radius() override { /* ... */
+    }
+    // ...
+};
+
+} // namespace Impl
+
+```
+- And we could extend the hierarchies by adding a Smiley class (:-)):
+```cpp
+namespace Interface {
+class Smiley : public virtual Circle { // pure interface
+  public:
+    // ...
+};
+} // namespace Interface
+
+namespace Impl {
+class Smiley : public virtual Interface::Smiley,
+               public Impl::Circle { // implementation
+  public:
+    // constructors, destructor
+    // ...
+}
+} // namespace Impl
+```
+- There are now two hierarchies:
+  - interface: Smiley -> Circle -> Shape
+  - implementation: Impl::Smiley -> Impl::Circle -> Impl::Shape
+- Since each implementation is derived from its interface as well as its implementation base class we get a lattice (DAG).
+```
+Smiley     ->         Circle     ->  Shape
+  ^                     ^               ^
+  |                     |               |
+Impl::Smiley -> Impl::Circle -> Impl::Shape
+```
+- As mentioned, this is just one way to construct a dual hierarchy.
+- The implementation hierarchy can be used directly, rather than through the abstract interface.
+```cpp
+void work_with_shape(Interface::Shape&);
+
+int user() {
+    Impl::Smiley my_smiley{/* args */}; // create concrete shape
+    // ...
+    my_smiley.some_member(); // use implementation class directly
+    // ...
+    work_with_shape(my_smiley); // use implementation through abstract interface
+    // ...
+}
+```
+- Note: There is often a choice between offering common functionality as (implemented) base class functions and free-standing functions (in an implementation namespace).
+  - Base classes gives a shorter notation and easier access to shared data (in the base) at the cost of the functionality being available only to users of the hierarchy.
 
 ## C.130: For making deep copies of polymorphic classes prefer a virtual clone function instead of public copy construction/assignment
 - Copying a polymorphic class is discouraged due to the slicing problem, see [C.67](C.copy.md#c67-a-polymorphic-class-should-suppress-public-copymove).
@@ -55,6 +295,12 @@ class D : public B {
 - Generally, it is recommended to use smart pointers to represent ownership (see [R.20](R.md#r20-use-uniqueptr-or-sharedptr-to-represent-ownership)).
 - However, because of language rules, the covariant return type cannot be a smart pointer: `D::clone` can't return a `unique_ptr<D>` while `B::clone` returns `unique_ptr<B>`.
 - Therefore, you either need to consistently return `unique_ptr<B>` in all overrides, or use `owner<>` utility from the Guidelines Support Library.
+
+
+
+# TOREAD: C.131
+
+
 
 
 

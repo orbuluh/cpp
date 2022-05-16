@@ -31,3 +31,8 @@ X& myX()
   - `X`'s destructor's code needs to be synchronized.
 - If you, as many do, define a singleton as a class for which only one object is created, functions like `myX` are not singletons, and this useful technique is not an exception to the no-singleton rule.
 
+
+## I.25: Prefer empty abstract classes as interfaces to class hierarchies
+- not yet read
+## I.27: For stable library ABI, consider the Pimpl idiom
+- not yet read
