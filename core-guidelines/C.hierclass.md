@@ -296,14 +296,14 @@ class D : public B {
 - However, because of language rules, the covariant return type cannot be a smart pointer: `D::clone` can't return a `unique_ptr<D>` while `B::clone` returns `unique_ptr<B>`.
 - Therefore, you either need to consistently return `unique_ptr<B>` in all overrides, or use `owner<>` utility from the Guidelines Support Library.
 
+## C.131: Avoid trivial getters and setters
+- A trivial getter or setter adds no semantic value; the data item could just as well be `public`.
+- Consider making such a class a `struct`
+- The key to this rule is whether the semantics of the getter/setter are trivial. While it is not a complete definition of "trivial", consider whether there would be any difference beyond syntax if the getter/setter was a public data member instead.
+- Examples of non-trivial semantics would be: maintaining a class invariant or converting between an internal type and an interface type.
 
-
-# TOREAD: C.131
-
-
-
-
-
+## C.132: Don't make a function virtual without reason
+- Redundant `virtual` increases run-time and object-code size. A `virtual` function can be overridden and is thus open to mistakes in a derived class. A `virtual` function ensures code replication in a templated hierarchy.
 
 ## C.133: Avoid protected data
 - `protected` data is a source of complexity and errors. protected data complicates the statement of invariants.
@@ -314,4 +314,24 @@ class D : public B {
   - Often, it is not possible to examine the complete set of classes, so any change to the representation of the class becomes infeasible.
   - There is no enforced invariant for the protected data; it is much like a set of global variables. The protected data has de facto become global to a large body of code.
   - Protected data often looks tempting to enable arbitrary improvements through derivation. Often, what you get is unprincipled changes and errors. Prefer private data with a well-specified and enforced invariant. Alternative, and often better, [keep data out of any class used as an interface](#c121-if-a-base-class-is-used-as-an-interface-make-it-a-pure-abstract-class).
+
+## C.134: Ensure all non-const data members have the same access level
+- Prevention of logical confusion leading to errors. If the non-const data members don't have the same access level, the type is confused about what it's trying to do. Is it a type that maintains an invariant or simply a collection of values?
+- The core question is: What code is responsible for maintaining a meaningful/correct value for that variable? There are exactly two kinds of data members:
+  - A: Ones that **don't participate in the object's invariant**. Any combination of values for these members is valid.
+  - B: Ones that do participate in the object's invariant.
+- Not every combination of values is meaningful (else there'd be no invariant). Therefore all code that has write access to these variables must know about the invariant, know the semantics, and know (and actively implement and enforce) the rules for keeping the values correct.
+- Data members in category A should just be `public` (or, more rarely, prote`cted if you only want derived classes to see them). They don't need encapsulation. All code in the system might as well see and manipulate them.
+
+- Data members in category B should be **private** or **const**.
+- This is because encapsulation is important. To make them non-private and non-const would mean that the **object can't control its own state: An unbounded amount of code beyond the class would need to know about the invariant and participate in maintaining it accurately** --
+  - if these data members were `public`, that would be all calling code that uses the object;
+  - if they were `protected`, it would be all the code in current and future derived classes.
+- This leads to **brittle and tightly coupled code tha**t quickly becomes a nightmare to maintain. Any code that inadvertently sets the data members to an invalid or unexpected combination of values would corrupt the object and all subsequent uses of the object.
+- Most classes are either all A or all B:
+  - All public: If you're writing an aggregate bundle-of-variables without an invariant across those variables, then all the variables should be public. By convention, declare such classes `struct` rather than `class`
+  - All private: If you're writing a type that maintains an invariant, then all the non-const variables should be `private` -- it should be encapsulated.
+- Exception: Occasionally classes will mix A and B, usually for debug reasons.
+  - An encapsulated object might contain something like non-const debug instrumentation that isn't part of the invariant and so falls into category A -- it isn't really part of the object's value or meaningful observable state either.
+  - In that case, the A parts should be treated as A's (made `public`, or in rarer cases `protected` if they should be visible only to derived classes) and the B parts should still be treated like B's (`private` or `const`).
 
