@@ -335,3 +335,20 @@ class D : public B {
   - An encapsulated object might contain something like non-const debug instrumentation that isn't part of the invariant and so falls into category A -- it isn't really part of the object's value or meaningful observable state either.
   - In that case, the A parts should be treated as A's (made `public`, or in rarer cases `protected` if they should be visible only to derived classes) and the B parts should still be treated like B's (`private` or `const`).
 
+## C.135: Use multiple inheritance to represent multiple distinct interfaces
+- Not all classes will necessarily support all interfaces, and not all callers will necessarily want to deal with all operations. Especially to break apart monolithic interfaces into "aspects" of behavior supported by a given derived class.
+- This is a very common use of inheritance because the need for multiple different interfaces to an implementation is common and such interfaces are often not easily or naturally organized into a single-rooted hierarchy.
+- Example: `istream` provides the interface to input operations; `ostream` provides the interface to output operations. `iostream` provides the union of the `istream` and `ostream` interfaces and the synchronization needed to allow both on a single stream.
+```cpp
+class iostream : public istream, public ostream {   // very simplified
+    // ...
+};
+```
+## C.136: Use multiple inheritance to represent the union of implementation attributes
+- Some forms of mixins have state and often operations on that state. If the operations are `virtual` the use of inheritance is necessary, if not using inheritance can avoid boilerplate and forwarding.
+- Example: `istream` provides the interface to input operations (and some data); `ostream` provides the interface to output operations (and some data). `iostream` provides the union of the `istream` and `ostream` interfaces and the synchronization needed to allow both on a single stream.
+- This a relatively rare use because implementation can often be organized into a single-rooted hierarchy.
+- Sometimes, an "implementation attribute" is more like a "mixin" that determine the behavior of an implementation and inject members to enable the implementation of the policies it requires. For example, see `std::enable_shared_from_this` or various bases from `boost.intrusive` (e.g. `list_base_hook` or `intrusive_ref_counter`).
+
+
+

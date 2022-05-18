@@ -25,8 +25,6 @@
 
 # TO READ
 - P: Philosophy
-- 
-- C: Classes and class hierarchies
 - Enum: Enumerations
 - Per: Performance
 - CP: Concurrency and parallelism
