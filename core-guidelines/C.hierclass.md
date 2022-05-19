@@ -350,5 +350,124 @@ class iostream : public istream, public ostream {   // very simplified
 - This a relatively rare use because implementation can often be organized into a single-rooted hierarchy.
 - Sometimes, an "implementation attribute" is more like a "mixin" that determine the behavior of an implementation and inject members to enable the implementation of the policies it requires. For example, see `std::enable_shared_from_this` or various bases from `boost.intrusive` (e.g. `list_base_hook` or `intrusive_ref_counter`).
 
+## C.137: Use virtual bases to avoid overly general base classes
+- Allow separation of shared data and interface. To avoid all shared data to being put into an ultimate base class.
+- For example:
+  - Factoring out `Utility` makes sense if many derived classes share significant "implementation details."
+  - `Interface` is the root of an interface hierarchy and `Utility` is the root of an implementation hierarchy.
+  - Often, linearization of a hierarchy is a better solution.
+```cpp
+struct Interface {
+    virtual void f();
+    virtual int g();
+    // ... no data here ...
+};
 
+class Utility {  // with data
+    void utility1();
+    virtual void utility2();    // customization point
+public:
+    int x;
+    int y;
+};
 
+class Derive1 : public Interface, virtual protected Utility {
+    // override Interface functions
+    // Maybe override Utility virtual functions
+    // ...
+};
+
+class Derive2 : public Interface, virtual protected Utility {
+    // override Interface functions
+    // Maybe override Utility virtual functions
+    // ...
+};
+```
+
+## C.138: Create an overload set for a derived class and its bases with `using`
+- Without a using declaration, member functions in the derived class hide the entire inherited overload sets.
+- This issue **affects both virtual and non-virtual member functions**
+```cpp
+// Example bad
+#include <iostream>
+class B {
+  public:
+    virtual int f(int i) {
+        std::cout << "f(int): ";
+        return i;
+    }
+    virtual double f(double d) {
+        std::cout << "f(double): ";
+        return d;
+    }
+    virtual ~B() = default;
+};
+class D : public B {
+  public:
+    int f(int i) override {
+        std::cout << "f(int): ";
+        return i + 1;
+    }
+};
+int main() {
+    D d;
+    std::cout << d.f(2) << '\n';   // prints "f(int): 3"
+    std::cout << d.f(2.3) << '\n'; // prints "f(int): 3" // shadow base
+}
+```
+```cpp
+class D : public B {
+  public:
+    int f(int i) override {
+        std::cout << "f(int): ";
+        return i + 1;
+    }
+    using B::f; // exposes f(double) through using
+};
+```
+- For variadic bases, C++17 introduced a variadic form of the using-declaration:
+```cpp
+template <class... Ts> struct Overloader : Ts... {
+    using Ts::operator()...; // exposes operator() from every base
+};
+```
+
+## C.139: Use `final` on classes sparingly
+- Capping a hierarchy with `final` classes is rarely needed for logical reasons and can be damaging to the extensibility of a hierarchy.
+- Not every class is meant to be a base class. Most standard-library classes are examples of that (e.g., `std::vector` and `std::string` are not designed to be derived from). This rule is about using `final` on classes with virtual functions meant to be interfaces for a class hierarchy.
+```cpp
+class Widget { /* ... */
+};
+
+// nobody will ever want to improve My_widget (or so you thought)
+class My_widget final : public Widget { /* ... */
+};
+
+class My_improved_widget : public My_widget { /* ... */
+};                                            // error: can't do that
+```
+- Capping an **individual `virtual` function with `final` is error-prone as `final` can easily be overlooked when defining/overriding a set of functions.**
+  - Fortunately, the compiler catches such mistakes: You cannot re-declare/re-open a final member in a derived class.
+- Claims of performance improvements from `final` should be substantiated. **Too often, such claims are based on conjecture or experience with other languages.**
+- There are examples where `final` can be important for both logical and performance reasons. One example is a performance-critical AST hierarchy in a **compiler** or **language analysis tool**. New derived classes are not added every year and only by library implementers. However, misuses are (or at least have been) far more common.
+
+## C.140: Do not provide different default arguments for a virtual function and an overrider
+- That can cause confusion: **An overrider does not inherit default arguments.**
+```cpp
+class Base {
+public:
+    virtual int multiply(int value, int factor = 2) = 0;
+    virtual ~Base() = default;
+};
+
+class Derived : public Base {
+public:
+    int multiply(int value, int factor = 10) override;
+};
+
+Derived d;
+Base& b = d;
+
+b.multiply(10);  // these two calls will call the same function but
+d.multiply(10);  // with different arguments and so different results
+```
