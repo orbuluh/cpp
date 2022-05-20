@@ -232,6 +232,7 @@ template <typename T> class Bad {
 - It is likely that it will be used as a base class for other derived classes with polymorphic behavior.
 - If it is accidentally passed by value, **with the implicitly generated copy constructor and assignment, we risk slicing:** only the base portion of a derived object will be copied, and the polymorphic behavior will be corrupted.
 - If the class has no data, `=delete` the copy/move functions. Otherwise, make them `protected`.
+- Also check [C.145: Access polymorphic objects through pointers and references](C.hier.access.md#c145-access-polymorphic-objects-through-pointers-and-references)
 
 ```cpp
 class B { // BAD: polymorphic base class doesn't suppress copying

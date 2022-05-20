@@ -1,5 +1,22 @@
 # C.hierclass: Designing classes in a hierarchy
 
+- [C.hierclass: Designing classes in a hierarchy](#chierclass-designing-classes-in-a-hierarchy)
+  - [C.126: An abstract class typically doesn't need a user-written constructor](#c126-an-abstract-class-typically-doesnt-need-a-user-written-constructor)
+  - [C.127: A class with a virtual function should have a virtual or protected destructor](#c127-a-class-with-a-virtual-function-should-have-a-virtual-or-protected-destructor)
+  - [C.128: Virtual functions should specify exactly one of `virtual`, `override`, or `final`](#c128-virtual-functions-should-specify-exactly-one-of-virtual-override-or-final)
+  - [C.129: When designing a class hierarchy, distinguish between **implementation inheritance** and **interface inheritance**](#c129-when-designing-a-class-hierarchy-distinguish-between-implementation-inheritance-and-interface-inheritance)
+  - [C.130: For making deep copies of polymorphic classes prefer a virtual clone function instead of public copy construction/assignment](#c130-for-making-deep-copies-of-polymorphic-classes-prefer-a-virtual-clone-function-instead-of-public-copy-constructionassignment)
+  - [C.131: Avoid trivial getters and setters](#c131-avoid-trivial-getters-and-setters)
+  - [C.132: Don't make a function virtual without reason](#c132-dont-make-a-function-virtual-without-reason)
+  - [C.133: Avoid protected data](#c133-avoid-protected-data)
+  - [C.134: Ensure all non-const data members have the same access level](#c134-ensure-all-non-const-data-members-have-the-same-access-level)
+  - [C.135: Use multiple inheritance to represent multiple distinct interfaces](#c135-use-multiple-inheritance-to-represent-multiple-distinct-interfaces)
+  - [C.136: Use multiple inheritance to represent the union of implementation attributes](#c136-use-multiple-inheritance-to-represent-the-union-of-implementation-attributes)
+  - [C.137: Use virtual bases to avoid overly general base classes](#c137-use-virtual-bases-to-avoid-overly-general-base-classes)
+  - [C.138: Create an overload set for a derived class and its bases with `using`](#c138-create-an-overload-set-for-a-derived-class-and-its-bases-with-using)
+  - [C.139: Use `final` on classes sparingly](#c139-use-final-on-classes-sparingly)
+  - [C.140: Do not provide different default arguments for a virtual function and an overrider](#c140-do-not-provide-different-default-arguments-for-a-virtual-function-and-an-overrider)
+
 ## C.126: An abstract class typically doesn't need a user-written constructor
 - An abstract class typically does not have any data for a constructor to initialize.
 ```cpp

@@ -3,7 +3,7 @@
 
 # On going
 - [C:          Classes and class hierarchies](C.md)
-- [C.hierclss: Designing classes in a hierarchy](C.hierclass.md)
+- [C.hier-access: Accessing objects in a hierarchy](C.hier.access.md)
 - [C.over:     Overloading and overloaded operators](C.over.md)
 - [E:          Error handling](E.md)
 - [ES:         Expressions and statements](ES.md)
@@ -11,6 +11,7 @@
 - [I:          Interfaces](I.md)
 - [NL:         Naming and layout rules](NL.md)
 - [R:          Resource management](R.md)
+- [Pro:        Profiles](Pro.md)
 
 # Completed
 - [C.concrete: Concrete types](C.concrete.md)
@@ -22,6 +23,7 @@
 - [C.con:      Containers and other resource handles](C.con.md)
 - [C.lambdas:  Function objects and lambdas](C.lambdas.md)
 - [C.hier:     Class hierarchies (OOP)](C.hier.md)
+- [C.hierclss: Designing classes in a hierarchy](C.hierclass.md)
 
 # TO READ
 - P: Philosophy
@@ -37,7 +39,6 @@
 - A: Architectural ideas
 - NR: Non-Rules and myths
 - RF: References
-- Pro: Profiles
 - GSL: Guidelines support library
 - FAQ: Answers to frequently asked questions
 - Appendix A: Libraries
