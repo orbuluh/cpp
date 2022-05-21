@@ -35,3 +35,14 @@ void f()
     auto p5 = std::make_shared<X>();   // shared ownership, preferable to the explicit use "new"
 }
 ```
+
+
+## R.22: Use `make_shared()` to make `shared_ptr`s
+- `make_shared` gives a more concise statement of the construction. It also gives an opportunity to** eliminate a separate allocation for the reference counts**, by placing the shared_ptr's use counts next to its object.
+```cpp
+shared_ptr<X> p1{new X{2}}; // bad
+auto p = make_shared<X>(2); // good
+```
+
+## R.23: Use `make_unique()` to make `unique_ptr`s
+- `make_unique` gives a more concise statement of the construction. It also ensures exception safety in complex expressions.

@@ -1,5 +1,15 @@
 # C.hier-access: Accessing objects in a hierarchy
 
+- [C.hier-access: Accessing objects in a hierarchy](#chier-access-accessing-objects-in-a-hierarchy)
+  - [C.145: Access polymorphic objects through pointers and references](#c145-access-polymorphic-objects-through-pointers-and-references)
+  - [C.146: Use `dynamic_cast` where class hierarchy navigation is unavoidable](#c146-use-dynamic_cast-where-class-hierarchy-navigation-is-unavoidable)
+  - [C.147: Use `dynamic_cast` to a **reference** type when failure to find the required class is considered an **error**](#c147-use-dynamic_cast-to-a-reference-type-when-failure-to-find-the-required-class-is-considered-an-error)
+  - [C.148: Use `dynamic_cast` to a **pointer** type when failure to find the required class is considered a **valid alternative**](#c148-use-dynamic_cast-to-a-pointer-type-when-failure-to-find-the-required-class-is-considered-a-valid-alternative)
+  - [C.149: Use `unique_ptr` or `shared_ptr` to avoid forgetting to delete objects created using new](#c149-use-unique_ptr-or-shared_ptr-to-avoid-forgetting-to-delete-objects-created-using-new)
+  - [C.150: Use `make_unique()` to construct objects owned by `unique_ptr`s](#c150-use-make_unique-to-construct-objects-owned-by-unique_ptrs)
+  - [C.152: Never assign a pointer to an array of derived class objects to a pointer to its base](#c152-never-assign-a-pointer-to-an-array-of-derived-class-objects-to-a-pointer-to-its-base)
+  - [C.153: Prefer virtual function to casting](#c153-prefer-virtual-function-to-casting)
+
 ## C.145: Access polymorphic objects through pointers and references
 - If you have a class with a virtual function, you don't (in general) know which class provided the function to be used.
 - Consider [C.67: A polymorphic class should suppress public copy/move](C.copy.md#c67-a-polymorphic-class-should-suppress-public-copymove)
@@ -164,3 +174,31 @@ void add(Shape* const item) {
 ```
 - A failure to find the required class will cause `dynamic_cast` to return a null value, and de-referencing a null-valued pointer will lead to undefined behavior. Therefore the result of **the `dynamic_cast` should always be treated as if it might contain a null value, and tested.**
 
+## C.149: Use `unique_ptr` or `shared_ptr` to avoid forgetting to delete objects created using new
+- [R.23](R.md#r23-use-makeunique-to-make-uniqueptrs)
+
+## C.150: Use `make_unique()` to construct objects owned by `unique_ptr`s
+- [R.23](R.md#r22-use-makeshared-to-make-sharedptrs)
+
+## C.152: Never assign a pointer to an array of derived class objects to a pointer to its base
+- **Subscripting the resulting base pointer will lead to invalid object access and probably to memory corruption.**
+```cpp
+struct B {
+    int x;
+};
+struct D : B {
+    int y;
+};
+
+void use(B*);
+
+D arrDs[] = {{1, 2}, {3, 4}, {5, 6}};
+B* p = arrDs;   // bad: a decays to &arrDs[0] which is converted to a B*
+p[1].x = 7; // overwrite arrDs[0].y
+
+use(arrDs); // bad: arrDs decays to &arrDs[0] which is converted to a B*
+```
+
+## C.153: Prefer virtual function to casting
+- A virtual function call is safe, whereas casting is error-prone.
+- A virtual function call **reaches the most derived function**, whereas a c**ast might reach an intermediate class and therefore give a wrong result** (especially as a hierarchy is modified during maintenance).

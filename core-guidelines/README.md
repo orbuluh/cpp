@@ -3,7 +3,6 @@
 
 # On going
 - [C:          Classes and class hierarchies](C.md)
-- [C.hier-access: Accessing objects in a hierarchy](C.hier.access.md)
 - [C.over:     Overloading and overloaded operators](C.over.md)
 - [E:          Error handling](E.md)
 - [ES:         Expressions and statements](ES.md)
@@ -24,6 +23,7 @@
 - [C.lambdas:  Function objects and lambdas](C.lambdas.md)
 - [C.hier:     Class hierarchies (OOP)](C.hier.md)
 - [C.hierclss: Designing classes in a hierarchy](C.hierclass.md)
+- [C.hier-access: Accessing objects in a hierarchy](C.hier.access.md)
 
 # TO READ
 - P: Philosophy
