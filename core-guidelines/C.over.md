@@ -1,6 +1,19 @@
 # C.over: Overloading and overloaded operator
 - You can overload ordinary functions, function templates, and operators. You cannot overload function objects.
 
+- [C.over: Overloading and overloaded operator](#cover-overloading-and-overloaded-operator)
+  - [C.160: Define operators primarily to mimic conventional usage](#c160-define-operators-primarily-to-mimic-conventional-usage)
+  - [C.161: Use non-member functions for symmetric operators](#c161-use-non-member-functions-for-symmetric-operators)
+  - [C.162: Overload operations that are roughly equivalent](#c162-overload-operations-that-are-roughly-equivalent)
+  - [C.163: Overload only for operations that are roughly equivalent](#c163-overload-only-for-operations-that-are-roughly-equivalent)
+  - [C.164: Avoid implicit conversion operators](#c164-avoid-implicit-conversion-operators)
+  - [C.165: Use `using` for customization points](#c165-use-using-for-customization-points)
+  - [C.166: Overload unary `&` only as part of a system of smart pointers and references](#c166-overload-unary--only-as-part-of-a-system-of-smart-pointers-and-references)
+  - [C.167: Use an operator for an operation with its conventional meaning](#c167-use-an-operator-for-an-operation-with-its-conventional-meaning)
+  - [C.168: Define overloaded operators in the namespace of their operands](#c168-define-overloaded-operators-in-the-namespace-of-their-operands)
+  - [C.170: If you feel like overloading a lambda, use a generic lambda](#c170-if-you-feel-like-overloading-a-lambda-use-a-generic-lambda)
+
+
 ## C.160: Define operators primarily to mimic conventional usage
 - Minimize surprises.
 - **Non-member operators should be either friends or defined in the same namespace as their operands.** - [C.168](#c168-define-overloaded-operators-in-the-namespace-of-their-operands)
@@ -203,4 +216,18 @@ namespace M {
     S::operator!(S a) { return false; }
     S not_s = !s;
 }
+```
+
+## C.170: If you feel like overloading a lambda, use a generic lambda
+- You cannot overload by defining two different lambdas with the same name.
+
+```cpp
+void f(int);
+void f(double);
+auto f = [](char);   // error: cannot overload variable and function
+
+auto g = [](int) { /* ... */ };
+auto g = [](double) { /* ... */ };   // error: cannot overload variables
+
+auto h = [](auto) { /* ... */ };   // OK
 ```

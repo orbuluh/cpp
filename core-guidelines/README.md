@@ -2,8 +2,7 @@
 - A fork with my simplified reading notes.
 
 # On going
-- [C:          Classes and class hierarchies](C.md)
-- [C.over:     Overloading and overloaded operators](C.over.md)
+- [Enum:       Enumerations](Enum.md)
 - [E:          Error handling](E.md)
 - [ES:         Expressions and statements](ES.md)
 - [F:          Functions](F.md)
@@ -13,21 +12,23 @@
 - [Pro:        Profiles](Pro.md)
 
 # Completed
-- [C.concrete: Concrete types](C.concrete.md)
-- [C.defop:    Default Operations](C.defop.md)
-- [C.dtor:     Destructors](C.dtor.md)
-- [C.ctor:     Constructors, assignments, and destructors](C.ctor.md)
-- [C.copy:     Copy and move](C.copy.md)
-- [C.other:    Other default operation rules](C.other.md)
-- [C.con:      Containers and other resource handles](C.con.md)
-- [C.lambdas:  Function objects and lambdas](C.lambdas.md)
-- [C.hier:     Class hierarchies (OOP)](C.hier.md)
-- [C.hierclss: Designing classes in a hierarchy](C.hierclass.md)
-- [C.hier-access: Accessing objects in a hierarchy](C.hier.access.md)
+- [C:          Classes and class hierarchies](C.md)
+  - [C.concrete: Concrete types](C.concrete.md)
+  - [C.defop:    Default Operations](C.defop.md)
+  - [C.dtor:     Destructors](C.dtor.md)
+  - [C.ctor:     Constructors, assignments, and destructors](C.ctor.md)
+  - [C.copy:     Copy and move](C.copy.md)
+  - [C.other:    Other default operation rules](C.other.md)
+  - [C.con:      Containers and other resource handles](C.con.md)
+  - [C.lambdas:  Function objects and lambdas](C.lambdas.md)
+  - [C.hier:     Class hierarchies (OOP)](C.hier.md)
+  - [C.hierclss: Designing classes in a hierarchy](C.hierclass.md)
+  - [C.hier-access: Accessing objects in a hierarchy](C.hier.access.md)
+  - [C.over:     Overloading and overloaded operators](C.over.md)
+  - [C.union:    Unions](C.union.md)
 
 # TO READ
 - P: Philosophy
-- Enum: Enumerations
 - Per: Performance
 - CP: Concurrency and parallelism
 - Con: Constants and immutability
