@@ -2,7 +2,6 @@
 - A fork with my simplified reading notes.
 
 # On going
-- [Enum:       Enumerations](Enum.md)
 - [E:          Error handling](E.md)
 - [ES:         Expressions and statements](ES.md)
 - [F:          Functions](F.md)
@@ -26,6 +25,7 @@
   - [C.hier-access: Accessing objects in a hierarchy](C.hier.access.md)
   - [C.over:     Overloading and overloaded operators](C.over.md)
   - [C.union:    Unions](C.union.md)
+- [Enum:       Enumerations](Enum.md)
 
 # TO READ
 - P: Philosophy
