@@ -3,7 +3,17 @@
   - Precisely stating what is expected of a supplier of a service and a user of that service is essential.
   - Having good (easy-to-understand, encouraging efficient use, not error-prone, supporting testing, etc.) **interfaces is probably the most important single aspect of code organization.**
 
+## I.2: Avoid non-const global variables
+- Non-const global variables **hide dependencies and make the dependencies subject to unpredictable changes.**.
 
+- The rule is "avoid", not "don't use." Of course there will be (rare) exceptions, such as cin, cout, and cerr.
+- Warning: **The initialization of global objects is not totally ordered.** If you use a global object initialize it with a constant.
+- Note that **it is possible to get undefined initialization order even for const objects.**
+- he rule against global variables applies to namespace scope variables as well.
+- Alternative: If you use global (more generally namespace scope) data to avoid copying, consider passing the data as an object by reference to const.
+- Another solution is to define the data as the state of some object and the operations as member functions.
+- Warning: Beware of data races: If one thread can access non-local data (or data passed by reference) while another thread executes the callee, we can have a data race. Every pointer or reference to mutable data is a potential data race.
+  - You cannot have a race condition on immutable data.
 
 ## I.3: Avoid singletons
 - Singletons are basically complicated global objects in disguise.
