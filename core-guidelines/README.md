@@ -2,6 +2,8 @@
 - A fork with my simplified reading notes.
 
 # On going
+- [R.alloc:    Allocation and deallocation](R.alloc.md)
+- [R.smart:    Smart pointers](R.smart.md)
 - [E:          Error handling](E.md)
 - [ES:         Expressions and statements](ES.md)
 - [F:          Functions](F.md)

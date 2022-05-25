@@ -100,7 +100,8 @@ public:
 - [I.2](I.md#i2-avoid-non-const-global-variables)
 
 
-
+- [R.alloc](R.alloc.md)
+- [R.smart](R.smart.md)
 
 
 
