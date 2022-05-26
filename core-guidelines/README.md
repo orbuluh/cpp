@@ -2,14 +2,13 @@
 - A fork with my simplified reading notes.
 
 # On going
-- [R.alloc:    Allocation and deallocation](R.alloc.md)
+- [R:          Resource management](R.md)
 - [R.smart:    Smart pointers](R.smart.md)
 - [E:          Error handling](E.md)
 - [ES:         Expressions and statements](ES.md)
 - [F:          Functions](F.md)
 - [I:          Interfaces](I.md)
 - [NL:         Naming and layout rules](NL.md)
-- [R:          Resource management](R.md)
 - [Pro:        Profiles](Pro.md)
 
 # Completed
@@ -28,6 +27,7 @@
   - [C.over:     Overloading and overloaded operators](C.over.md)
   - [C.union:    Unions](C.union.md)
 - [Enum:       Enumerations](Enum.md)
+  - [R.alloc:    Allocation and deallocation](R.alloc.md)
 
 # TO READ
 - P: Philosophy
