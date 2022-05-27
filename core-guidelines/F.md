@@ -1,5 +1,8 @@
 # F: Functions
 
+# F.7: For general use, take `T*` or `T&` arguments rather than smart pointers
+- NOT YET READ
+
 ## F.50: Use a lambda when a function won't do (to capture local variables, or to write a local function)
 - Functions can't **capture local variables** or be **defined at local scope**; if you need those things, prefer a lambda where possible, and a handwritten function object where not.
 - On the other hand, lambdas and function objects don't overload; **if you need to overload, prefer a function** (the workarounds to make lambdas overload are ornate).
