@@ -1,6 +1,6 @@
 # F: Functions
 
-# F.7: For general use, take `T*` or `T&` arguments rather than smart pointers
+## F.7: For general use, take `T*` or `T&` arguments rather than smart pointers
 - NOT YET READ
 
 ## F.50: Use a lambda when a function won't do (to capture local variables, or to write a local function)
