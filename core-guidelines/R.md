@@ -99,6 +99,6 @@ public:
 ## R.6: Avoid non-const global variables
 - [I.2](I.md#i2-avoid-non-const-global-variables)
 
-## Subsections
+# Subsections
 - [R.alloc](R.alloc.md)
 - [R.smart](R.smart.md)

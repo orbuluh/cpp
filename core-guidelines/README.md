@@ -5,10 +5,12 @@
 
 - [E:          Error handling](E.md)
 - [ES:         Expressions and statements](ES.md)
+- [ES.dcl:     Declarations](ES.dcl.md)
 - [F:          Functions](F.md)
 - [I:          Interfaces](I.md)
 - [NL:         Naming and layout rules](NL.md)
 - [Pro:        Profiles](Pro.md)
+- [SL:         The Standard Library](SL.md)
 
 # Completed
 - [C:          Classes and class hierarchies](C.md)
@@ -38,7 +40,7 @@
 - T: Templates and generic programming
 - CPL: C-style programming
 - SF: Source files
-- SL: The Standard Library
+
 
 - A: Architectural ideas
 - NR: Non-Rules and myths
