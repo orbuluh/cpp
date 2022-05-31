@@ -104,13 +104,67 @@ struct foo x = foo();   // requires disambiguation
 - Exception: Antique header files might declare non-types and types with the same name in the same scope.
 
 
+## ES.9: Avoid ALL_CAPS names
+- Such names are commonly used for macros. Thus, ALL_CAPS name are vulnerable to unintended macro substitution.
 
+```cpp
+// somewhere in some header:
+#define NE !=
 
+// somewhere else in some other header:
+enum Coord { N, NE, NW, S, SE, SW, E, W };
 
+// somewhere third in some poor programmer's .cpp:
+switch (direction) {
+case N:
+    // ...
+case NE:
+    // ...
+    // ...
+}
+```
+- Note - Do not use ALL_CAPS for constants just because constants used to be macros.
 
+## ES.10: Declare one name (only) per declaration
+- One declaration per line increases readability and avoids mistakes related to the C/C++ grammar. It also leaves room for a more descriptive end-of-line comment.
+```cppp
+char *p, c, a[7], *pp[7], **aa[10];   // yuck!
+```
+- In a long list of declarators it is easy to overlook an uninitialized variable.
+```cpp
+int a = 10, b = 11, c = 12, d, e = 14, f = 15;
+```
+- Exception: A function declaration can contain several function argument declarations.
+- Exception: A structured binding (C++17) is specifically designed to introduce several variables:
+```cpp
+auto [iter, inserted] = m.insert_or_assign(k, val);
+if (inserted) { /* new entry was inserted */ }
+```
+```cpp
+template<class InputIterator, class Predicate>
+bool any_of(InputIterator first, InputIterator last, Predicate pred);
+```
+- or better using concepts:
+```cpp
+bool any_of(input_iterator auto first, input_iterator auto last, predicate auto pred);
+```
+```cpp
+double scalbn(double x, int n);   // OK: x * pow(FLT_RADIX, n); FLT_RADIX is usually 2
+```
+- or:
+```cpp
+double scalbn(    // better: x * pow(FLT_RADIX, n); FLT_RADIX is usually 2
+    double x,     // base value
+    int n         // exponent
+);
+```
+or:
+```cpp
+// better: base * pow(FLT_RADIX, exponent); FLT_RADIX is usually 2
+double scalbn(double base, int exponent);
+```
 
 ## ES.11: Use `auto` to avoid redundant repetition of type names
-
 - Simple repetition is tedious and error-prone.
 - When you use `auto`, the name of the declared entity is in a fixed position in the declaration, increasing readability.
 - In a function template declaration the return type can be a member type.
@@ -142,6 +196,201 @@ std::set<int> values;
 // ...
 auto [ position, newly_inserted ] = values.insert(5);   // break out the members of the std::pair
 ```
+
+## ES.12: Do not reuse names in nested scopes
+- It is easy to get confused about which variable is used. Can cause maintenance problems.
+```cpp
+int d = 0;
+// ...
+if (cond) {
+    // ...
+    d = 9;
+    // ...
+} else {
+    // ...
+    int d = 7;
+    // ...
+    d = value_to_be_returned;
+    // ...
+}
+
+return d;
+```
+- If this is a large if-statement, it is easy to overlook that a new d has been introduced in the inner scope.
+- This is a known source of bugs. Sometimes such reuse of a name in an inner scope is called "shadowing".
+- Shadowing is primarily a problem when functions are too large and too complex.
+- Shadowing of function arguments in the outermost block is disallowed by the language:
+```cpp
+void f(int x) {
+    int x = 4; // error: reuse of function argument name
+
+    if (x) {
+        int x = 7; // allowed, but bad
+        // ...
+    }
+}
+```
+- Reuse of a member name as a local variable can also be a problem:
+```cpp
+struct S {
+    int m;
+    void f(int x);
+};
+
+void S::f(int x) {
+    m = 7; // assign to member
+    if (x) {
+        int m = 9;
+        // ...
+        m = 99; // assign to local variable
+        // ...
+    }
+}
+```
+- Exception: We often reuse function names from a base class in a derived class:
+```cpp
+struct B {
+    void f(int);
+};
+
+struct D : B {
+    void f(double);
+    using B::f;
+};
+```
+- **This is error-prone.** For example, had we forgotten the using declaration, a call d.f(1) would not have found the int version of f.
+
+## ES.20: Always initialize an object
+- Avoid used-before-set errors and their associated undefined behavior. Avoid problems with comprehension of complex initialization. Simplify refactoring.
+- The **always initialize rule** is deliberately stronger than the **an object must be set before used language rule**. The latter, more relaxed rule, catches the technical bugs, but:
+  - It leads to less readable code
+  - It encourages people to declare names in greater than necessary scopes
+  - It leads to harder to read code
+  - It leads to logic bugs by encouraging complex code
+  - It hampers refactoring
+- The always initialize rule is a style rule aimed to improve maintainability as well as a rule protecting against used-before-set errors.
+- Here is an example that is often considered to demonstrate the need for a more relaxed rule for initialization
+```cpp
+widget i; // "widget" a type that's expensive to initialize, possibly a large POD
+widget j;
+
+if (cond) { // bad: i and j are initialized "late"
+    i = f1();
+    j = f2();
+} else {
+    i = f3();
+    j = f4();
+}
+```
+- This cannot trivially be rewritten to initialize i and j with initializers. Note that for types with a default constructor, attempting to postpone initialization simply leads to a default initialization followed by an assignment.
+- A popular reason for such examples is "efficiency", but a compiler that can detect whether we made a used-before-set error can also eliminate any redundant double initialization.
+- Assuming that there is a logical connection between i and j, that connection should probably be expressed in code:
+```cpp
+pair<widget, widget> make_related_widgets(bool x) {
+    return (x) ? {f1(), f2()} : {f3(), f4()};
+}
+auto [i, j] = make_related_widgets(cond); // C++17
+```
+- If the `make_related_widgets` function is otherwise redundant, we can eliminate it by using a lambda [ES.28](#es28-use-lambdas-for-complex-initialization-especially-of-const-variables)
+```cpp
+auto [i, j] = [x] { return (x) ? pair{f1(), f2()} : pair{f3(), f4()} }();    // C++17
+```
+
+- Using a value representing "uninitialized" is a symptom of a problem and not a solution:
+
+```cpp
+widget i = uninit; // bad
+widget j = uninit;
+
+// ...
+use(i); // possibly used before set
+// ...
+
+if (cond) { // bad: i and j are initialized "late"
+    i = f1();
+    j = f2();
+} else {
+    i = f3();
+    j = f4();
+}
+```
+- Now the compiler cannot even simply detect a used-before-set. Further, we've introduced complexity in the state space for widget: which operations are valid on an uninit widget and which are not?
+- Note: Complex initialization has been popular with clever programmers for decades. It has also been a major source of errors and complexity. Many such errors are introduced during maintenance years after the initial implementation. Example:
+```cpp
+//This rule covers member variables.
+class X {
+  public:
+    X(int i, int ci) : m2{i}, cm2{ci} {}
+    // ...
+
+  private:
+    int m1 = 7;
+    int m2;
+    int m3;
+
+    const int cm1 = 7;
+    const int cm2;
+    const int cm3;
+};
+```
+- The compiler will flag the uninitialized cm3 because it is a const, but it will not catch the lack of initialization of m3.
+- Usually, a rare spurious member initialization is worth the absence of errors from lack of initialization and often an optimizer can eliminate a redundant initialization (e.g., an initialization that occurs immediately before an assignment).
+- Exception: If you are declaring an object that is just about to be initialized from input, initializing it would cause a double initialization. However, beware that this might leave uninitialized data beyond the input -- and that has been a fertile source of errors and security breaches:
+```cpp
+constexpr int max = 8 * 1024;
+int buf[max];         // OK, but suspicious: uninitialized
+f.read(buf, max);
+```
+- The cost of initializing that array could be significant in some situations. However, such examples do tend to leave uninitialized variables accessible, so they should be treated with suspicion.
+```cpp
+constexpr int max = 8 * 1024;
+int buf[max] = {};   // zero all elements; better in some situations
+f.read(buf, max);
+```
+- Because of the restrictive initialization rules for arrays and std::array, they offer the most compelling examples of the need for this exception.
+- When feasible use a library function that is known not to overflow. For example:
+```cpp
+string s;   // s is default initialized to ""
+cin >> s;   // s expands to hold the string
+```
+- Don't consider simple variables that are targets for input operations exceptions to this rule:
+```cpp
+int i;   // bad
+// ...
+cin >> i;
+```
+- In the not uncommon case where the input target and the input operation get separated (as they should not) the possibility of used-before-set opens up.
+```cpp
+int i2 = 0;   // better, assuming that zero is an acceptable value for i2
+// ...
+cin >> i2;
+```
+- A good optimizer should know about input operations and eliminate the redundant operation.
+- Note: Sometimes, a lambda can be used as an initializer to avoid an uninitialized variable:
+```cpp
+error_code ec;
+Value v = [&] {
+    auto p = get_value();   // get_value() returns a pair<error_code, Value>
+    ec = p.first;
+    return p.second;
+}();
+```
+- or maybe:
+```cpp
+Value v = [] {
+    auto p = get_value();   // get_value() returns a pair<error_code, Value>
+    if (p.first) throw Bad_value{p.first};
+    return p.second;
+}();
+```
+
+
+
+
+
+
+
+
 
 ## ES.28: Use lambdas for complex initialization, especially of const variables
 - It nicely encapsulates local initialization, including cleaning up scratch variables needed only for the initialization, without needing to create a needless non-local yet non-reusable function.
