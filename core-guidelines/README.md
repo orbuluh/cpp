@@ -5,7 +5,7 @@
 
 - [E:          Error handling](E.md)
 - [ES:         Expressions and statements](ES.md)
-- [ES.dcl:     Declarations](ES.dcl.md)
+  - [ES.expr: Expressions](ES.expr.md)
 - [F:          Functions](F.md)
 - [I:          Interfaces](I.md)
 - [NL:         Naming and layout rules](NL.md)
@@ -31,6 +31,8 @@
 - [R:          Resource management](R.md)
   - [R.alloc:    Allocation and deallocation](R.alloc.md)
   - [R.smart:    Smart pointers](R.smart.md)
+- [ES - not yet finished]
+  - [ES.dcl:     Declarations](ES.dcl.md)
 
 # TO READ
 - P: Philosophy

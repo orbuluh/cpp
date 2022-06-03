@@ -1,6 +1,30 @@
 # ES.dcl: Declarations
 - A declaration is a statement. A declaration introduces a name into a scope and might cause the construction of a named object.
 
+- [ES.dcl: Declarations](#esdcl-declarations)
+  - [ES.5: Keep scopes small](#es5-keep-scopes-small)
+  - [ES.6: Declare names in for-statement initializers and conditions to limit scope](#es6-declare-names-in-for-statement-initializers-and-conditions-to-limit-scope)
+  - [ES.7: Keep common and local names short, and keep uncommon and non-local names longer](#es7-keep-common-and-local-names-short-and-keep-uncommon-and-non-local-names-longer)
+  - [ES.8: Avoid similar-looking names](#es8-avoid-similar-looking-names)
+  - [ES.9: Avoid ALL_CAPS names](#es9-avoid-all_caps-names)
+  - [ES.10: Declare one name (only) per declaration](#es10-declare-one-name-only-per-declaration)
+  - [ES.11: Use `auto` to avoid redundant repetition of type names](#es11-use-auto-to-avoid-redundant-repetition-of-type-names)
+  - [ES.12: Do not reuse names in nested scopes](#es12-do-not-reuse-names-in-nested-scopes)
+  - [ES.20: Always initialize an object](#es20-always-initialize-an-object)
+  - [ES.21: Don't introduce a variable (or constant) before you need to use it](#es21-dont-introduce-a-variable-or-constant-before-you-need-to-use-it)
+  - [ES.22: Don't declare a variable until you have a value to initialize it with](#es22-dont-declare-a-variable-until-you-have-a-value-to-initialize-it-with)
+  - [ES.23: Prefer the {}-initializer syntax](#es23-prefer-the--initializer-syntax)
+  - [ES.24: Use a `unique_ptr<T>` to hold pointers](#es24-use-a-unique_ptrt-to-hold-pointers)
+  - [ES.25: Declare an object `const` or `constexpr` unless you want to modify its value later on](#es25-declare-an-object-const-or-constexpr-unless-you-want-to-modify-its-value-later-on)
+  - [ES.26: Don't use a variable for two unrelated purposes](#es26-dont-use-a-variable-for-two-unrelated-purposes)
+  - [ES.27: Use `std::array` or `stack_array` for arrays on the stack](#es27-use-stdarray-or-stack_array-for-arrays-on-the-stack)
+  - [ES.28: Use lambdas for complex initialization, especially of const variables](#es28-use-lambdas-for-complex-initialization-especially-of-const-variables)
+  - [ES.30: Don't use macros for program text manipulation](#es30-dont-use-macros-for-program-text-manipulation)
+  - [ES.31: Don't use macros for constants or "functions"](#es31-dont-use-macros-for-constants-or-functions)
+  - [ES.32: Use ALL_CAPS for all macro names](#es32-use-all_caps-for-all-macro-names)
+  - [ES.33: If you must use macros, give them unique names](#es33-if-you-must-use-macros-give-them-unique-names)
+  - [ES.34: Don't define a (C-style) variadic function](#es34-dont-define-a-c-style-variadic-function)
+
 ## ES.5: Keep scopes small
 - Readability. Minimize resource retention. Avoid accidental misuse of value.
 - Alternative formulation: Don't declare a name in an unnecessarily large scope.
@@ -574,3 +598,156 @@ const widget x = [&] {
     return val;
 }();
 ```
+
+## ES.30: Don't use macros for program text manipulation
+- Macros are a major source of bugs. Macros don't obey the usual scope and type rules.
+- Macros ensure that the human reader sees something different from what the compiler sees.
+- Macros complicate tool building.
+
+```cpp
+#define Case break; case   /* BAD */
+```
+- This innocuous-looking macro makes a single lower case c instead of a C into a bad flow-control bug.
+- This rule does not ban the use of macros for "configuration control" use in #ifdefs, etc.
+- In the future, modules are likely to eliminate the need for macros in configuration control.
+- This rule is meant to also **discourage use of # for stringification and ## for concatenation**. As usual for macros, there are uses that are "mostly harmless", but even these can **create problems for tools, such as auto completers, static analyzers, and debuggers.** 
+- Often the desire to use fancy macros is a sign of an overly complex design.
+- Also, # and ## encourages the definition and use of macros:
+
+```cpp
+#define CAT(a, b) a##b
+#define STRINGIFY(a) #a
+
+void f(int x, int y) {
+    string CAT(x, y) = "asdf"; // BAD: hard for tools to handle (and ugly)
+    string sx2 = STRINGIFY(x);
+    // ...
+}
+```
+- There are workarounds for low-level string manipulation using macros. For example:
+
+```cpp
+string s = "asdf" "lkjh"; // ordinary string literal concatenation
+
+enum E { a, b };
+
+template <int x>
+constexpr const char* stringify() {
+    switch (x) {
+    case a:
+        return "a";
+    case b:
+        return "b";
+    }
+}
+
+void f(int x, int y) {
+    string sx = stringify<x>();
+    // ...
+}
+```
+- This is not as convenient as a macro to define, but as easy to use, has zero overhead, and is typed and scoped.
+- In the future, static reflection is likely to eliminate the last needs for the preprocessor for program text manipulation.
+
+
+## ES.31: Don't use macros for constants or "functions"
+- Macros are a major source of bugs.
+  - Macros don't obey the usual scope and type rules.
+  - Macros don't obey the usual rules for argument passing.
+  - Macros ensure that the human reader sees something different from what the compiler sees.
+  - Macros complicate tool building.
+
+```cpp
+#define PI 3.14
+#define SQUARE(a, b) (a * b)
+```
+- Even if we hadn't left a well-known bug in SQUARE there are much better behaved alternatives; for example:
+```cpp
+constexpr double pi = 3.14;
+template<typename T> T square(T a, T b) { return a * b; }
+```
+
+## ES.32: Use ALL_CAPS for all macro names
+- Convention. Readability. Distinguishing macros.
+
+```cpp
+Example
+#define forever for (;;)   /* very BAD */
+#define FOREVER for (;;)   /* Still evil, but at least visible to humans */
+```
+
+## ES.33: If you must use macros, give them unique names
+- Macros do not obey scope rules.
+
+```cpp
+#define MYCHAR        /* BAD, will eventually clash with someone else's MYCHAR*/
+#define ZCORP_CHAR    /* Still evil, but less likely to clash */
+```
+- Note: Avoid macros if you can: ES.30, ES.31, and ES.32.
+- However, there are billions of lines of code littered with macros and a long tradition for using and overusing macros. If you are forced to use macros, use long names and supposedly unique prefixes (e.g., your organization's name) to lower the likelihood of a clash.
+
+## ES.34: Don't define a (C-style) variadic function
+- Not type safe. Requires messy cast-and-macro-laden code to get working right.
+
+```cpp
+#include <cstdarg>
+
+// "severity" followed by a zero-terminated list of char*s; write the C-style
+// strings to cerr
+void error(int severity...) {
+    va_list ap; // a magic type for holding arguments
+    va_start(
+        ap,
+        severity); // arg startup: "severity" is the first argument of error()
+
+    for (;;) {
+        // treat the next var as a char*; no checking: a cast in disguise
+        char* p = va_arg(ap, char*);
+        if (!p)
+            break;
+        cerr << p << ' ';
+    }
+
+    va_end(ap); // arg cleanup (don't forget this)
+
+    cerr << '\n';
+    if (severity)
+        exit(severity);
+}
+
+void use() {
+    error(7, "this", "is", "an", "error", nullptr);
+    error(7);                              // crash
+    error(7, "this", "is", "an", "error"); // crash
+    const char* is = "is";
+    string an = "an";
+    error(7, "this", "is", an, "error"); // crash
+}
+```
+- Alternative: Overloading. Templates. Variadic templates.
+
+```cpp
+#include <iostream>
+
+void error(int severity) {
+    std::cerr << '\n';
+    std::exit(severity);
+}
+
+template <typename T, typename... Ts>
+constexpr void error(int severity, T head, Ts... tail) {
+    std::cerr << head;
+    error(severity, tail...);
+}
+
+void use() {
+    error(7);                                     // No crash!
+    error(5, "this", "is", "not", "an", "error"); // No crash!
+
+    std::string an = "an";
+    error(7, "this", "is", "not", an, "error"); // No crash!
+
+    error(5, "oh", "no", nullptr); // Compile error! No need for nullptr.
+}
+```
+- Note: This is basically the way printf is implemented.
