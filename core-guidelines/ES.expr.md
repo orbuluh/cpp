@@ -387,3 +387,540 @@ int64_t i {some_int32};
 auto p = reinterpret_cast<Device_register>(0x800);  // inherently dangerous
 ```
 
+## ES.50: Don't cast away const
+Reason
+It makes a lie out of const. If the variable is actually declared const, modifying it results in undefined behavior.
+
+Example, bad
+void f(const int& x)
+{
+    const_cast<int&>(x) = 42;   // BAD
+}
+
+static int i = 0;
+static const int j = 0;
+
+f(i); // silent side effect
+f(j); // undefined behavior
+Example
+Sometimes, you might be tempted to resort to const_cast to avoid code duplication, such as when two accessor functions that differ only in const-ness have similar implementations. For example:
+
+class Bar;
+
+class Foo {
+public:
+    // BAD, duplicates logic
+    Bar& get_bar()
+    {
+        /* complex logic around getting a non-const reference to my_bar */
+    }
+
+    const Bar& get_bar() const
+    {
+        /* same complex logic around getting a const reference to my_bar */
+    }
+private:
+    Bar my_bar;
+};
+Instead, prefer to share implementations. Normally, you can just have the non-const function call the const function. However, when there is complex logic this can lead to the following pattern that still resorts to a const_cast:
+
+class Foo {
+public:
+    // not great, non-const calls const version but resorts to const_cast
+    Bar& get_bar()
+    {
+        return const_cast<Bar&>(static_cast<const Foo&>(*this).get_bar());
+    }
+    const Bar& get_bar() const
+    {
+        /* the complex logic around getting a const reference to my_bar */
+    }
+private:
+    Bar my_bar;
+};
+Although this pattern is safe when applied correctly, because the caller must have had a non-const object to begin with, it's not ideal because the safety is hard to enforce automatically as a checker rule.
+
+Instead, prefer to put the common code in a common helper function -- and make it a template so that it deduces const. This doesn't use any const_cast at all:
+
+class Foo {
+public:                         // good
+          Bar& get_bar()       { return get_bar_impl(*this); }
+    const Bar& get_bar() const { return get_bar_impl(*this); }
+private:
+    Bar my_bar;
+
+    template<class T>           // good, deduces whether T is const or non-const
+    static auto& get_bar_impl(T& t)
+        { /* the complex logic around getting a possibly-const reference to my_bar */ }
+};
+Note: Don't do large non-dependent work inside a template, which leads to code bloat. For example, a further improvement would be if all or part of get_bar_impl can be non-dependent and factored out into a common non-template function, for a potentially big reduction in code size.
+
+Exception
+You might need to cast away const when calling const-incorrect functions. Prefer to wrap such functions in inline const-correct wrappers to encapsulate the cast in one place.
+
+Example
+Sometimes, "cast away const" is to allow the updating of some transient information of an otherwise immutable object. Examples are caching, memoization, and precomputation. Such examples are often handled as well or better using mutable or an indirection than with a const_cast.
+
+Consider keeping previously computed results around for a costly operation:
+
+int compute(int x); // compute a value for x; assume this to be costly
+
+class Cache {   // some type implementing a cache for an int->int operation
+public:
+    pair<bool, int> find(int x) const;   // is there a value for x?
+    void set(int x, int v);             // make y the value for x
+    // ...
+private:
+    // ...
+};
+
+class X {
+public:
+    int get_val(int x)
+    {
+        auto p = cache.find(x);
+        if (p.first) return p.second;
+        int val = compute(x);
+        cache.set(x, val); // insert value for x
+        return val;
+    }
+    // ...
+private:
+    Cache cache;
+};
+Here, get_val() is logically constant, so we would like to make it a const member. To do this we still need to mutate cache, so people sometimes resort to a const_cast:
+
+class X {   // Suspicious solution based on casting
+public:
+    int get_val(int x) const
+    {
+        auto p = cache.find(x);
+        if (p.first) return p.second;
+        int val = compute(x);
+        const_cast<Cache&>(cache).set(x, val);   // ugly
+        return val;
+    }
+    // ...
+private:
+    Cache cache;
+};
+Fortunately, there is a better solution: State that cache is mutable even for a const object:
+
+class X {   // better solution
+public:
+    int get_val(int x) const
+    {
+        auto p = cache.find(x);
+        if (p.first) return p.second;
+        int val = compute(x);
+        cache.set(x, val);
+        return val;
+    }
+    // ...
+private:
+    mutable Cache cache;
+};
+An alternative solution would be to store a pointer to the cache:
+
+class X {   // OK, but slightly messier solution
+public:
+    int get_val(int x) const
+    {
+        auto p = cache->find(x);
+        if (p.first) return p.second;
+        int val = compute(x);
+        cache->set(x, val);
+        return val;
+    }
+    // ...
+private:
+    unique_ptr<Cache> cache;
+};
+That solution is the most flexible, but requires explicit construction and destruction of *cache (most likely in the constructor and destructor of X).
+
+In any variant, we must guard against data races on the cache in multi-threaded code, possibly using a std::mutex.
+
+Enforcement
+Flag const_casts.
+This rule is part of the type-safety profile for the related Profile.
+ES.55: Avoid the need for range checking
+Reason
+Constructs that cannot overflow do not overflow (and usually run faster):
+
+Example
+for (auto& x : v)      // print all elements of v
+    cout << x << '\n';
+
+auto p = find(v, x);   // find x in v
+Enforcement
+Look for explicit range checks and heuristically suggest alternatives.
+
+ES.56: Write std::move() only when you need to explicitly move an object to another scope
+Reason
+We move, rather than copy, to avoid duplication and for improved performance.
+
+A move typically leaves behind an empty object (C.64), which can be surprising or even dangerous, so we try to avoid moving from lvalues (they might be accessed later).
+
+Notes
+Moving is done implicitly when the source is an rvalue (e.g., value in a return treatment or a function result), so don't pointlessly complicate code in those cases by writing move explicitly. Instead, write short functions that return values, and both the function's return and the caller's accepting of the return will be optimized naturally.
+
+In general, following the guidelines in this document (including not making variables' scopes needlessly large, writing short functions that return values, returning local variables) help eliminate most need for explicit std::move.
+
+Explicit move is needed to explicitly move an object to another scope, notably to pass it to a "sink" function and in the implementations of the move operations themselves (move constructor, move assignment operator) and swap operations.
+
+Example, bad
+void sink(X&& x);   // sink takes ownership of x
+
+void user()
+{
+    X x;
+    // error: cannot bind an lvalue to a rvalue reference
+    sink(x);
+    // OK: sink takes the contents of x, x must now be assumed to be empty
+    sink(std::move(x));
+
+    // ...
+
+    // probably a mistake
+    use(x);
+}
+Usually, a std::move() is used as an argument to a && parameter. And after you do that, assume the object has been moved from (see C.64) and don't read its state again until you first set it to a new value.
+
+void f()
+{
+    string s1 = "supercalifragilisticexpialidocious";
+
+    string s2 = s1;             // ok, takes a copy
+    assert(s1 == "supercalifragilisticexpialidocious");  // ok
+
+    // bad, if you want to keep using s1's value
+    string s3 = move(s1);
+
+    // bad, assert will likely fail, s1 likely changed
+    assert(s1 == "supercalifragilisticexpialidocious");
+}
+Example
+void sink(unique_ptr<widget> p);  // pass ownership of p to sink()
+
+void f()
+{
+    auto w = make_unique<widget>();
+    // ...
+    sink(std::move(w));               // ok, give to sink()
+    // ...
+    sink(w);    // Error: unique_ptr is carefully designed so that you cannot copy it
+}
+Notes
+std::move() is a cast to && in disguise; it doesn't itself move anything, but marks a named object as a candidate that can be moved from. The language already knows the common cases where objects can be moved from, especially when returning values from functions, so don't complicate code with redundant std::move()'s.
+
+Never write std::move() just because you've heard "it's more efficient." In general, don't believe claims of "efficiency" without data (???). In general, don't complicate your code without reason (??). Never write std::move() on a const object, it is silently transformed into a copy (see Item 23 in Meyers15)
+
+Example, bad
+vector<int> make_vector()
+{
+    vector<int> result;
+    // ... load result with data
+    return std::move(result);       // bad; just write "return result;"
+}
+Never write return move(local_variable);, because the language already knows the variable is a move candidate. Writing move in this code won't help, and can actually be detrimental because on some compilers it interferes with RVO (the return value optimization) by creating an additional reference alias to the local variable.
+
+Example, bad
+vector<int> v = std::move(make_vector());   // bad; the std::move is entirely redundant
+Never write move on a returned value such as x = move(f()); where f returns by value. The language already knows that a returned value is a temporary object that can be moved from.
+
+Example
+void mover(X&& x)
+{
+    call_something(std::move(x));         // ok
+    call_something(std::forward<X>(x));   // bad, don't std::forward an rvalue reference
+    call_something(x);                    // suspicious, why not std::move?
+}
+
+template<class T>
+void forwarder(T&& t)
+{
+    call_something(std::move(t));         // bad, don't std::move a forwarding reference
+    call_something(std::forward<T>(t));   // ok
+    call_something(t);                    // suspicious, why not std::forward?
+}
+Enforcement
+Flag use of std::move(x) where x is an rvalue or the language will already treat it as an rvalue, including return std::move(local_variable); and std::move(f()) on a function that returns by value.
+Flag functions taking an S&& parameter if there is no const S& overload to take care of lvalues.
+Flag a std::moves argument passed to a parameter, except when the parameter type is an X&& rvalue reference or the type is move-only and the parameter is passed by value.
+Flag when std::move is applied to a forwarding reference (T&& where T is a template parameter type). Use std::forward instead.
+Flag when std::move is applied to other than an rvalue reference to non-const. (More general case of the previous rule to cover the non-forwarding cases.)
+Flag when std::forward is applied to an rvalue reference (X&& where X is a non-template parameter type). Use std::move instead.
+Flag when std::forward is applied to other than a forwarding reference. (More general case of the previous rule to cover the non-moving cases.)
+Flag when an object is potentially moved from and the next operation is a const operation; there should first be an intervening non-const operation, ideally assignment, to first reset the object's value.
+ES.60: Avoid new and delete outside resource management functions
+Reason
+Direct resource management in application code is error-prone and tedious.
+
+Note
+This is also known as the rule of "No naked new!"
+
+Example, bad
+void f(int n)
+{
+    auto p = new X[n];   // n default constructed Xs
+    // ...
+    delete[] p;
+}
+There can be code in the ... part that causes the delete never to happen.
+
+See also: R: Resource management
+
+Enforcement
+Flag naked news and naked deletes.
+
+ES.61: Delete arrays using delete[] and non-arrays using delete
+Reason
+That's what the language requires and mistakes can lead to resource release errors and/or memory corruption.
+
+Example, bad
+void f(int n)
+{
+    auto p = new X[n];   // n default constructed Xs
+    // ...
+    delete p;   // error: just delete the object p, rather than delete the array p[]
+}
+Note
+This example not only violates the no naked new rule as in the previous example, it has many more problems.
+
+Enforcement
+If the new and the delete are in the same scope, mistakes can be flagged.
+If the new and the delete are in a constructor/destructor pair, mistakes can be flagged.
+ES.62: Don't compare pointers into different arrays
+Reason
+The result of doing so is undefined.
+
+Example, bad
+void f()
+{
+    int a1[7];
+    int a2[9];
+    if (&a1[5] < &a2[7]) {}       // bad: undefined
+    if (0 < &a1[5] - &a2[7]) {}   // bad: undefined
+}
+Note
+This example has many more problems.
+
+Enforcement
+???
+
+ES.63: Don't slice
+Reason
+Slicing -- that is, copying only part of an object using assignment or initialization -- most often leads to errors because the object was meant to be considered as a whole. In the rare cases where the slicing was deliberate the code can be surprising.
+
+Example
+class Shape { /* ... */ };
+class Circle : public Shape { /* ... */ Point c; int r; };
+
+Circle c {{0, 0}, 42};
+Shape s {c};    // copy construct only the Shape part of Circle
+s = c;          // or copy assign only the Shape part of Circle
+
+void assign(const Shape& src, Shape& dest)
+{
+    dest = src;
+}
+Circle c2 {{1, 1}, 43};
+assign(c, c2);   // oops, not the whole state is transferred
+assert(c == c2); // if we supply copying, we should also provide comparison,
+                 // but this will likely return false
+The result will be meaningless because the center and radius will not be copied from c into s. The first defense against this is to define the base class Shape not to allow this.
+
+Alternative
+If you mean to slice, define an explicit operation to do so. This saves readers from confusion. For example:
+
+class Smiley : public Circle {
+    public:
+    Circle copy_circle();
+    // ...
+};
+
+Smiley sm { /* ... */ };
+Circle c1 {sm};  // ideally prevented by the definition of Circle
+Circle c2 {sm.copy_circle()};
+Enforcement
+Warn against slicing.
+
+ES.64: Use the T{e}notation for construction
+Reason
+The T{e} construction syntax makes it explicit that construction is desired. The T{e} construction syntax doesn't allow narrowing. T{e} is the only safe and general expression for constructing a value of type T from an expression e. The casts notations T(e) and (T)e are neither safe nor general.
+
+Example
+For built-in types, the construction notation protects against narrowing and reinterpretation
+
+void use(char ch, int i, double d, char* p, long long lng)
+{
+    int x1 = int{ch};     // OK, but redundant
+    int x2 = int{d};      // error: double->int narrowing; use a cast if you need to
+    int x3 = int{p};      // error: pointer to->int; use a reinterpret_cast if you really need to
+    int x4 = int{lng};    // error: long long->int narrowing; use a cast if you need to
+
+    int y1 = int(ch);     // OK, but redundant
+    int y2 = int(d);      // bad: double->int narrowing; use a cast if you need to
+    int y3 = int(p);      // bad: pointer to->int; use a reinterpret_cast if you really need to
+    int y4 = int(lng);    // bad: long long->int narrowing; use a cast if you need to
+
+    int z1 = (int)ch;     // OK, but redundant
+    int z2 = (int)d;      // bad: double->int narrowing; use a cast if you need to
+    int z3 = (int)p;      // bad: pointer to->int; use a reinterpret_cast if you really need to
+    int z4 = (int)lng;    // bad: long long->int narrowing; use a cast if you need to
+}
+The integer to/from pointer conversions are implementation defined when using the T(e) or (T)e notations, and non-portable between platforms with different integer and pointer sizes.
+
+Note
+Avoid casts (explicit type conversion) and if you must prefer named casts.
+
+Note
+When unambiguous, the T can be left out of T{e}.
+
+complex<double> f(complex<double>);
+
+auto z = f({2*pi, 1});
+Note
+The construction notation is the most general initializer notation.
+
+Exception
+std::vector and other containers were defined before we had {} as a notation for construction. Consider:
+
+vector<string> vs {10};                           // ten empty strings
+vector<int> vi1 {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};  // ten elements 1..10
+vector<int> vi2 {10};                             // one element with the value 10
+How do we get a vector of 10 default initialized ints?
+
+vector<int> v3(10); // ten elements with value 0
+The use of () rather than {} for number of elements is conventional (going back to the early 1980s), hard to change, but still a design error: for a container where the element type can be confused with the number of elements, we have an ambiguity that must be resolved. The conventional resolution is to interpret {10} as a list of one element and use (10) to distinguish a size.
+
+This mistake need not be repeated in new code. We can define a type to represent the number of elements:
+
+struct Count { int n; };
+
+template<typename T>
+class Vector {
+public:
+    Vector(Count n);                     // n default-initialized elements
+    Vector(initializer_list<T> init);    // init.size() elements
+    // ...
+};
+
+Vector<int> v1{10};
+Vector<int> v2{Count{10}};
+Vector<Count> v3{Count{10}};    // yes, there is still a very minor problem
+The main problem left is to find a suitable name for Count.
+
+Enforcement
+Flag the C-style (T)e and functional-style T(e) casts.
+
+ES.65: Don't dereference an invalid pointer
+Reason
+Dereferencing an invalid pointer, such as nullptr, is undefined behavior, typically leading to immediate crashes, wrong results, or memory corruption.
+
+Note
+This rule is an obvious and well-known language rule, but can be hard to follow. It takes good coding style, library support, and static analysis to eliminate violations without major overhead. This is a major part of the discussion of C++'s model for type- and resource-safety.
+
+See also:
+
+Use RAII to avoid lifetime problems.
+Use unique_ptr to avoid lifetime problems.
+Use shared_ptr to avoid lifetime problems.
+Use references when nullptr isn't a possibility.
+Use not_null to catch unexpected nullptr early.
+Use the bounds profile to avoid range errors.
+Example
+void f()
+{
+    int x = 0;
+    int* p = &x;
+
+    if (condition()) {
+        int y = 0;
+        p = &y;
+    } // invalidates p
+
+    *p = 42;            // BAD, p might be invalid if the branch was taken
+}
+To resolve the problem, either extend the lifetime of the object the pointer is intended to refer to, or shorten the lifetime of the pointer (move the dereference to before the pointed-to object's lifetime ends).
+
+void f1()
+{
+    int x = 0;
+    int* p = &x;
+
+    int y = 0;
+    if (condition()) {
+        p = &y;
+    }
+
+    *p = 42;            // OK, p points to x or y and both are still in scope
+}
+Unfortunately, most invalid pointer problems are harder to spot and harder to fix.
+
+Example
+void f(int* p)
+{
+    int x = *p; // BAD: how do we know that p is valid?
+}
+There is a huge amount of such code. Most works -- after lots of testing -- but in isolation it is impossible to tell whether p could be the nullptr. Consequently, this is also a major source of errors. There are many approaches to dealing with this potential problem:
+
+void f1(int* p) // deal with nullptr
+{
+    if (!p) {
+        // deal with nullptr (allocate, return, throw, make p point to something, whatever
+    }
+    int x = *p;
+}
+There are two potential problems with testing for nullptr:
+
+it is not always obvious what to do what to do if we find nullptr
+the test can be redundant and/or relatively expensive
+it is not obvious if the test is to protect against a violation or part of the required logic.
+void f2(int* p) // state that p is not supposed to be nullptr
+{
+    assert(p);
+    int x = *p;
+}
+This would carry a cost only when the assertion checking was enabled and would give a compiler/analyzer useful information. This would work even better if/when C++ gets direct support for contracts:
+
+void f3(int* p) // state that p is not supposed to be nullptr
+    [[expects: p]]
+{
+    int x = *p;
+}
+Alternatively, we could use gsl::not_null to ensure that p is not the nullptr.
+
+void f(not_null<int*> p)
+{
+    int x = *p;
+}
+These remedies take care of nullptr only. Remember that there are other ways of getting an invalid pointer.
+
+Example
+void f(int* p)  // old code, doesn't use owner
+{
+    delete p;
+}
+
+void g()        // old code: uses naked new
+{
+    auto q = new int{7};
+    f(q);
+    int x = *q; // BAD: dereferences invalid pointer
+}
+Example
+void f()
+{
+    vector<int> v(10);
+    int* p = &v[5];
+    v.push_back(99); // could reallocate v's elements
+    int x = *p; // BAD: dereferences potentially invalid pointer
+}
+Enforcement
+This rule is part of the lifetime safety profile
+
+Flag a dereference of a pointer that points to an object that has gone out of scope
+Flag a dereference of a pointer that might have been invalidated by assigning a nullptr
+Flag a dereference of a pointer that might have been invalidated by a delete
+Flag a dereference to a pointer to a container element that might have been invalidated by dereference
