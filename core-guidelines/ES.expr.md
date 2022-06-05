@@ -262,7 +262,7 @@ cout << f1() << f2();   // operator<<(operator<<(cout, f1()), f2())
 f1() = f2();    // undefined behavior in C++14; in C++17, f2() is evaluated before f1()
 ```
 
-# ES.45: Avoid "magic constants"; use symbolic constants
+## ES.45: Avoid "magic constants"; use symbolic constants
 - Unnamed constants embedded in expressions are easily overlooked and often hard to understand:
 ```cpp
 for (int m = 1; m <= 12; ++m)   // don't: magic constant 12
@@ -321,3 +321,69 @@ u = gsl::narrow<unsigned>(d);        // OK: throws narrowing_error
 if (ptr) do_something(*ptr);   // OK: ptr is used as a condition
 bool b = ptr;                  // bad: narrowing
 ```
+
+## ES.47: Use `nullptr` rather than `0` or `NULL`
+- Readability. Minimize surprises: `nullptr` cannot be confused with an int. `nullptr` also has a well-specified (very restrictive) type, and thus works in more scenarios where type deduction might do the wrong thing on `NULL` or `0`.
+
+## ES.48: Avoid casts
+- Casts are a well-known source of errors and make some optimizations unreliable.
+```cpp
+//Example, bad
+double d = 2;
+auto p = (long*)&d;
+auto q = (long long*)&d;
+cout << d << ' ' << *p << ' ' << *q << '\n';
+```
+- What would you think this fragment prints? The result is at best implementation defined.
+
+- Note: Programmers who write casts typically assume that they know what they are doing, or that writing a cast makes the program "easier to read". In fact, they often disable the general rules for using values.
+- Overload resolution and template instantiation usually pick the right function if there is a right function to pick. If there is not, maybe there ought to be, rather than applying a local fix (cast).
+- Notes: Casts are necessary in a systems programming language. For example, how else would we get the address of a device register into a pointer? However, casts are seriously overused as well as a major source of errors.
+- If you feel the need for a lot of casts, there might be a fundamental design problem.
+- The type profile bans `reinterpret_cast` and C-style casts.
+- **Never cast to (void) to ignore a `[[nodiscard]]` return value.** If you deliberately want to discard such a result, first think hard about whether that is really a good idea (there is usually a good reason the author of the function or of the return type used [[nodiscard]] in the first place). If you still think it's appropriate and your code reviewer agrees, use `std::ignore` = to turn off the warning which is simple, portable, and easy to grep.
+  - Alternatives: Casts are widely (mis)used. Modern C++ has rules and constructs that eliminate the need for casts in many contexts, such as
+  - Use templates
+  - Use `std::variant`
+  - Rely on the well-defined, safe, implicit conversions between pointer types
+  - Use `std::ignore =` to ignore `[[nodiscard]]` values.
+
+## ES.49: If you must use a cast, use a named cast
+- Readability. Error avoidance. Named casts are more specific than a C-style or functional cast, allowing the compiler to catch some errors.
+  - `static_cast`
+  - `const_cast`
+  - `reinterpret_cast`
+  - `dynamic_cast`
+  - `std::move` // move(x) is an rvalue reference to x
+  - `std::forward` // forward<T>(x) is an rvalue or an lvalue reference to x depending on T
+  - `gsl::narrow_cast` // narrow_cast<T>(x) is static_cast<T>(x)
+  - `gsl::narrow` // narrow<T>(x) is static_cast<T>(x) if static_cast<T>(x) == x or it throws narrowing_error
+
+```cpp
+class B { /* ... */ };
+class Y { /* ... */ }; // used to be derived from B, but someone refactor
+
+template <typename Y> Y* upcast(B* pb) {
+    Y* pd0 = pb;                  // error: no implicit conversion from B* to Y*
+    Y* pd1 = (Y*)pb;              // legal, but what is done?
+    Y* pd2 = static_cast<Y*>(pb); // error: Y is not derived from B
+    Y* pd3 = reinterpret_cast<Y*>(pb); // OK: on your head be it!
+    Y* pd4 = dynamic_cast<Y*>(pb);     // OK: return nullptr
+    // ...
+}
+```
+- The example was synthesized from real-world bugs where T used to be derived from B, but someone refactored the hierarchy.
+- The **C-style cast is dangerous because it can do any kind of conversion**, depriving us of any protection from mistakes (now or in the future).
+
+- Note: When converting between types with no information loss (e.g. from float to double or from int32 to int64), brace initialization might be used instead.
+```cpp
+double d {some_float};
+int64_t i {some_int32};
+```
+- This makes it clear that the type conversion was intended and also prevents conversions between types that might result in loss of precision. (It is a compilation error to try to initialize a float from a double in this fashion, for example.)
+
+- Note: `reinterpret_cast` can be essential, but the essential uses (e.g., turning a machine address into pointer) are not type safe:
+```cpp
+auto p = reinterpret_cast<Device_register>(0x800);  // inherently dangerous
+```
+
