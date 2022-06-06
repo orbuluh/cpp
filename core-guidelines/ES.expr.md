@@ -386,3 +386,271 @@ int64_t i {some_int32};
 ```cpp
 auto p = reinterpret_cast<Device_register>(0x800);  // inherently dangerous
 ```
+
+## ES.50: Don't cast away const
+- It makes a lie out of const. If the variable is actually declared const, modifying it results in undefined behavior.
+
+```cpp
+void f(const int& x)
+{
+    const_cast<int&>(x) = 42;   // BAD
+}
+
+static int i = 0;
+static const int j = 0;
+
+f(i); // silent side effect
+f(j); // undefined behavior
+```
+Example Sometimes, you might be tempted to resort to const_cast to avoid code duplication, such as when two accessor functions that differ only in const-ness have similar implementations. For example:
+
+
+```cpp
+class Bar;
+
+class Foo {
+  public:
+    // BAD, duplicates logic
+    Bar& get_bar() {
+        /* complex logic around getting a non-const reference to my_bar */
+    }
+
+    const Bar& get_bar() const {
+        /* same complex logic around getting a const reference to my_bar */
+    }
+
+  private:
+    Bar my_bar;
+};
+```
+- Instead, prefer to share implementations. Normally, you can just have the non-const function call the const function. However, when there is complex logic this can lead to the following pattern that still resorts to a `const_cast`:
+
+```cpp
+class Foo {
+  public:
+    // not great, non-const calls const version but resorts to const_cast
+    Bar& get_bar() {
+        return const_cast<Bar&>(static_cast<const Foo&>(*this).get_bar());
+    }
+    const Bar& get_bar() const {
+        /* the complex logic around getting a const reference to my_bar */
+    }
+
+  private:
+    Bar my_bar;
+};
+```
+- Although this pattern is safe when applied correctly, because the caller must have had a non-const object to begin with, it's not ideal because the safety is hard to enforce automatically as a checker rule.
+- Instead, prefer to put the common code in a common helper function -- and make it a template so that it deduces const. This doesn't use any const_cast at all:
+```cpp
+class Foo {
+  public: // good
+    Bar& get_bar() { return get_bar_impl(*this); }
+    const Bar& get_bar() const { return get_bar_impl(*this); }
+
+  private:
+    Bar my_bar;
+
+    template <class T> // good, deduces whether T is const or non-const
+    static auto& get_bar_impl(T& t) { /* the complex logic around getting a
+                                         possibly-const reference to my_bar */
+    }
+};
+```
+- Note: Don't do large non-dependent work inside a template, which leads to code bloat. For example, a further improvement would be if all or part of `get_bar_impl` can be non-dependent and factored out into a common non-template function, for a potentially big reduction in code size.
+- Exception: You might need to cast away const when calling const-incorrect functions. Prefer to wrap such functions in inline const-correct wrappers to encapsulate the cast in one place.
+- Sometimes, "cast away const" is to allow the updating of some transient information of an otherwise immutable object. Examples are caching, memoization, and precomputation. Such examples are often handled as well or better using mutable or an indirection than with a const_cast.
+- Consider keeping previously computed results around for a costly operation:
+```cpp
+int compute(int x); // compute a value for x; assume this to be costly
+
+class Cache { // some type implementing a cache for an int->int operation
+  public:
+    pair<bool, int> find(int x) const; // is there a value for x?
+    void set(int x, int v);            // make y the value for x
+    // ...
+  private:
+    // ...
+};
+
+class X {
+  public:
+    int get_val(int x) {
+        auto p = cache.find(x);
+        if (p.first)
+            return p.second;
+        int val = compute(x);
+        cache.set(x, val); // insert value for x
+        return val;
+    }
+    // ...
+  private:
+    Cache cache;
+};
+```
+- Here, get_val() is logically constant, so we would like to make it a const member. To do this we still need to mutate cache, so people sometimes resort to a const_cast:
+```cpp
+class X { // Suspicious solution based on casting
+  public:
+    int get_val(int x) const {
+        auto p = cache.find(x);
+        if (p.first)
+            return p.second;
+        int val = compute(x);
+        const_cast<Cache&>(cache).set(x, val); // ugly
+        return val;
+    }
+    // ...
+  private:
+    Cache cache;
+};
+```
+- Fortunately, there is a better solution: State that cache is mutable even for a const object:
+```cpp
+class X { // better solution
+  public:
+    int get_val(int x) const {
+        auto p = cache.find(x);
+        if (p.first)
+            return p.second;
+        int val = compute(x);
+        cache.set(x, val);
+        return val;
+    }
+    // ...
+  private:
+    mutable Cache cache;
+};
+```
+- An alternative solution would be to store a pointer to the cache:
+```cpp
+class X { // OK, but slightly messier solution
+  public:
+    int get_val(int x) const {
+        auto p = cache->find(x);
+        if (p.first)
+            return p.second;
+        int val = compute(x);
+        cache->set(x, val);
+        return val;
+    }
+    // ...
+  private:
+    unique_ptr<Cache> cache;
+};
+```
+- That solution is the most flexible, but requires explicit construction and destruction of *cache (most likely in the constructor and destructor of X).
+- In any variant, we must guard against data races on the cache in multi-threaded code, possibly using a `std::mutex`.
+
+
+## ES.55: Avoid the need for range checking
+- Constructs that cannot overflow do not overflow (and usually run faster):
+
+```cpp
+for (auto& x : v) // print all elements of v
+    cout << x << '\n';
+
+auto p = find(v, x); // find x in v
+```
+
+## ES.56: Write `std::move()` only when you need to explicitly move an object to another scope
+- We move, rather than copy, to avoid duplication and for improved performance.
+- A move typically leaves behind an empty object (C.64), which can be surprising or even dangerous, so we try to avoid moving from lvalues (they might be accessed later).
+- Moving is done implicitly when the source is an rvalue (e.g., value in a return treatment or a function result), so don't pointlessly complicate code in those cases by writing move explicitly.
+- Instead, write short functions that return values, and both the function's return and the caller's accepting of the return will be optimized naturally.
+- In general, following the guidelines in this document (including not making variables' scopes needlessly large, writing short functions that return values, returning local variables) help eliminate most need for explicit `std::move`.
+- Explicit move is needed to explicitly move an object to another scope, notably **to pass it to a "sink" function** and in the implementations of the move operations themselves (move constructor, move assignment operator) and swap operations.
+
+```cpp
+//Example, bad
+void sink(X&& x); // sink takes ownership of x
+
+void user() {
+    X x;
+    // error: cannot bind an lvalue to a rvalue reference
+    sink(x);
+    // OK: sink takes the contents of x, x must now be assumed to be empty
+    sink(std::move(x));
+
+    // ...
+
+    // probably a mistake
+    use(x);
+}
+```
+- Usually, a `std::move()` is used as an argument to a `&&` parameter. And after you do that, assume the object has been moved from (see C.64) and don't read its state again until you first set it to a new value.
+```cpp
+void f() {
+    string s1 = "supercalifragilisticexpialidocious";
+
+    string s2 = s1;                                     // ok, takes a copy
+    assert(s1 == "supercalifragilisticexpialidocious"); // ok
+
+    // bad, if you want to keep using s1's value
+    string s3 = move(s1);
+
+    // bad, assert will likely fail, s1 likely changed
+    assert(s1 == "supercalifragilisticexpialidocious");
+}
+```
+```cpp
+void sink(unique_ptr<widget> p); // pass ownership of p to sink()
+
+void f() {
+    auto w = make_unique<widget>();
+    // ...
+    sink(std::move(w)); // ok, give to sink()
+    // ...
+    sink(w); // Error: unique_ptr is carefully designed so that you cannot copy
+             // it
+}
+```
+- Notes: `std::move()` is a cast to `&&` in disguise; it doesn't itself move anything, but marks a named object as a candidate that can be moved from. The language already knows the common cases where objects can be moved from, especially when returning values from functions, so don't complicate code with redundant `std::move()`'s.
+- Never write `std::move()` just because you've heard "it's more efficient." In general, don't believe claims of "efficiency" without data. In general, don't complicate your code without reason.
+- **Never write `std::move()` on a const object, it is silently transformed into a copy** (see Item 23 in Meyers15)
+
+```cpp
+vector<int> make_vector() {
+    vector<int> result;
+    // ... load result with data
+    return std::move(result); // bad; just write "return result;"
+}
+```
+
+- Never write `return move(local_variable)`;, because the language already knows the variable is a move candidate. Writing move in this code won't help, and can actually be detrimental because on some compilers it interferes with RVO (the return value optimization) by creating an additional reference alias to the local variable.
+
+```cpp
+Example, bad
+vector<int> v = std::move(make_vector());   // bad; the std::move is entirely redundant
+```
+- Never write move on a returned value such as x = move(f()); where f returns by value. The language already knows that a returned value is a temporary object that can be moved from.
+
+```cpp
+void mover(X&& x) {
+    call_something(std::move(x)); // ok
+    call_something(
+        std::forward<X>(x)); // bad, don't std::forward an rvalue reference
+    call_something(x);       // suspicious, why not std::move?
+}
+
+template <class T> void forwarder(T&& t) {
+    call_something(std::move(t)); // bad, don't std::move a forwarding reference
+    call_something(std::forward<T>(t)); // ok
+    call_something(t);                  // suspicious, why not std::forward?
+}
+```
+
+## ES.60: Avoid new and delete outside resource management functions
+- Direct resource management in application code is error-prone and tedious.
+- This is also known as the rule of "No naked new!"
+
+```cpp
+Example, bad
+void f(int n)
+{
+    auto p = new X[n];   // n default constructed Xs
+    // ...
+    delete[] p;
+}
+```
+- There can be code in the ... part that causes the delete never to happen.
