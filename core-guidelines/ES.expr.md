@@ -1,5 +1,26 @@
 # ES.expr: Expressions
 
+- [ES.expr: Expressions](#esexpr-expressions)
+  - [ES.40: Avoid complicated expressions](#es40-avoid-complicated-expressions)
+  - [ES.41: If in doubt about operator precedence, parenthesize](#es41-if-in-doubt-about-operator-precedence-parenthesize)
+  - [ES.42: Keep use of pointers simple and straightforward](#es42-keep-use-of-pointers-simple-and-straightforward)
+  - [ES.43: Avoid expressions with undefined order of evaluation](#es43-avoid-expressions-with-undefined-order-of-evaluation)
+  - [ES.44: Don't depend on order of evaluation of function arguments](#es44-dont-depend-on-order-of-evaluation-of-function-arguments)
+  - [ES.45: Avoid "magic constants"; use symbolic constants](#es45-avoid-magic-constants-use-symbolic-constants)
+  - [ES.46: Avoid lossy (narrowing, truncating) arithmetic conversions](#es46-avoid-lossy-narrowing-truncating-arithmetic-conversions)
+  - [ES.47: Use `nullptr` rather than `0` or `NULL`](#es47-use-nullptr-rather-than-0-or-null)
+  - [ES.48: Avoid casts](#es48-avoid-casts)
+  - [ES.49: If you must use a cast, use a named cast](#es49-if-you-must-use-a-cast-use-a-named-cast)
+  - [ES.50: Don't cast away const](#es50-dont-cast-away-const)
+  - [ES.55: Avoid the need for range checking](#es55-avoid-the-need-for-range-checking)
+  - [ES.56: Write `std::move()` only when you need to explicitly move an object to another scope](#es56-write-stdmove-only-when-you-need-to-explicitly-move-an-object-to-another-scope)
+  - [ES.60: Avoid new and delete outside resource management functions](#es60-avoid-new-and-delete-outside-resource-management-functions)
+  - [ES.61: Delete arrays using `delete[]` and non-arrays using `delete`](#es61-delete-arrays-using-delete-and-non-arrays-using-delete)
+  - [ES.62: Don't compare pointers into different arrays](#es62-dont-compare-pointers-into-different-arrays)
+  - [ES.63: Don't slice](#es63-dont-slice)
+  - [ES.64: Use the `T{e}` notation for construction](#es64-use-the-te-notation-for-construction)
+  - [ES.65: Don't dereference an invalid pointer](#es65-dont-dereference-an-invalid-pointer)
+
 ## ES.40: Avoid complicated expressions
 - Complicated expressions are error-prone.
 ```cpp
@@ -654,3 +675,199 @@ void f(int n)
 }
 ```
 - There can be code in the ... part that causes the delete never to happen.
+
+## ES.61: Delete arrays using `delete[]` and non-arrays using `delete`
+- That's what the language requires and mistakes can lead to resource release errors and/or memory corruption.
+```cpp
+void f(int n) {
+    auto p = new X[n]; // n default constructed Xs
+    // ...
+    delete p; // error: just delete the object p, rather than delete the array
+              // p[]
+}
+```
+- Note: This example not only violates the no naked new rule as in the previous example, it has many more problems.
+
+## ES.62: Don't compare pointers into different arrays
+- The result of doing so is undefined.
+```cpp
+// Example, bad
+void f() {
+    int a1[7];
+    int a2[9];
+    if (&a1[5] < &a2[7]) {
+    } // bad: undefined
+    if (0 < &a1[5] - &a2[7]) {
+    } // bad: undefined
+}
+```
+
+## ES.63: Don't slice
+- Slicing -- that is, copying only part of an object using assignment or initialization -- most often leads to errors because the object was meant to be considered as a whole.
+- In the rare cases where the slicing was deliberate the code can be surprising.
+```cpp
+class Shape { /* ... */ };
+class Circle : public Shape { /* ... */
+    Point c;
+    int r;
+};
+
+Circle c{{0, 0}, 42};
+Shape s{c}; // copy construct only the Shape part of Circle
+s = c;      // or copy assign only the Shape part of Circle
+
+void assign(const Shape& src, Shape& dest) { dest = src; }
+Circle c2{{1, 1}, 43};
+assign(c, c2);   // oops, not the whole state is transferred
+assert(c == c2); // if we supply copying, we should also provide comparison,
+                 // but this will likely return false
+```
+- The result will be meaningless because the center and radius will not be copied from c into s.
+- The first defense against this is to define the base class Shape not to allow this.
+- Alternative: If you mean to slice, define an explicit operation to do so. This saves readers from confusion. For example:
+```cpp
+class Smiley : public Circle {
+  public:
+    Circle copy_circle();
+    // ...
+};
+
+Smiley sm{/* ... */};
+Circle c1{sm}; // ideally prevented by the definition of Circle
+Circle c2{sm.copy_circle()};
+```
+
+## ES.64: Use the `T{e}` notation for construction
+
+- The `T{e}` construction syntax makes it **explicit that construction is desired**.
+- The `T{e}` construction syntax doesn't allow narrowing.
+- `T{e}` is the only safe and general expression for constructing a value of type `T` from an expression `e`.
+- The casts notations `T(e)` and `(T)e` are neither safe nor general.
+- For built-in types, the construction notation protects against narrowing and reinterpretation
+```cpp
+void use(char ch, int i, double d, char* p, long long lng)
+{
+int x1 = int{ch}; // OK, but redundant
+int x2 = int{d};  // error: double->int narrowing; use a cast if you need to
+int x3 = int{p}; // error: pointer to->int; use a reinterpret_cast if you really need to
+int x4 = int{lng}; // error: long long->int narrowing; use a cast if you need to
+
+int y1 = int(ch); // OK, but redundant
+int y2 = int(d);  // bad: double->int narrowing; use a cast if you need to
+int y3 = int(p); // bad: pointer to->int; use a reinterpret_cast if you really need to
+int y4 = int(lng); // bad: long long->int narrowing; use a cast if you need to
+
+int z1 = (int)ch; // OK, but redundant
+int z2 = (int)d;  // bad: double->int narrowing; use a cast if you need to
+int z3 = (int)p;  // bad: pointer to->int; use a reinterpret_cast if you really need to
+int z4 = (int)lng; // bad: long long->int narrowing; use a cast if you need to
+}
+```
+- The **integer to/from pointer** conversions are **implementation defined **when using the `T(e)` or `(T)e` notations, and non-portable between platforms with different integer and pointer sizes.
+- Note: Avoid casts (explicit type conversion) and if you must prefer named casts.
+- When unambiguous, the `T` can be left out of `T{e}`.
+```cpp
+complex<double> f(complex<double>);
+auto z = f({2*pi, 1});
+```
+- The construction notation is the most general initializer notation.
+- Exception: `std::vector` and other containers were defined before we had `{}` as a notation for construction. Consider:
+
+```cpp
+vector<string> vs {10};                           // ten empty strings
+vector<int> vi1 {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};  // ten elements 1..10
+vector<int> vi2 {10};                             // one element with the value 10
+vector<int> v3(10);                               // ten elements with value 0
+```
+
+- The use of `()` rather than `{}` for number of elements is conventional (going back to the early 1980s), hard to change, but still a design error: for a container where the element type can be confused with the number of elements, we have an ambiguity that must be resolved.
+- The conventional resolution is to interpret `{10}` as a list of one element and use `(10)` to distinguish a size.
+- This mistake need not be repeated in new code. We can define a type to represent the number of elements:
+
+```cpp
+struct Count {
+    int n;
+};
+
+template <typename T> class Vector {
+  public:
+    Vector(Count n);                  // n default-initialized elements
+    Vector(initializer_list<T> init); // init.size() elements
+    // ...
+};
+
+Vector<int> v1{10};
+Vector<int> v2{Count{10}};
+Vector<Count> v3{Count{10}}; // yes, there is still a very minor problem ... find a name for Count..
+```
+
+## ES.65: Don't dereference an invalid pointer
+- Dereferencing an invalid pointer, such as `nullptr`, is undefined behavior, typically leading to immediate crashes, wrong results, or memory corruption.
+- Note: This rule is an obvious and well-known language rule, but can be hard to follow. It takes good coding style, library support, and static analysis to eliminate violations without major overhead.
+- This is a major part of the discussion of C++'s model for type- and resource-safety.
+- Unfortunately, most invalid pointer problems are harder to spot and harder to fix.
+
+```cpp
+void f(int* p)
+{
+    int x = *p; // BAD: how do we know that p is valid?
+}
+```
+- There is a huge amount of such code. Most works -- after lots of testing -- but in isolation it is impossible to tell whether `p` could be the `nullptr`. Consequently, this is also a major source of errors. There are many approaches to dealing with this potential problem:
+```cpp
+void f1(int* p) // deal with nullptr
+{
+    if (!p) {
+        // deal with nullptr (allocate, return, throw, make p point to
+        // something, whatever
+    }
+    int x = *p;
+}
+```
+- There are two potential problems with testing for `nullptr`:
+- it is not always obvious what to do what to do if we find `nullptr`, the test can be redundant and/or relatively expensive
+- it is not obvious if the test is to protect against a violation or part of the required logic.
+```cpp
+void f2(int* p) // state that p is not supposed to be nullptr
+{
+    assert(p);
+    int x = *p;
+}
+```
+- This would carry a cost only when the assertion checking was enabled and would give a compiler/analyzer useful information.
+- This would work even better if/when C++ gets direct support for contracts:
+```cpp
+void f3(int* p) // state that p is not supposed to be nullptr
+    [[expects: p]]
+{
+    int x = *p;
+}
+````
+- Alternatively, we could use `gsl::not_null` to ensure that `p` is not the nullptr`.
+```cpp
+void f(not_null<int*> p)
+{
+    int x = *p;
+}
+```
+- These remedies take care of `nullptr` only. Remember that there are other ways of getting an invalid pointer.
+```cpp
+void f(int* p) // old code, doesn't use owner
+{
+    delete p;
+}
+
+void g() // old code: uses naked new
+{
+    auto q = new int{7};
+    f(q);
+    int x = *q; // BAD: dereferences invalid pointer
+}
+
+void f() {
+    vector<int> v(10);
+    int* p = &v[5];
+    v.push_back(99); // could reallocate v's elements
+    int x = *p;      // BAD: dereferences potentially invalid pointer
+}
+```
