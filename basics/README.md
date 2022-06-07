@@ -16,5 +16,6 @@
   - use `std::string_view` to [unordered_]{set|map} with a `std::string` key
 
 # Language related
-- [comma operator](comma_operator.md)
-- [parameter pack](parameter_pack.md)
+- [Comma operator](comma_operator.md)
+- [Parameter pack](parameter_pack.md)
+- [Structural binding](structural_binding.md)
