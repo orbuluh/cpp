@@ -1,5 +1,21 @@
 # ES.stmt: Statements
 
+- [ES.stmt: Statements](#esstmt-statements)
+  - [ES.70: Prefer a switch-statement to an if-statement when there is a choice](#es70-prefer-a-switch-statement-to-an-if-statement-when-there-is-a-choice)
+  - [ES.71: Prefer a range-for-statement to a for-statement when there is a choice](#es71-prefer-a-range-for-statement-to-a-for-statement-when-there-is-a-choice)
+  - [ES.72: Prefer a for-statement to a while-statement when there is an obvious loop variable](#es72-prefer-a-for-statement-to-a-while-statement-when-there-is-an-obvious-loop-variable)
+  - [ES.73: Prefer a while-statement to a for-statement when there is no obvious loop variable](#es73-prefer-a-while-statement-to-a-for-statement-when-there-is-no-obvious-loop-variable)
+  - [ES.74: Prefer to declare a loop variable in the initializer part of a for-statement](#es74-prefer-to-declare-a-loop-variable-in-the-initializer-part-of-a-for-statement)
+  - [ES.75: Avoid do-statementsReason](#es75-avoid-do-statementsreason)
+  - [ES.76: Avoid goto](#es76-avoid-goto)
+  - [ES.77: Minimize the use of break and continue in loops](#es77-minimize-the-use-of-break-and-continue-in-loops)
+  - [ES.78: Don't rely on implicit fallthrough in switch statements](#es78-dont-rely-on-implicit-fallthrough-in-switch-statements)
+  - [ES.79: Use default to handle common cases (only)](#es79-use-default-to-handle-common-cases-only)
+  - [ES.84: Don't try to declare a local variable with no name](#es84-dont-try-to-declare-a-local-variable-with-no-name)
+  - [ES.85: Make empty statements visible](#es85-make-empty-statements-visible)
+  - [ES.86: Avoid modifying loop control variables inside the body of raw for-loops](#es86-avoid-modifying-loop-control-variables-inside-the-body-of-raw-for-loops)
+  - [ES.87: Don't add redundant `==` or `!=` to conditions](#es87-dont-add-redundant--or--to-conditions)
+
 ## ES.70: Prefer a switch-statement to an if-statement when there is a choice
 - Readability.
 - **Efficiency: A switch compares against constants and is usually better optimized than a series of tests in an if-then-else chain.**
@@ -324,3 +340,99 @@ void f2(E x) {
 }
 ```
 - Did you forget case d or deliberately leave it out? Forgetting a case typically happens when a case is added to an enumeration and the person doing so fails to add it to every switch over the enumerators.
+
+## ES.84: Don't try to declare a local variable with no name
+- There is no such thing. What looks to a human like a variable without a name is to the compiler a statement consisting of a temporary that immediately goes out of scope.
+
+```cpp
+void f() {
+    lock<mutex>{mx}; // No name variable!!
+    // ...
+}
+```
+- This declares **an unnamed lock object that immediately goes out of scope at the point of the semicolon.** This is not an uncommon mistake. In particular, this particular example can lead to hard-to find race conditions.
+- Unnamed function arguments are fine.
+
+## ES.85: Make empty statements visible
+- Readability.
+```cpp
+Example
+for (i = 0; i < max; ++i); // BAD: the empty statement is easily overlooked
+v[i] = f(v[i]);
+
+for (auto x : v) { // better
+    // nothing
+}
+v[i] = f(v[i]);
+```
+
+## ES.86: Avoid modifying loop control variables inside the body of raw for-loops
+- The loop control up front should enable correct reasoning about what is happening inside the loop.
+- Modifying loop counters in both the iteration-expression and inside the body of the loop is a perennial source of surprises and bugs.
+```cpp
+for (int i = 0; i < 10; ++i) {
+    // no updates to i -- ok
+}
+
+for (int i = 0; i < 10; ++i) {
+    //
+    if (/* something */)
+        ++i; // BAD
+    //
+}
+
+bool skip = false;
+for (int i = 0; i < 10; ++i) {
+    if (skip) {
+        skip = false;
+        continue;
+    }
+    //
+    if (/* something */)
+        skip = true; // Better: using two variables for two concepts.
+    //
+}
+
+```
+
+## ES.87: Don't add redundant `==` or `!=` to conditions
+- Doing so avoids verbosity and eliminates some opportunities for mistakes. Helps make style consistent and conventional.
+- By definition, a condition in an if-statement, while-statement, or a for-statement selects between true and false.
+- A numeric value is compared to `0` and a pointer value to `nullptr`.
+
+```cpp
+// These all mean "if p is not nullptr"
+if (p) { ... }            // good
+if (p != 0) { ... }       // redundant !=0, bad: don't use 0 for pointers
+if (p != nullptr) { ... } // redundant !=nullptr, not recommended
+```
+- Often, `if (p)` is read as "if p is valid" which is a direct expression of the programmers intent, whereas if `(p != nullptr)` would be a long-winded workaround.
+- This rule is especially useful when a declaration is used as a condition
+```cpp
+if (auto pc = dynamic_cast<Circle>(ps)) { ... } // execute if ps points to a kind of Circle, good
+if (auto pc = dynamic_cast<Circle>(ps); pc != nullptr) { ... } // not recommended
+```
+- Note that implicit conversions to bool are applied in conditions. For example:
+```cpp
+for (string s; cin >> s; ) v.push_back(s); //This invokes istream's operator bool().
+```
+- Note: Explicit comparison of an integer to 0 is in general not redundant. The reason is that (as opposed to pointers and Booleans) an integer often has more than two reasonable values.
+- Furthermore 0 (zero) is often used to indicate success. Consequently, it is best to be specific about the comparison.
+```cpp
+void f(int i) {
+    if (i) // suspect
+        // ...
+        if (i == success) // possibly better
+    // ...
+}
+```
+- Always remember that an integer can have more than two values.
+
+- This is a common beginners error. If you use C-style strings, you must know the <cstring> functions well.
+```cpp
+if(strcmp(p1, p2)) { ... }   // are the two C-style strings equal? (mistake!)
+```
+- Being verbose and writing below would not in itself save you.
+```cpp
+if(strcmp(p1, p2) != 0) { ... }   // are the two C-style strings equal? (mistake!)
+```
