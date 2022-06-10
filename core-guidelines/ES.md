@@ -47,3 +47,4 @@ char** read2(istream& is, int maxelem, int maxstring,
 - [ES.dcl: Declarations](ES.dcl.md)
 - [ES.expr: Expressions](ES.expr.md)
 - [ES.stmt: Statements](ES.stmt.md)
+- [ES.arith: Arithmetic](ES.arith.md)

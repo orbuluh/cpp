@@ -3,6 +3,7 @@
 
 # On going
 - [ES:         Expressions and statements](ES.md)
+- [ES.arith    Arithmetic](ES.arith.md)
 - [E:          Error handling](E.md)
 - [F:          Functions](F.md)
 - [I:          Interfaces](I.md)
