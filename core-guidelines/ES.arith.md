@@ -89,49 +89,122 @@ auto a = area(10'000'000, 100'000'000);   // bad, numeric overflow
 - Exception: Use unsigned types if you really want modulo arithmetic.
 - Alternative: For critical applications that can afford some overhead, use a range-checked integer and/or floating-point type.
 
+## ES.104: Don't underflow
+- Decrementing a value beyond a minimum value can lead to memory corruption and undefined behavior.
+
+```cpp
+int a[10];
+a[-2] = 7;   // bad
+
+int n = 101;
+while (n--)
+    a[n - 1] = 9;   // bad (twice)
+```
+
+## ES.105: Don't divide by integer zero
+- The result is undefined and probably a crash.
+- This also applies to %.
+```cpp
+// Example, bad
+int divide(int a, int b) {
+    // BAD, should be checked (e.g., in a precondition)
+    return a / b;
+}
+// Example, good
+int divide(int a, int b) {
+    // good, address via precondition (and replace with contracts once C++ gets
+    // them)
+    Expects(b != 0);
+    return a / b;
+}
+
+double divide(double a, double b) {
+    // good, address via using double instead
+    return a / b;
+}
+```
+- Alternative: For critical applications that can afford some overhead, use a range-checked integer and/or floating-point type.
+
+## ES.106: Don't try to avoid negative values by using unsigned
+- Choosing unsigned implies many changes to the usual behavior of integers, including modulo arithmetic, can suppress warnings related to overflow, and opens the door for errors related to signed/unsigned mixes.
+- Using unsigned doesn't actually eliminate the possibility of negative values.
+
+```cpp
+// Example
+unsigned int u1 = -2;   // Valid: the value of u1 is 4294967294
+int i1 = -2;
+unsigned int u2 = i1;   // Valid: the value of u2 is 4294967294
+int i2 = u2;            // Valid: the value of i2 is -2
+```
+- These problems with such (perfectly legal) constructs are hard to spot in real code and are the source of many real-world errors. Consider:
+
+```cpp
+unsigned area(unsigned height, unsigned width) { return height*width; } // [see also](#Ri-expects)
+// ...
+int height;
+cin >> height;
+auto a = area(height, 2);   // if the input is -2 a becomes 4294967292
+```
+- Remember that -1 when assigned to an unsigned int becomes the largest unsigned int. Also, **since unsigned arithmetic is modulo arithmetic the multiplication didn't overflow, it wrapped around.**
+
+```cpp
+// Example
+unsigned max = 100000;    // "accidental typo", I mean to say 10'000
+unsigned short x = 100;
+while (x < max) x += 100; // infinite loop
+```
+- Had x been a signed short, we could have warned about the undefined behavior upon overflow.
+
+```cpp
+struct Positive {
+    int val;
+    Positive(int x) :val{x} { Assert(0 < x); }
+    operator int() { return val; }
+};
+
+int f(Positive arg) { return arg; }
+
+int r1 = f(2);
+int r2 = f(-2);  // throws
+```
 
 ## ES.107: Don't use unsigned for subscripts, prefer `gsl::index`
-Reason
-To avoid signed/unsigned confusion. To enable better optimization. To enable better error detection. To avoid the pitfalls with auto and int.
-
-Example, bad
+- To avoid signed/unsigned confusion. To enable better optimization. To enable better error detection. To avoid the pitfalls with auto and int.
+```cpp
+// Example, bad
 vector<int> vec = /*...*/;
 
-for (int i = 0; i < vec.size(); i += 2)                    // might not be big enough
+for (int i = 0; i < vec.size(); i += 2) // might not be big enough
     cout << vec[i] << '\n';
-for (unsigned i = 0; i < vec.size(); i += 2)               // risk wraparound
+for (unsigned i = 0; i < vec.size(); i += 2) // risk wraparound
     cout << vec[i] << '\n';
-for (auto i = 0; i < vec.size(); i += 2)                   // might not be big enough
+for (auto i = 0; i < vec.size(); i += 2) // might not be big enough
     cout << vec[i] << '\n';
 for (vector<int>::size_type i = 0; i < vec.size(); i += 2) // verbose
     cout << vec[i] << '\n';
-for (auto i = vec.size()-1; i >= 0; i -= 2)                // bug
+for (auto i = vec.size() - 1; i >= 0; i -= 2) // bug
     cout << vec[i] << '\n';
-for (int i = vec.size()-1; i >= 0; i -= 2)                 // might not be big enough
+for (int i = vec.size() - 1; i >= 0; i -= 2) // might not be big enough
     cout << vec[i] << '\n';
-Example, good
+```
+
+```cpp
 vector<int> vec = /*...*/;
 
 for (gsl::index i = 0; i < vec.size(); i += 2)             // ok
     cout << vec[i] << '\n';
 for (gsl::index i = vec.size()-1; i >= 0; i -= 2)          // ok
     cout << vec[i] << '\n';
-Note
-The built-in array uses signed subscripts. The standard-library containers use unsigned subscripts. Thus, no perfect and fully compatible solution is possible (unless and until the standard-library containers change to use signed subscripts someday in the future). Given the known problems with unsigned and signed/unsigned mixtures, better stick to (signed) integers of a sufficient size, which is guaranteed by gsl::index.
+```
+- Note - The built-in array uses signed subscripts. The standard-library containers use unsigned subscripts.
+- Thus, no perfect and fully compatible solution is possible (unless and until the standard-library containers change to use signed subscripts someday in the future).
+- Given the known problems with unsigned and signed/unsigned mixtures, better stick to (signed) integers of a sufficient size, which is guaranteed by `gsl::index`.
 
 Example
-template<typename T>
-struct My_container {
-public:
+```cpp
+template <typename T> struct My_container {
+  public:
     // ...
-    T& operator[](gsl::index i);    // not unsigned
+    T& operator[](gsl::index i); // not unsigned
     // ...
 };
-Example
-??? demonstrate improved code generation and potential for error detection ???
-Alternatives
-Alternatives for users
-
-use algorithms
-use range-for
-use iterators/pointers
