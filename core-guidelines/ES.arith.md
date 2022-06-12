@@ -1,4 +1,13 @@
 # Arithmetic
+- [Arithmetic](#arithmetic)
+  - [ES.100: Don't mix signed and unsigned arithmetic](#es100-dont-mix-signed-and-unsigned-arithmetic)
+  - [ES.101: Use unsigned types for bit manipulation](#es101-use-unsigned-types-for-bit-manipulation)
+  - [ES.102: Use signed types for arithmetic](#es102-use-signed-types-for-arithmetic)
+  - [ES.103: Don't overflow](#es103-dont-overflow)
+  - [ES.104: Don't underflow](#es104-dont-underflow)
+  - [ES.105: Don't divide by integer zero](#es105-dont-divide-by-integer-zero)
+  - [ES.106: Don't try to avoid negative values by using unsigned](#es106-dont-try-to-avoid-negative-values-by-using-unsigned)
+  - [ES.107: Don't use unsigned for subscripts, prefer `gsl::index`](#es107-dont-use-unsigned-for-subscripts-prefer-gslindex)
 
 ## ES.100: Don't mix signed and unsigned arithmetic
 - Avoid wrong results.

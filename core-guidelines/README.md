@@ -2,8 +2,7 @@
 - A fork with my simplified reading notes.
 
 # On going
-- [ES:         Expressions and statements](ES.md)
-- [ES.arith    Arithmetic](ES.arith.md)
+- [Per:        Performance](Per.md)
 - [E:          Error handling](E.md)
 - [F:          Functions](F.md)
 - [I:          Interfaces](I.md)
@@ -30,14 +29,14 @@
 - [R:          Resource management](R.md)
   - [R.alloc:    Allocation and deallocation](R.alloc.md)
   - [R.smart:    Smart pointers](R.smart.md)
-
+- [ES:         Expressions and statements](ES.md)
   - [ES.dcl:     Declarations](ES.dcl.md)
   - [ES.expr: Expressions](ES.expr.md)
   - [ES.stmt:    Statements](ES.stmt.md)
-
+  - [ES.arith    Arithmetic](ES.arith.md)
 # TO READ
 - P: Philosophy
-- Per: Performance
+
 - CP: Concurrency and parallelism
 - Con: Constants and immutability
 - T: Templates and generic programming
