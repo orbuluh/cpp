@@ -2,7 +2,7 @@
 - A fork with my simplified reading notes.
 
 # On going
-- [Per:        Performance](Per.md)
+
 - [E:          Error handling](E.md)
 - [F:          Functions](F.md)
 - [I:          Interfaces](I.md)
@@ -34,16 +34,15 @@
   - [ES.expr: Expressions](ES.expr.md)
   - [ES.stmt:    Statements](ES.stmt.md)
   - [ES.arith    Arithmetic](ES.arith.md)
+- [Per:        Performance](Per.md)
+
 # TO READ
 - P: Philosophy
-
 - CP: Concurrency and parallelism
 - Con: Constants and immutability
 - T: Templates and generic programming
 - CPL: C-style programming
 - SF: Source files
-
-
 - A: Architectural ideas
 - NR: Non-Rules and myths
 - RF: References

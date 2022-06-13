@@ -3,10 +3,28 @@
 - The rules in this section are more restrictive and intrusive than what is needed for many (most) applications.
 - Do not naïvely try to follow them in general code: achieving the goals of low latency requires extra work.
 
+- [Per: Performance](#per-performance)
+  - [Per.1: Don't optimize without reason](#per1-dont-optimize-without-reason)
+  - [Per.2: Don't optimize prematurely](#per2-dont-optimize-prematurely)
+  - [Per.3: Don't optimize something that's not performance critical](#per3-dont-optimize-something-thats-not-performance-critical)
+  - [Per.4: Don't assume that complicated code is necessarily faster than simple code](#per4-dont-assume-that-complicated-code-is-necessarily-faster-than-simple-code)
+  - [Per.5: Don't assume that low-level code is necessarily faster than high-level code](#per5-dont-assume-that-low-level-code-is-necessarily-faster-than-high-level-code)
+  - [Per.6: Don't make claims about performance without measurements](#per6-dont-make-claims-about-performance-without-measurements)
+  - [Per.7: Design to enable optimization](#per7-design-to-enable-optimization)
+  - [Per.10: Rely on the static type system](#per10-rely-on-the-static-type-system)
+  - [Per.11: Move computation from run time to compile time](#per11-move-computation-from-run-time-to-compile-time)
+  - [Per.12: Eliminate redundant aliases](#per12-eliminate-redundant-aliases)
+  - [Per.13: Eliminate redundant indirections](#per13-eliminate-redundant-indirections)
+  - [Per.14: Minimize the number of allocations and deallocations](#per14-minimize-the-number-of-allocations-and-deallocations)
+  - [Per.15: Do not allocate on a critical branch](#per15-do-not-allocate-on-a-critical-branch)
+  - [Per.16: Use compact data structures](#per16-use-compact-data-structures)
+  - [Per.17: Declare the most used member of a time-critical struct first](#per17-declare-the-most-used-member-of-a-time-critical-struct-first)
+  - [Per.18: Space is time](#per18-space-is-time)
+  - [Per.19: Access memory predictably](#per19-access-memory-predictably)
+  - [Per.30: Avoid context switches on the critical path](#per30-avoid-context-switches-on-the-critical-path)
 
 ## Per.1: Don't optimize without reason
 - If there is no need for optimization, the main result of the effort will be more errors and higher maintenance costs.
-
 
 ## Per.2: Don't optimize prematurely
 - Elaborately optimized code is usually larger and harder to change than unoptimized code.
@@ -172,3 +190,87 @@ for (auto p = r.first; p != r.second; ++p)
 ## Per.10: Rely on the static type system
 - Type violations, weak types (e.g. void*s), and low-level code (e.g., manipulation of sequences as individual bytes) make the job of the optimizer much harder.
 - Simple code often optimizes better than hand-crafted complex code.
+
+## Per.11: Move computation from run time to compile time
+- To decrease code size and run time.
+- To avoid data races by using constants.
+- To catch errors at compile time (and thus eliminate the need for error-handling code).
+
+```cpp
+double square(double d) { return d*d; }
+static double s2 = square(2);    // old-style: dynamic initialization
+
+constexpr double ntimes(double d, int n)   // assume 0 <= n
+{
+    double m = 1;
+    while (n--) m *= d;
+    return m;
+}
+constexpr double s3 {ntimes(2, 3)};  // modern-style: compile-time initialization
+```
+- Code like the initialization of s2 isn't uncommon, especially for initialization that's a bit more complicated than square().
+- However, compared to the initialization of s3 there are two problems:
+  - we suffer the overhead of a function call at run time
+  - `s2` just might be accessed by another thread before the initialization happens.
+- Note: you can't have a data race on a constant.
+- Consider a popular technique for providing a handle for storing small objects in the handle itself and larger ones on the heap.
+```cpp
+constexpr int on_stack_max = 20;
+
+template<typename T>
+struct Scoped {     // store a T in Scoped
+    // ...
+    T obj;
+};
+
+template<typename T>
+struct On_heap {    // store a T on the free store
+    // ...
+    T* objp;
+};
+
+template<typename T>
+using Handle = typename std::conditional<(sizeof(T) <= on_stack_max),
+                    Scoped<T>,      // first alternative
+                    On_heap<T>      // second alternative
+               >::type;
+
+void f()
+{
+    Handle<double> v1;                   // the double goes on the stack
+    Handle<std::array<double, 200>> v2;  // the array goes on the free store
+    // ...
+}
+```
+- Assume that Scoped and On_heap provide compatible user interfaces. Here we compute the optimal type to use at compile time.
+- There are similar techniques for selecting the optimal function to call.
+- Note: The ideal is **not to try execute everything at compile time**.
+  - Obviously, most computations depend on inputs so they can't be moved to compile time, but beyond that logical constraint is the fact that complex compile-time computation can seriously increase compile times and complicate debugging.
+  - It is even possible to slow down code by compile-time computation.
+  - This is admittedly rare, but by factoring out a general computation into separate optimal sub-calculations it is possible to render the instruction cache less effective.
+
+## Per.12: Eliminate redundant aliases
+## Per.13: Eliminate redundant indirections
+## Per.14: Minimize the number of allocations and deallocations
+## Per.15: Do not allocate on a critical branch
+## Per.16: Use compact data structures
+- Performance is typically dominated by memory access times.
+## Per.17: Declare the most used member of a time-critical struct first
+## Per.18: Space is time
+- Performance is typically dominated by memory access times.
+## Per.19: Access memory predictably
+- Performance is very sensitive to cache performance and cache algorithms favor simple (usually linear) access to adjacent data.
+```cpp
+int matrix[rows][cols];
+
+// bad
+for (int c = 0; c < cols; ++c)
+    for (int r = 0; r < rows; ++r)
+        sum += matrix[r][c];
+
+// good
+for (int r = 0; r < rows; ++r)
+    for (int c = 0; c < cols; ++c)
+        sum += matrix[r][c];
+```
+## Per.30: Avoid context switches on the critical path
