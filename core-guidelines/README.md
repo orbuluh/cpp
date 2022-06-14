@@ -2,7 +2,7 @@
 - A fork with my simplified reading notes.
 
 # On going
-
+- [CP:         Concurrency and parallelism](CP.md)
 - [E:          Error handling](E.md)
 - [F:          Functions](F.md)
 - [I:          Interfaces](I.md)
@@ -38,7 +38,6 @@
 
 # TO READ
 - P: Philosophy
-- CP: Concurrency and parallelism
 - Con: Constants and immutability
 - T: Templates and generic programming
 - CPL: C-style programming
