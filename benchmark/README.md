@@ -1,3 +1,3 @@
 # Benchmark playground
-[Dynamic dispatch](dynamicDispatch.h)
-[String copy](stringCopy.h)
+- [Dynamic dispatch](dynamicDispatch.h)
+- [String copy](stringCopy.h)
