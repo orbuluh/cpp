@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
     //comma_op_magic::demo();
     //heterogenous_lookup::demo();
     //find_example::demo();
-    //fold_expression::demo();
-    structural_binding::demo();
+    fold_expression::demo();
+    //structural_binding::demo();
     return 0;
 }

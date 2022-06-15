@@ -1,35 +1,26 @@
 #include <iostream>
 namespace fold_expression {
 
+template<typename ...Args>
+void printer1(Args&&... args)
+{
 
-bool allVar() {                                              // (1)
-    return true;
+    // form 4: (I op ... op E)
+    (std::cout << ... << args) << '\n';
 }
 
-template<typename T, typename ...Ts>                         // (2)
-bool allVar(T t, Ts ... ts) {                                // (3)
-    return t && allVar(ts...);                               // (4)
+template<typename ...Args>
+void printer2(Args&&... args)
+{
+    // form 2: (... op E)
+    std::cout << (... << args) << '\n';
 }
-
-template<typename... Args>                                   // (5)
-bool all(Args... args) { return (... && args); }
 
 void demo() {
-    std::cout << std::boolalpha;
-
-    std::cout << '\n';
-
-    std::cout << "allVar(): " << allVar() << '\n';
-    std::cout << "all(): " << all() << '\n';
-
-    std::cout << "allVar(true): " << allVar(true) << '\n';
-    std::cout << "all(true): " << all(true) << '\n';
-
-    std::cout << "allVar(true, true, true, false): " 
-              << allVar(true, true, true, false) << '\n';
-    std::cout << "all(true, true, true, false): " 
-              << all(true, true, true, false) << '\n';
-
-    std::cout << '\n';
+    std::cout << "form 4: (I op ... op E)\n";
+    printer1(1, 2, 3, 4);
+    std::cout << "form 2: (... op E)\n";
+    printer2(1, 2, 3, 4);
 }
+
 }
