@@ -3,6 +3,7 @@
 
 # On going
 - [CP:         Concurrency and parallelism](CP.md)
+- [CP.con:     Concurrency](CP.con.md)
 - [E:          Error handling](E.md)
 - [F:          Functions](F.md)
 - [I:          Interfaces](I.md)

@@ -133,3 +133,78 @@ if (val < 5) {
   - the less chance you have to wait on a lock (so performance can improve).
 - Immutable data can be safely and efficiently shared. No locking is needed: You can't have a data race on a constant.
 
+## CP.4: Think in terms of tasks, rather than threads
+- A thread is an implementation concept, a way of thinking about the machine.
+- A task is an application notion, something you'd like to do, preferably concurrently with other tasks.
+- Application concepts are easier to reason about.
+
+```cpp
+void some_fun(const std::string& msg) {
+    std::thread publisher(
+        [=] { std::cout << msg; }); // bad: less expressive
+                                    //      and more error-prone
+    auto pubtask = std::async([=] { std::cout << msg; }); // OK
+    // ...
+    publisher.join();
+}
+```
+- With the exception of `async()`, the standard-library facilities are low-level, machine-oriented, threads-and-lock level.
+- This is a necessary foundation, but we have to try to raise the level of abstraction: for productivity, for reliability, and for performance.
+- This is a potent argument for using higher level, more applications-oriented libraries (if possible, built on top of standard-library facilities).
+
+
+## CP.8: Don't try to use `volatile` for synchronization
+- In C++, unlike some other languages, `volatile` does not provide atomicity, does not synchronize between threads, and does not prevent instruction reordering (neither compiler nor hardware).
+- **It simply has nothing to do with concurrency.**
+
+```cpp
+int free_slots = max_slots; // current source of memory for objects
+
+Pool* use()
+{
+    if (int n = free_slots--) return &pool[n];
+}
+```
+- Here we have a problem: This is perfectly good code in a single-threaded program, but have two threads execute this and there is a race condition on free_slots so that two threads might get the same value and `free_slots`.
+- That's (obviously) a bad data race, so people trained in other languages might try to fix it like this:
+```cpp
+volatile int free_slots = max_slots; // current source of memory for objects
+
+Pool* use()
+{
+    if (int n = free_slots--) return &pool[n];
+}
+```
+- This has no effect on synchronization: The data race is still there!
+- The C++ mechanism for this is atomic types:
+```cpp
+atomic<int> free_slots = max_slots; // current source of memory for objects
+
+Pool* use()
+{
+    if (int n = free_slots--) return &pool[n];
+}
+```
+- Now the `--` operation is atomic, rather than a read-increment-write sequence where another thread might get in-between the individual operations.
+- Alternative - Use `atomic` types where you might have used `volatile` in some other language.
+- Use a `mutex` for more complicated examples.
+
+
+## CP.9: Whenever feasible use tools to validate your concurrent code
+- Experience shows that concurrent code is exceptionally hard to get right and that compile-time checking, run-time checks, and testing are less effective at finding concurrency errors than they are at finding errors in sequential code.
+- Subtle concurrency errors can have dramatically bad effects, including memory corruption, deadlocks, and security vulnerabilities.
+- Thread safety is challenging, often getting the better of experienced programmers: tooling is an important strategy to mitigate those risks.
+- There are many tools "out there", both commercial and open-source tools, both research and production tools.
+-  Static enforcement tools:
+   -  both clang and some older versions of GCC have some support for static annotation of thread safety properties.
+   -  Consistent use of this technique turns many classes of thread-safety errors into compile-time errors.
+   -  The annotations are generally local (marking a particular member variable as guarded by a particular mutex), and are usually easy to learn. 
+   -  However, as with many static tools, it can often present false negatives; cases that should have been caught but were allowed.
+- dynamic enforcement tools:
+  - Clang's Thread Sanitizer (aka TSAN) is a powerful example of dynamic tools: it changes the build and execution of your program to add bookkeeping on memory access, absolutely identifying data races in a given execution of your binary.
+  - The cost for this is both memory (5-10x in most cases) and CPU slowdown (2-20x).
+  - Dynamic tools like this are best when applied to integration tests, canary pushes, or unit tests that operate on multiple threads.
+  - Workload matters: When TSAN identifies a problem, it is effectively always an actual data race, but it can only identify races seen in a given execution.
+
+# Subsections
+- [CP.con: Concurrency](CP.con.md)
