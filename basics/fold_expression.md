@@ -1,11 +1,13 @@
 - reading notes from
-  - [MODERNES C++](https://www.modernescpp.com/index.php/from-variadic-templates-to-fold-expressions)
   - [Fluent C++ post](https://www.fluentcpp.com/2021/03/12/cpp-fold-expressions/)
+  - [cppreference](https://en.cppreference.com/w/cpp/language/fold)
 - [playground](fold_expression.h)
 
 # Quick fact
 - Since C++17
 - Reduces (folds) a [parameter pack](parameter_pack.md) over **a binary operator**.
+- "A fold expression is an instruction for the compiler to repeat the application of an operator over a **variadic template pack.**"
+- The position of ... specifies left or right associativity, but doesn't change the order of arguments.
 - Four syntax (**Note that the opening and closing parentheses are a required part of the fold expression.**):
 ```cpp
 ( pack op ... )	// unary right fold
@@ -47,31 +49,4 @@ printer2(1, 2, 3, 4); // result: 512
 // so it basically becomes...
 // std::cout << (((1 << 2) << 3) << 4) << '\n';
 // e.g. 4 * 8 * 16 = 512!!!!
-```
-- A fold expression is an instruction for the compiler to repeat the application of an operator over a **variadic template pack.**
-- The position of ... specifies left or right associativity, but doesn't change the order of arguments.
-  - The (left/right) associativity is on the same side as the dot dot dot.
-  - For example:
-```cpp
-// left fold
-/* e.g.
-int minus(int const& value1, int const& value2, int const& value3)
-{
-    return ((value1 - value2) - value3);
-}                                                                 */
-template <typename... Values>
-auto minus(Values const&... values) {
-    return (... + values);
-}
-
-// right fold
-/* e.g.
-int minus(int const& value1, int const& value2, int const& value3)
-{
-    return (value1 - (value2 - value3));
-}                                                                 */
-template <typename... Values>
-auto minus(Values const&... values) {
-    return (values + ...);
-}
 ```
