@@ -5,7 +5,6 @@
 - [std::binary_search, std::upper_bound, std::lower_bound](binary_search.md)
 - [std::next_permutation](permutation.md)
 
-
 ## data structure related aha
 - [std::vector](vector_ops.md)
   - more about `insert` and `erase`
@@ -17,5 +16,5 @@
 
 # Language related
 - [Comma operator](comma_operator.md)
-- [Parameter pack](parameter_pack.md)
+- [Parameter pack](parameter_pack.md), [Fold expression](fold_expression.md)
 - [Structural binding](structural_binding.md)
