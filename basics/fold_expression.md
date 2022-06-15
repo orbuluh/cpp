@@ -1,6 +1,7 @@
 - reading notes from
   - [MODERNES C++](https://www.modernescpp.com/index.php/from-variadic-templates-to-fold-expressions)
   - [Fluent C++ post](https://www.fluentcpp.com/2021/03/12/cpp-fold-expressions/)
+- [playground](fold_expression.h)
 
 # Quick fact
 - Since C++17
