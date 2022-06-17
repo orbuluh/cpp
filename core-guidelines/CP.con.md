@@ -108,3 +108,19 @@ void some_fct(int* p) {
 ```
 
 
+## CP.24: Think of a thread as a global container (when it's detached)
+- To maintain pointer safety and avoid leaks, we need to consider what pointers are used by a thread.
+- If a thread is detached, we can safely pass pointers to static and free store objects (only).
+  - Note: Even objects with static storage duration can be problematic if used from detached threads:
+    - if the thread continues until the end of the program, it might be running concurrently with the destruction of objects with static storage duration, and thus accesses to such objects might race.
+- Note: This rule is redundant if you don't `detach()` and use `gsl::joining_thread`.
+- If we cannot prove that a thread does not `detach()`, we must assume that it does and that it outlives the scope in which it was constructed; After that, the usual lifetime and ownership (for global objects) enforcement applies.
+
+
+## CP.25: Prefer `gsl::joining_thread` over `std::thread`
+- A `joining_thread` is a thread that joins at the end of its scope.
+- Detached threads are hard to monitor.
+- It is harder to ensure absence of errors in detached threads (and potentially detached threads).
+- Note: Make "immortal threads" globals, put them in an enclosing scope, or put them on the free store rather than `detach()`. **Don't detach.**
+- Note: Because of old code and third party libraries using `std::thread`, this rule can be hard to introduce.
+
