@@ -124,3 +124,182 @@ void some_fct(int* p) {
 - Note: Make "immortal threads" globals, put them in an enclosing scope, or put them on the free store rather than `detach()`. **Don't detach.**
 - Note: Because of old code and third party libraries using `std::thread`, this rule can be hard to introduce.
 
+
+## CP.26: Don't `detach()` a thread
+- Often, the need to outlive the scope of its creation is inherent in the threads task, but implementing that idea by detach makes it harder to monitor and communicate with the detached thread.
+- In particular, it is harder (though not impossible) to ensure that the thread completed as expected or lives for as long as expected.
+
+```cpp
+void heartbeat();
+
+void use()
+{
+    std::thread t(heartbeat);             // don't join; heartbeat is meant to run forever
+    t.detach();
+    // ...
+}
+```
+- This is a reasonable use of a thread, for which `detach()` is commonly used.
+- There are problems, though. How do we monitor the detached thread to see if it is alive? Something might go wrong with the heartbeat, and losing a heartbeat can be very serious in a system for which it is needed.
+- So, we need to communicate with the heartbeat thread (e.g., through a stream of messages or notification events using a `condition_variable`).
+- An alternative, and usually superior solution is to control its lifetime by placing it in a scope outside its point of creation (or activation).
+
+```cpp
+void heartbeat();
+
+gsl::joining_thread t(heartbeat);             // heartbeat is meant to run "forever"
+```
+- This heartbeat will (barring error, hardware problems, etc.) run for as long as the program does.
+- Sometimes, we need to separate the point of creation from the point of ownership:
+
+```cpp
+void heartbeat();
+unique_ptr<gsl::joining_thread> tick_tock {nullptr};
+
+void use()
+{
+    // heartbeat is meant to run as long as tick_tock lives
+    tick_tock = make_unique<gsl::joining_thread>(heartbeat);
+    // ...
+}
+```
+
+
+## CP.31: Pass small amounts of data between threads by value, rather than by reference or pointer
+- A small amount of data is cheaper to copy and access than to share it using some locking mechanism.
+- Copying naturally gives unique ownership (simplifies code) and eliminates the possibility of data races.
+
+```cpp
+Example
+string modify1(string);
+void modify2(string&);
+
+void fct(string& s)
+{
+    auto res = async(modify1, s);
+    async(modify2, s);
+}
+```
+
+- The call of `modify1` involves copying two string values; the call of `modify2` does not.
+- On the other hand, the implementation of `modify1` is exactly as we would have written it for single-threaded code, whereas the implementation of `modify2` will need some form of locking to avoid data races.
+- If the string is short (say 10 characters), the call of `modify1` can be surprisingly fast; essentially all the cost is in the thread switch.
+- If the string is long (say 1,000,000 characters), copying it twice is probably not a good idea.
+- Note that this argument has nothing to do with async as such. It applies equally to considerations about whether to use message passing or shared memory.
+
+
+## CP.32: To share ownership between unrelated threads use `shared_ptr`
+- If threads are unrelated (that is, not known to be in the same scope or one within the lifetime of the other) **and they need to share free store memory that needs to be deleted**, a `shared_ptr` (or equivalent) is the only safe way to ensure proper deletion.
+- Note: A static object (e.g. a global) can be shared because it is not owned in the sense that some thread is responsible for its deletion.
+- An object on free store that is never to be deleted can be shared.
+- An object owned by one thread can be safely shared with another as long as that second thread doesn't outlive the owner.
+
+## CP.40: Minimize context switching
+- Context switches are expensive.
+
+## CP.41: Minimize thread creation and destruction
+- Thread creation is expensive.
+
+```cpp
+void worker(Message m)
+{
+    // process
+}
+
+void dispatcher(istream& is)
+{
+    for (Message m; is >> m; )
+        run_list.push_back(new thread(worker, m));
+}
+```
+- This spawns a thread per message, and the run_list is presumably managed to destroy those tasks once they are finished.s
+- Instead, we could have a set of pre-created worker threads processing the messages
+
+```cpp
+Sync_queue<Message> work;
+
+void dispatcher(istream& is)
+{
+    for (Message m; is >> m; )
+        work.put(m);
+}
+
+void worker()
+{
+    for (Message m; m = work.get(); ) {
+        // process
+    }
+
+}
+
+void workers()  // set up worker threads (specifically 4 worker threads)
+{
+    joining_thread w1 {worker};
+    joining_thread w2 {worker};
+    joining_thread w3 {worker};
+    joining_thread w4 {worker};
+}
+```
+- If your system has a good thread pool, use it.
+- If your system has a good message queue, use it.
+
+
+## CP.42: Don't wait without a condition
+- A wait without a condition can miss a wakeup or wake up simply to find that there is no work to do.
+
+```cpp
+std::condition_variable cv;
+std::mutex mx;
+
+void thread1()
+{
+    while (true) {
+        // do some work ...
+        std::unique_lock<std::mutex> lock(mx);
+        cv.notify_one();    // wake other thread
+    }
+}
+
+void thread2()
+{
+    while (true) {
+        std::unique_lock<std::mutex> lock(mx);
+        cv.wait(lock);    // might block forever
+        // do work ...
+    }
+}
+```
+- Here, if some other thread consumes `thread1`'s notification, `thread2` can wait forever.
+
+```cpp
+template<typename T>
+class Sync_queue {
+public:
+    void put(const T& val);
+    void put(T&& val);
+    void get(T& val);
+private:
+    mutex mtx;
+    condition_variable cond;    // this controls access
+    list<T> q;
+};
+
+template<typename T>
+void Sync_queue<T>::put(const T& val)
+{
+    lock_guard<mutex> lck(mtx);
+    q.push_back(val);
+    cond.notify_one();
+}
+
+template<typename T>
+void Sync_queue<T>::get(T& val)
+{
+    unique_lock<mutex> lck(mtx);
+    cond.wait(lck, [this] { return !q.empty(); });    // prevent spurious wakeup
+    val = q.front();
+    q.pop_front();
+}
+```
+- Now if the queue is empty when a thread executing `get()` wakes up (e.g., because another thread has gotten to `get()` before it), it will immediately go back to sleep, waiting.
+
