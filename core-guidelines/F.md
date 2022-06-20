@@ -3,6 +3,66 @@
 ## F.7: For general use, take `T*` or `T&` arguments rather than smart pointers
 - NOT YET READ
 
+## F.20: For "out" output values, prefer return values to output parameters
+- A return value is self-documenting, whereas a `&` could be either in-out or out-only and is liable to be misused.
+- This includes large objects like standard containers that use implicit move operations for performance and to avoid explicit memory management.
+- **If you have multiple values to return, use a tuple or similar multi-member type.**
+```cpp
+// Example OK: return pointers to elements with the value x
+vector<const int*> find_all(const vector<int>&, int x);
+
+// Bad: place pointers to elements with value x in-out
+void find_all(const vector<int>&, vector<const int*>& out, int x);
+```
+- Note: A struct of many (individually cheap-to-move) elements might be in aggregate expensive to move.
+- Note: **It is not recommended to return a const value.** Such older advice is now obsolete; it does not add value, and it interferes with move semantics.
+```cpp
+const vector<int> fct();    // bad: that "const" is more trouble than it is worth
+
+void g(vector<int>& vx)
+{
+    // ...
+    fct() = vx;   // prevented by the "const"
+    // ...
+    vx = fct(); // expensive copy: move semantics suppressed by the "const"
+    // ...
+}
+```
+- The argument for adding `const` to a return value is that it prevents (very rare) accidental access to a temporary.
+- The argument against is that **it prevents (very frequent) use of move semantics.**
+
+- Exceptions:
+  - For non-concrete types, such as types in an inheritance hierarchy, return the object by `unique_ptr` or `shared_ptr`.
+  - If a type is expensive to move (e.g., `array<BigPOD>`), consider allocating it on the free store and return a handle (e.g., `unique_ptr`), or passing it in a reference to non-const target object to fill (to be used as an out-parameter).
+  - To reuse an object that carries capacity (e.g., `std::string`, `std::vector`) across multiple calls to the function in an inner loop: treat it as an in/out parameter and pass by reference.
+- Example: Assuming that Matrix has move operations (possibly by keeping its elements in a `std::vector`):
+```cpp
+Matrix operator+(const Matrix& a, const Matrix& b)
+{
+    Matrix res;
+    // ... fill res with the sum ...
+    return res;
+}
+
+Matrix x = m1 + m2;  // move constructor
+
+y = m3 + m3;         // move assignment
+```
+- Note: The return value optimization doesn't handle the assignment case, but the move assignment does.
+```cpp
+Example
+struct Package {      // exceptional case: expensive-to-move object
+    char header[16];
+    char load[2024 - 16];
+};
+
+Package fill();       // Bad: large return value
+void fill(Package&);  // OK
+
+int val();            // OK
+void val(int&);       // Bad: Is val reading its argument
+```
+
 ## F.50: Use a lambda when a function won't do (to capture local variables, or to write a local function)
 - Functions can't **capture local variables** or be **defined at local scope**; if you need those things, prefer a lambda where possible, and a handwritten function object where not.
 - On the other hand, lambdas and function objects don't overload; **if you need to overload, prefer a function** (the workarounds to make lambdas overload are ornate).

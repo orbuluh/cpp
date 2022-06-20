@@ -208,3 +208,4 @@ Pool* use()
 
 # Subsections
 - [CP.con: Concurrency](CP.con.md)
+- [CP.coro: Coroutines](CP.coro.md)

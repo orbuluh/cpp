@@ -3,7 +3,7 @@
 
 # On going
 - [CP:         Concurrency and parallelism](CP.md)
-- [CP.con:     Concurrency](CP.con.md)
+
 - [E:          Error handling](E.md)
 - [F:          Functions](F.md)
 - [I:          Interfaces](I.md)
@@ -36,7 +36,8 @@
   - [ES.stmt:    Statements](ES.stmt.md)
   - [ES.arith    Arithmetic](ES.arith.md)
 - [Per:        Performance](Per.md)
-
+  - [CP.con:     Concurrency](CP.con.md)
+  - [CP.coro:    Coroutines](CP.coro.md)
 # TO READ
 - P: Philosophy
 - Con: Constants and immutability

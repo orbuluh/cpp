@@ -5,6 +5,19 @@ This section focuses on relatively ad-hoc uses of multiple threads communicating
 - For vector parallel code, see [vectorization](CP.vec.md)
 - For lock-free programming, see [lock free](CP.free.md)
 
+- [CP.con: Concurrency](#cpcon-concurrency)
+  - [CP.20: Use RAII, never plain `lock()`/`unlock()`](#cp20-use-raii-never-plain-lockunlock)
+  - [CP.21: Use `std::lock()` or `std::scoped_lock` to acquire multiple mutexes](#cp21-use-stdlock-or-stdscoped_lock-to-acquire-multiple-mutexes)
+  - [CP.22: Never call unknown code while holding a lock (e.g., a callback)](#cp22-never-call-unknown-code-while-holding-a-lock-eg-a-callback)
+  - [CP.23: Think of a joining thread as a scoped container](#cp23-think-of-a-joining-thread-as-a-scoped-container)
+  - [CP.24: Think of a thread as a global container (when it's detached)](#cp24-think-of-a-thread-as-a-global-container-when-its-detached)
+  - [CP.25: Prefer `gsl::joining_thread` over `std::thread`](#cp25-prefer-gsljoining_thread-over-stdthread)
+  - [CP.26: Don't `detach()` a thread](#cp26-dont-detach-a-thread)
+  - [CP.31: Pass small amounts of data between threads by value, rather than by reference or pointer](#cp31-pass-small-amounts-of-data-between-threads-by-value-rather-than-by-reference-or-pointer)
+  - [CP.32: To share ownership between unrelated threads use `shared_ptr`](#cp32-to-share-ownership-between-unrelated-threads-use-shared_ptr)
+  - [CP.40: Minimize context switching](#cp40-minimize-context-switching)
+  - [CP.41: Minimize thread creation and destruction](#cp41-minimize-thread-creation-and-destruction)
+  - [CP.42: Don't wait without a condition](#cp42-dont-wait-without-a-condition)
 
 ## CP.20: Use RAII, never plain `lock()`/`unlock()`
 - Avoids nasty errors from unreleased locks.
