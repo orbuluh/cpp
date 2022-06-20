@@ -2,6 +2,8 @@
 
 ## Language related
 - [static](static.md)
+- [linkage](linkage.md)
+- [translation unit](translation_unit.md)
 - [Comma operator](comma_operator.md)
 - [Parameter pack](parameter_pack.md), [Fold expression](fold_expression.md)
 - [Structural binding](structural_binding.md)
