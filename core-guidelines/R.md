@@ -99,6 +99,30 @@ public:
 ## R.6: Avoid non-const global variables
 - [I.2](I.md#i2-avoid-non-const-global-variables)
 
+## R.12: Immediately give the result of an explicit resource allocation to a manager object
+- If you don't, an exception or a return might lead to a leak.
+
+```cpp
+// Example, bad
+void f(const string& name)
+{
+    FILE* f = fopen(name, "r");            // open the file
+    vector<char> buf(1024);                // could have thrown and leak the handle
+    auto _ = finally([f] { fclose(f); });  // remember to close the file
+    // ...
+}
+```
+```cpp
+// Example
+void f(const string& name)
+{
+    ifstream f{name};   // open the file
+    vector<char> buf(1024);
+    // ...
+}
+```
+- The use of the file handle (in `ifstream`) is simple, efficient, and safe.
+
 # Subsections
 - [R.alloc](R.alloc.md)
 - [R.smart](R.smart.md)

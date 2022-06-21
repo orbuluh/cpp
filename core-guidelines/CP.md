@@ -206,6 +206,23 @@ Pool* use()
   - Dynamic tools like this are best when applied to integration tests, canary pushes, or unit tests that operate on multiple threads.
   - Workload matters: When TSAN identifies a problem, it is effectively always an actual data race, but it can only identify races seen in a given execution.
 
+
+# CP.par: Parallelism
+- By "parallelism" we refer to **performing a task (more or less) simultaneously** ("in parallel with") on many data items.
+- Parallelism rule summary:
+- Where appropriate, prefer the standard-library parallel algorithms
+- Use algorithms that are designed for parallelism, not algorithms with unnecessary dependency on linear evaluation
+
+# CP.vec: Vectorization
+- Vectorization is a technique for executing a number of tasks **concurrently without introducing explicit synchronization.**
+- An operation is simply applied to elements of a data structure (a vector, an array, etc.) in parallel.
+- Vectorization has the interesting property of often requiring no non-local changes to a program.
+- However, vectorization works best with simple data structures and with algorithms specifically crafted to enable it.
+
+
 # Subsections
 - [CP.con: Concurrency](CP.con.md)
 - [CP.coro: Coroutines](CP.coro.md)
+- [CP.par: Parallelism](#cppar-parallelism)
+- [CP.mess: Message passing](CP.mess.md)
+- [CP.vec: Vectorization](#cpvec-vectorization)
