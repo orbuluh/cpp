@@ -9,9 +9,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory(ch2.managing_threads ManagingThreads)
+add_subdirectory(event_loop EventLoop)
 
 list(APPEND EXTRA_LIBS
     ManagingThreads
+    EventLoop
 )
 
 add_executable(concurrency main.cpp)
