@@ -7,15 +7,13 @@
 - If you want to customized comparator, it's the third argument. You have to specify container type.
 
 # Applicability
-- maintain a minPQ with size k, then the top() element is the k-th largest number.
-- say you have an array and you want to keep the k most largest number -> [Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/)
-  - you can maintain a maxPQ with size being `size(array) - k`, and whenever you push t o the maxPQ while the size exceed `size(array) - k`, then the top must be one of the number among the k most largest.
-  - ```cpp
-        // say maxQ {6, 5, 4, 3, 2, 1}
-        // k == 2 -> then the last 6 - k == 4 elements doesn't matter
-        // or to put it other way - whenever pq's size is larger than 4
-        // the top of the PQ must be one of the number we want
-  ```
+- `{1, 2, 3, 4, 5, 6}`
+- 2-th (k = 2) largest is 5, you can think it in two way:
+  - maintain a minPQ, with size k = 2. Keep pushing element and pop top (current min) out. Then at the end, the top element is the 2 (k-th) largest.
+  - maintain a maxPQ, pushing all element then pop k - 1 = 1 element. Then the top is the 2 (k-th) largest
+- [Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/)
+- [Kth Largest Element in an Array](https://leetcode.com/problems/kth-largest-element-in-an-array/)
+  - There is actually a quicker way -> partition (in quick sort) to find the k-th largest ... [note to be added]
 
 # Customized comparator
 ```cpp
