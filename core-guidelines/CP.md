@@ -219,10 +219,10 @@ Pool* use()
 - Vectorization has the interesting property of often requiring no non-local changes to a program.
 - However, vectorization works best with simple data structures and with algorithms specifically crafted to enable it.
 
-
 # Subsections
 - [CP.con: Concurrency](CP.con.md)
 - [CP.coro: Coroutines](CP.coro.md)
 - [CP.par: Parallelism](#cppar-parallelism)
 - [CP.mess: Message passing](CP.mess.md)
 - [CP.vec: Vectorization](#cpvec-vectorization)
+- [CP.free: Lock-free programming](CP.free.md)

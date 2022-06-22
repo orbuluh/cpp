@@ -3,7 +3,6 @@
 
 # On going
 - [CP:         Concurrency and parallelism](CP.md)
-- [CP.mess:    Message passing](CP.mess.md)
 - [E:          Error handling](E.md)
 - [F:          Functions](F.md)
 - [I:          Interfaces](I.md)
@@ -38,7 +37,8 @@
 - [Per:        Performance](Per.md)
   - [CP.con:     Concurrency](CP.con.md)
   - [CP.coro:    Coroutines](CP.coro.md)
-  - 
+  - [CP.mess:    Message passing](CP.mess.md)
+  - [CP.free:    Lock-free programming](CP.free.md)
 # TO READ
 - P: Philosophy
 - Con: Constants and immutability

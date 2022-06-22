@@ -4,6 +4,9 @@
 - If possible, use a higher level facility: messaging libraries, parallel algorithms, and vectorization.
 - This section looks at passing messages so that a programmer doesn't have to do explicit synchronization.
 
+- [CP.mess: Message passing](#cpmess-message-passing)
+  - [CP.60: Use a `future` to return a value from a concurrent task](#cp60-use-a-future-to-return-a-value-from-a-concurrent-task)
+  - [CP.61: Use `async()` to spawn concurrent tasks](#cp61-use-async-to-spawn-concurrent-tasks)
 
 ## CP.60: Use a `future` to return a value from a concurrent task
 - A `future` preserves the usual function call return semantics for asynchronous tasks.
