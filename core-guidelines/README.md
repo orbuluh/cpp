@@ -2,7 +2,6 @@
 - A fork with my simplified reading notes.
 
 # On going
-- [CP:         Concurrency and parallelism](CP.md)
 - [E:          Error handling](E.md)
 - [F:          Functions](F.md)
 - [I:          Interfaces](I.md)
@@ -35,10 +34,15 @@
   - [ES.stmt:    Statements](ES.stmt.md)
   - [ES.arith    Arithmetic](ES.arith.md)
 - [Per:        Performance](Per.md)
+- [CP:         Concurrency and parallelism](CP.md)
   - [CP.con:     Concurrency](CP.con.md)
   - [CP.coro:    Coroutines](CP.coro.md)
   - [CP.mess:    Message passing](CP.mess.md)
   - [CP.free:    Lock-free programming](CP.free.md)
+  - [CP.etc:     Etc. concurrency rules](CP.etc.md)
+
+
+
 # TO READ
 - P: Philosophy
 - Con: Constants and immutability
