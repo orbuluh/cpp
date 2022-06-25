@@ -252,6 +252,73 @@ void no_leak_simplified(int x)
 - **Sometimes, `finally()` can make such unsystematic cleanup a bit more manageable.**
 
 
+## E.14: Use purpose-designed user-defined types as exceptions (not built-in types)
+- A user-defined type can better transmit information about an error to a handler.
+- Information can be encoded into the type itself and the type is unlikely to clash with other people's exceptions.
+
+```cpp
+throw 7; // bad
+throw "something bad";  // bad
+throw std::exception{}; // bad - no info
+```
+- Deriving from `std::exception` gives the flexibility to catch the specific exception or handle generally through `std::exception`:
+```cpp
+class MyException : public std::runtime_error
+{
+public:
+    MyException(const string& msg) : std::runtime_error{msg} {}
+    // ...
+};
+// ...
+throw MyException{"something bad"};  // good
+```
+- Exceptions do not need to be derived from std::exception:
+```cpp
+class MyCustomError final {};  // not derived from std::exception
+
+// ...
+
+throw MyCustomError{};  // good - handlers must catch this type (or ...)
+```
+- Library types derived from `std::exceptio`n can be used as generic exceptions if no useful information can be added at the point of detection:
+```cpp
+throw std::runtime_error("someting bad"); // good
+
+// ...
+throw std::invalid_argument("i is not even"); // good
+//enum classes are also allowed:
+enum class alert {RED, YELLOW, GREEN};
+throw alert::RED; // good
+```
+
+
+## E.15: Throw by value, catch exceptions from a hierarchy by reference
+- Throwing by value (not by pointer) and catching by reference prevents copying, especially slicing base subobjects.
+```cpp
+// Example; bad
+void f() {
+    try {
+        // ...
+        throw new widget{}; // don't: throw by value not by raw pointer
+        // ...
+    } catch (base_class e) { // don't: might slice
+        // ...
+    }
+}
+```
+Instead, use a reference:
+
+catch (base_class& e) { /* ... */ }
+or - typically better still - a const reference:
+
+catch (const base_class& e) { /* ... */ }
+Most handlers do not modify their exception and in general we recommend use of const.
+
+Note
+Catch by value can be appropriate for a small value type such as an enum value.
+
+Note
+To rethrow a caught exception use throw; not throw e;. Using throw e; would throw a new copy of e (sliced to the static type std::exception) instead of rethrowing the original exception of type std::runtime_error. (But keep Don't try to catch every exception in every function and Minimize the use of explicit try/catch in mind.)
 
 
 
