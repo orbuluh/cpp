@@ -291,9 +291,8 @@ enum class alert {RED, YELLOW, GREEN};
 throw alert::RED; // good
 ```
 
-
-## E.15: Throw by value, catch exceptions from a hierarchy by reference
-- Throwing by value (not by pointer) and catching by reference prevents copying, especially slicing base subobjects.
+## E.15: Throw by **value**, catch exceptions from a hierarchy by **reference**
+- Throwing by value (not by pointer) and catching by reference prevents copying, especially **slicing** base subobjects.
 ```cpp
 // Example; bad
 void f() {
@@ -306,24 +305,18 @@ void f() {
     }
 }
 ```
-Instead, use a reference:
-
-catch (base_class& e) { /* ... */ }
-or - typically better still - a const reference:
-
+- Instead, use a reference:
+```cpp
+  catch (base_class& e) { /* ... */ }
+```
+- or - typically better still - a const reference:
+```cpp
 catch (const base_class& e) { /* ... */ }
-Most handlers do not modify their exception and in general we recommend use of const.
-
-Note
-Catch by value can be appropriate for a small value type such as an enum value.
-
-Note
-To rethrow a caught exception use throw; not throw e;. Using throw e; would throw a new copy of e (sliced to the static type std::exception) instead of rethrowing the original exception of type std::runtime_error. (But keep Don't try to catch every exception in every function and Minimize the use of explicit try/catch in mind.)
-
-
-
-
-
+```
+- Most handlers do not modify their exception and in general we recommend use of const.
+- Note: Catch by value can be appropriate for a small value type such as an enum value.
+- Note: To rethrow a caught exception use throw; not `throw e;`. Using `throw e;` would throw a new copy of `e` (sliced to the static type `std::exception`) instead of rethrowing the original exception of type `std::runtime_error`.
+- (But keep **Don't try to catch every exception in every function and Minimize the use of explicit try/catch in mind.**)
 
 ## E.16: Destructors, deallocation, and swap must never fail
 - **The standard library assumes that destructors, deallocation functions (e.g., operator delete), and swap do not throw.** If they do, basic standard-library invariants are broken.
@@ -344,3 +337,114 @@ class Connection {
 - For example, we might put a socket that does not want to close on a "bad socket" list, to be examined by a regular sweep of the system state. **Every example we have seen of this is error-prone, specialized, and often buggy.**
 - Deallocation functions, including operator delete, must be noexcept. swap functions must be noexcept. Most destructors are implicitly noexcept by default. Also, [make move operations noexcept](C.copy.md#c66-make-move-operations-noexcept).
 
+## E.17: Don't try to catch every exception in every function
+- Catching an exception in a function that cannot take a meaningful recovery action leads to complexity and waste.
+- Let an exception propagate until it reaches a function that can handle it.
+- Let cleanup actions on the unwinding path be handled by RAII.
+
+```cpp
+//Example, don't
+void f() // bad
+{
+    try {
+        // ...
+    } catch (...) {
+        // no action
+        throw; // propagate exception
+    }
+}
+```
+
+## E.18: Minimize the use of explicit try/catch
+- try/catch is verbose and non-trivial uses are error-prone.
+- try/catch can be a sign of unsystematic and/or low-level resource management or error handling.
+
+```cpp
+//Example, Bad
+void f(zstring s) {
+    Gadget* p;
+    try {
+        p = new Gadget(s);
+        // ...
+        delete p;
+    } catch (Gadget_construction_failure) {
+        delete p;
+        throw;
+    }
+}
+```
+- This code is messy.
+  - There could be a leak from the naked pointer in the try block.
+  - Not all exceptions are handled.
+  - Deleting an object that failed to construct is almost certainly a mistake. 
+- Better:
+```cpp
+void f2(zstring s)
+{
+    Gadget g {s};
+}
+```
+- Alternatives:
+  - proper resource handles and RAII
+  - finally
+
+
+## E.19: Use a `final_action` object to express cleanup if no suitable resource handle is available
+- `finally` is less verbose and harder to get wrong than try/catch.
+
+```cpp
+void f(int n)
+{
+    void* p = malloc(n);
+    auto _ = finally([p] { free(p); });
+    // ...
+}
+```
+- Note: `finally` is not as messy as try/catch, but it is still ad-hoc
+- Prefer proper resource management objects. Consider `finally` a last resort.
+- Note: Use of `finally` is a systematic and reasonably clean alternative to the old `goto exit;` technique for dealing with cleanup where resource management is not systematic.
+
+## E.25: If you can't throw exceptions, simulate RAII for resource management
+- Even without exceptions, RAII is usually the best and most systematic way of dealing with resources.
+
+- Note: Error handling using exceptions is the only complete and systematic way of handling **non-local** errors in C++.
+- In particular,
+  - non-intrusively signaling failure to construct an object requires an exception.
+  - Signaling errors in a way that cannot be ignored requires exceptions.
+  - If you can't use exceptions, simulate their use as best you can.
+
+- A lot of fear of exceptions is misguided.
+  - When used for exceptional circumstances in code that is not littered with pointers and complicated control structures, exception handling is almost always affordable (in time and space) and almost always leads to better code.
+  - This, of course, assumes a good implementation of the exception handling mechanisms, which is not available on all systems.
+- There are also cases where the problems above do not apply, but exceptions cannot be used for other reasons.
+  - Some hard-real-time systems are an example: An operation has to be completed within a fixed time with an error or a correct answer.
+  - In the absence of appropriate time estimation tools, this is hard to guarantee for exceptions.
+  - Such systems (e.g. flight control software) typically also ban the use of dynamic (heap) memory.
+
+- So, the primary guideline for error handling is "use exceptions and RAII."
+  - This section deals with the cases where you either do not have an efficient implementation of exceptions, or have such a rat's nest of old-style code (e.g., lots of pointers, ill-defined ownership, and lots of unsystematic error handling based on tests of error codes) that it is infeasible to introduce simple and systematic exception handling.
+- Before condemning exceptions or complaining too much about their cost,
+  - consider examples of the use of error codes.
+  - Consider the cost and complexity of the use of error codes.
+  - If performance is your worry, measure.
+
+- Example: Assume you wanted to write
+```cpp
+void func(zstring arg)
+{
+    Gadget g {arg};
+    // ...
+}
+```
+- If the gadget isn't correctly constructed, `func` exits with an exception.
+- If we cannot throw an exception, we can simulate this RAII style of resource handling by adding a `valid(`) member function to `Gadget`:
+```cpp
+error_indicator func(zstring arg) {
+    Gadget g{arg};
+    if (!g.valid())
+        return gadget_construction_error;
+    // ...
+    return 0; // zero indicates "good"
+}
+```
+- The problem is of course that the caller now has to remember to test the return value. To encourage doing so, consider adding a `[[nodiscard]]`.
