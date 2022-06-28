@@ -17,6 +17,29 @@
   - Complexity errors (logical errors made likely by overly complex expression of ideas)
   - Interface errors (e.g., an unexpected value is passed through an interface)
 
+- [E: Error handling](#e-error-handling)
+  - [E.1: Develop an error-handling strategy early in a designReason](#e1-develop-an-error-handling-strategy-early-in-a-designreason)
+  - [E.2: Throw an exception to signal that a function can't perform its assigned task](#e2-throw-an-exception-to-signal-that-a-function-cant-perform-its-assigned-task)
+  - [E.3: Use exceptions for error handling only](#e3-use-exceptions-for-error-handling-only)
+  - [E.4: Design your error-handling strategy around invariants](#e4-design-your-error-handling-strategy-around-invariants)
+  - [E.5: Let a constructor establish an invariant, and throw if it cannot](#e5-let-a-constructor-establish-an-invariant-and-throw-if-it-cannot)
+  - [E.6: Use RAII to prevent leaks](#e6-use-raii-to-prevent-leaks)
+  - [E.7: State your preconditions](#e7-state-your-preconditions)
+  - [E.8: State your postconditions](#e8-state-your-postconditions)
+  - [E.12: Use `noexcept` when exiting a function because of a throw is **impossible or unacceptable**](#e12-use-noexcept-when-exiting-a-function-because-of-a-throw-is-impossible-or-unacceptable)
+  - [E.13: Never throw while being the direct owner of an object](#e13-never-throw-while-being-the-direct-owner-of-an-object)
+  - [E.14: Use purpose-designed user-defined types as exceptions (not built-in types)](#e14-use-purpose-designed-user-defined-types-as-exceptions-not-built-in-types)
+  - [E.15: Throw by **value**, catch exceptions from a hierarchy by **reference**](#e15-throw-by-value-catch-exceptions-from-a-hierarchy-by-reference)
+  - [E.16: Destructors, deallocation, and swap must never fail](#e16-destructors-deallocation-and-swap-must-never-fail)
+  - [E.17: Don't try to catch every exception in every function](#e17-dont-try-to-catch-every-exception-in-every-function)
+  - [E.18: Minimize the use of explicit try/catch](#e18-minimize-the-use-of-explicit-trycatch)
+  - [E.19: Use a `final_action` object to express cleanup if no suitable resource handle is available](#e19-use-a-final_action-object-to-express-cleanup-if-no-suitable-resource-handle-is-available)
+  - [E.25: If you can't throw exceptions, simulate RAII for resource management](#e25-if-you-cant-throw-exceptions-simulate-raii-for-resource-management)
+  - [E.26: If you can't throw exceptions, consider failing fast](#e26-if-you-cant-throw-exceptions-consider-failing-fast)
+  - [E.27: If you can't throw exceptions, use error codes systematically](#e27-if-you-cant-throw-exceptions-use-error-codes-systematically)
+  - [E.28: Avoid error handling based on global state (e.g. `errno`)](#e28-avoid-error-handling-based-on-global-state-eg-errno)
+  - [E.30: Don't use exception specifications](#e30-dont-use-exception-specifications)
+  - [E.31: Properly order your catch-clauses](#e31-properly-order-your-catch-clauses)
 
 ## E.1: Develop an error-handling strategy early in a designReason
 - A consistent and complete strategy for handling errors and resource leaks is hard to retrofit into a system.
@@ -448,3 +471,216 @@ error_indicator func(zstring arg) {
 }
 ```
 - The problem is of course that the caller now has to remember to test the return value. To encourage doing so, consider adding a `[[nodiscard]]`.
+
+## E.26: If you can't throw exceptions, consider failing fast
+- If you can't do a good job at recovering, at least you can get out before too much consequential damage is done.
+- Note: If you cannot be systematic about error handling, consider "crashing" as a response to any error that cannot be handled locally.
+  - That is, if you cannot recover from an error in the context of the function that detected it, call `abort()`, `quick_exit()`, or a similar function that will trigger some sort of system restart.
+  - In systems where you have lots of processes and/or lots of computers, you need to expect and handle fatal crashes anyway, say from hardware failures. In such cases, "crashing" is simply leaving error handling to the next level of the system.
+
+```cpp
+void f(int n) {
+    // ...
+    p = static_cast<X*>(malloc(n * sizeof(X)));
+    if (!p)
+        abort(); // abort if memory is exhausted
+    // ...
+}
+```
+- Most programs cannot handle memory exhaustion gracefully anyway. This is roughly equivalent to
+
+```cpp
+void f(int n) {
+    // ...
+    p = new X[n]; // throw if memory is exhausted (by default, terminate)
+    // ...
+}
+```
+- Typically, it is a good idea to log the reason for the "crash" before exiting.
+
+## E.27: If you can't throw exceptions, use error codes systematically
+- Systematic use of any error-handling strategy minimizes the chance of forgetting to handle an error.
+- Note: There are several issues to be addressed:
+  - How do you transmit an error indicator from out of a function?
+  - How do you release all resources from a function before doing an error exit?
+  - What do you use as an error indicator?
+  - In general, returning an error indicator implies returning two values: The result and an error indicator.
+  - The error indicator can be part of the object, e.g. an object can have a `valid()` indicator or a pair of values can be returned.
+
+```cpp
+Gadget make_gadget(int n) {
+    // ...
+}
+
+void user() {
+    Gadget g = make_gadget(17);
+    if (!g.valid()) {
+        // error handling
+    }
+    // ...
+}
+```
+- This approach fits with simulated RAII resource management.
+- The `valid()` function could return an `error_indicator` (e.g. a member of an `error_indicator` enumeration).
+
+- Example: What if we cannot or do not want to modify the `Gadget` type? In that case, we must return a pair of values.
+- For example:
+```cpp
+std::pair<Gadget, error_indicator> make_gadget(int n) {
+    // ...
+}
+
+void user() {
+    auto r = make_gadget(17);
+    if (!r.second) {
+        // error handling
+    }
+    Gadget& g = r.first;
+    // ...
+}
+```
+- As shown, std::pair is a possible return type. Some people prefer a specific type. For example:
+
+```cpp
+Gval make_gadget(int n) {
+    // ...
+}
+
+void user() {
+    auto r = make_gadget(17);
+    if (!r.err) {
+        // error handling
+    }
+    Gadget& g = r.val;
+    // ...
+}
+```
+- One reason to prefer a specific return type is to have names for its members, rather than the somewhat cryptic `first` and `second` and to avoid confusion with other uses of `std::pair`.
+- Example: In general, you must clean up before an error exit. This can be messy:
+
+```cpp
+std::pair<int, error_indicator> user() {
+    Gadget g1 = make_gadget(17);
+    if (!g1.valid()) {
+        return {0, g1_error};
+    }
+
+    Gadget g2 = make_gadget(31);
+    if (!g2.valid()) {
+        cleanup(g1);
+        return {0, g2_error};
+    }
+
+    // ...
+
+    if (all_foobar(g1, g2)) {
+        cleanup(g2);
+        cleanup(g1);
+        return {0, foobar_error};
+    }
+
+    // ...
+
+    cleanup(g2);
+    cleanup(g1);
+    return {res, 0};
+}
+```
+- Simulating RAII can be non-trivial, especially in functions with multiple resources and multiple possible errors.
+- A not uncommon technique is to gather cleanup at the end of the function to avoid repetition (note that the extra scope around `g2` is undesirable but necessary to make the goto version compile):
+
+```cpp
+std::pair<int, error_indicator> user() {
+    error_indicator err = 0;
+    int res = 0;
+
+    Gadget g1 = make_gadget(17);
+    if (!g1.valid()) {
+        err = g1_error;
+        goto g1_exit;
+    }
+
+    {
+        Gadget g2 = make_gadget(31);
+        if (!g2.valid()) {
+            err = g2_error;
+            goto g2_exit;
+        }
+
+        if (all_foobar(g1, g2)) {
+            err = foobar_error;
+            goto g2_exit;
+        }
+
+        // ...
+
+    g2_exit:
+        if (g2.valid())
+            cleanup(g2);
+    }
+
+g1_exit:
+    if (g1.valid())
+        cleanup(g1);
+    return {res, err};
+}
+```
+- The larger the function, the more tempting this technique becomes. `finally` can ease the pain a bit.
+- Also, the larger the program becomes the harder it is to apply an error-indicator-based error-handling strategy systematically.
+- We prefer exception-based error handling and recommend keeping functions short.
+
+## E.28: Avoid error handling based on global state (e.g. `errno`)
+- Global state is hard to manage and it is easy to forget to check it. When did you last test the return value of `printf()`?
+
+```cpp
+// Example, bad
+int last_err;
+
+void f(int n) {
+    // ...
+    p = static_cast<X*>(malloc(n * sizeof(X)));
+    if (!p)
+        last_err = -1; // error if memory is exhausted
+    // ...
+}
+```
+- C-style error handling is based on the global variable `errno`, so it is essentially impossible to avoid this style completely.
+
+## E.30: Don't use exception specifications
+- Exception specifications make error handling brittle, impose a run-time cost, and have been removed from the C++ standard.
+
+```cpp
+int use(int arg) throw(X, Y) {
+    // ...
+    auto x = f(arg);
+    // ...
+}
+```
+- If `f()` throws an exception different from X and Y the unexpected handler is invoked, which by default terminates.
+  - That's OK, but say that we have checked that this cannot happen and `f` is changed to throw a new exception `Z`, we now have a crash on our hands unless we change `use()` (and re-test everything).
+  - The snag is that `f()` might be in a library we do not control and the new exception is not anything that `use()` can do anything about or is in any way interested in.
+- We can change `use()` to pass `Z` through, but now `use()`'s callers probably need to be modified. This quickly becomes unmanageable.
+- Alternatively, we can add a `try-catch` to `use()` to map `Z` into an acceptable exception. This too, quickly becomes unmanageable.
+- Note that changes to the set of exceptions often happens at the lowest level of a system (e.g., because of changes to a network library or some middleware), so changes "bubble up" through long call chains.
+- In a large code base, this could mean that nobody could update to a new version of a library until the last user was modified.
+- If `use()` is part of a library, it might not be possible to update it because a change could affect unknown clients.
+- **The policy of letting exceptions propagate until they reach a function that potentially can handle it has proven itself over the years.**
+- Note: If no exception can be thrown, use `noexcept`.
+
+## E.31: Properly order your catch-clauses
+- catch-clauses are evaluated in the order they appear and one clause can hide another.
+```cpp
+// Example, bad
+void f() {
+    // ...
+    try {
+        // ...
+    } catch (Base& b) {           /* ... */
+    } catch (Derived& d) {        /* ... */
+    } catch (...) {               /* ... */
+    } catch (std::exception& e) { /* ... */
+    }
+}
+```
+- If `Derived` is derived from `Base` the Derived-handler will never be invoked.
+- The "catch everything" handler ensured that the `std::exception`-handler will never be invoked.

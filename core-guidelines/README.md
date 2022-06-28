@@ -2,7 +2,6 @@
 - A fork with my simplified reading notes.
 
 # On going
-- [E:          Error handling](E.md)
 - [F:          Functions](F.md)
 - [I:          Interfaces](I.md)
 - [NL:         Naming and layout rules](NL.md)
@@ -40,7 +39,7 @@
   - [CP.mess:    Message passing](CP.mess.md)
   - [CP.free:    Lock-free programming](CP.free.md)
   - [CP.etc:     Etc. concurrency rules](CP.etc.md)
-
+- [E:          Error handling](E.md)
 
 
 # TO READ
