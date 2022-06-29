@@ -40,11 +40,10 @@
   - [CP.free:    Lock-free programming](CP.free.md)
   - [CP.etc:     Etc. concurrency rules](CP.etc.md)
 - [E:          Error handling](E.md)
-
+- [Con:        Constants and immutability](CON.md)
 
 # TO READ
 - P: Philosophy
-- Con: Constants and immutability
 - T: Templates and generic programming
 - CPL: C-style programming
 - SF: Source files
