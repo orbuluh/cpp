@@ -2,6 +2,7 @@
 - A fork with my simplified reading notes.
 
 # On going
+- [T:          Templates and generic programming](T.md)
 - [F:          Functions](F.md)
 - [I:          Interfaces](I.md)
 - [NL:         Naming and layout rules](NL.md)
@@ -41,10 +42,10 @@
   - [CP.etc:     Etc. concurrency rules](CP.etc.md)
 - [E:          Error handling](E.md)
 - [Con:        Constants and immutability](CON.md)
-
+  - [T.gp: Generic programming](T.gp.md)
 # TO READ
 - P: Philosophy
-- T: Templates and generic programming
+
 - CPL: C-style programming
 - SF: Source files
 - A: Architectural ideas
