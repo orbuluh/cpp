@@ -9,5 +9,6 @@
 
 # Subsections
 - [T.gp: Generic programming](T.gp.md)
+- [T.concepts: Concept rules](T.concept.md)
 
 
