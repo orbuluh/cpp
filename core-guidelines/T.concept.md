@@ -1,5 +1,21 @@
 # T.concepts: Concept rules
 
+- [T.concepts: Concept rules](#tconcepts-concept-rules)
+- [T.con-use: Concept use](#tcon-use-concept-use)
+  - [T.10: Specify concepts for all template arguments](#t10-specify-concepts-for-all-template-arguments)
+  - [T.11: Whenever possible use standard concepts](#t11-whenever-possible-use-standard-concepts)
+  - [T.12: Prefer concept names over `auto` for local variables](#t12-prefer-concept-names-over-auto-for-local-variables)
+  - [T.13: Prefer the shorthand notation for simple, single-type argument concepts](#t13-prefer-the-shorthand-notation-for-simple-single-type-argument-concepts)
+- [T.concepts.def: Concept definition rules](#tconceptsdef-concept-definition-rules)
+  - [T.20: Avoid "concepts" without meaningful semantics](#t20-avoid-concepts-without-meaningful-semantics)
+  - [T.21: Require a complete set of operations for a concept](#t21-require-a-complete-set-of-operations-for-a-concept)
+  - [T.22: Specify axioms for concepts](#t22-specify-axioms-for-concepts)
+  - [T.23: Differentiate a refined concept from its more general case by adding new use patterns.](#t23-differentiate-a-refined-concept-from-its-more-general-case-by-adding-new-use-patterns)
+  - [T.24: Use tag classes or traits to **differentiate concepts that differ only in semantics.**](#t24-use-tag-classes-or-traits-to-differentiate-concepts-that-differ-only-in-semantics)
+  - [T.25: Avoid complementary constraints](#t25-avoid-complementary-constraints)
+  - [T.26: Prefer to define concepts in terms of use-patterns rather than simple syntax](#t26-prefer-to-define-concepts-in-terms-of-use-patterns-rather-than-simple-syntax)
+
+
 # T.con-use: Concept use
 
 ## T.10: Specify concepts for all template arguments
@@ -136,3 +152,241 @@ auto zz = algo(xx, yy); // error: string is not a Number
 ```
 - Note: Concepts with multiple operations have far lower chance of accidentally matching a type than a single-operation concept.
 
+## T.21: Require a complete set of operations for a concept
+- Ease of comprehension. Improved interoperability. Helps implementers and maintainers.
+- This is a specific variant of the general rule that a concept must make semantic sense.
+
+```cpp
+// Bad: This makes no semantic sense. You need at least + to make - meaningful and useful.
+template <typename T>
+concept Subtractable = requires(T a, T b) {
+    a - b;
+};
+```
+- Examples of complete sets are
+  - Arithmetic: +, -, *, /, +=, -=, *=, /=
+  - Comparable: <, >, <=, >=, ==, !=
+- The rule supports the view that a concept should reflect a (mathematically) coherent set of operations.
+
+- Note: This rule applies whether we use direct language support for concepts or not.
+- It is a general design rule that even applies to non-templates:
+  - This is minimal, but surprising and constraining for users. It could even be less efficient.
+```cpp
+class Minimal {
+    // ...
+};
+
+bool operator==(const Minimal&, const Minimal&);
+bool operator<(const Minimal&, const Minimal&);
+
+Minimal operator+(const Minimal&, const Minimal&);
+// no other operators
+
+void f(const Minimal& x, const Minimal& y) {
+    if (!(x == y)) { /* ... */
+    }                // OK
+    if (x != y) {    /* ... */
+    }                // surprise! error
+
+    while (!(x < y)) { /* ... */
+    }                  // OK
+    while (x >= y) {   /* ... */
+    }                  // surprise! error
+
+    x = x + y; // OK
+    x += y;    // surprise! error
+}
+```
+
+```cpp
+class Convenient {
+    // ...
+};
+
+bool operator==(const Convenient&, const Convenient&);
+bool operator<(const Convenient&, const Convenient&);
+// ... and the other comparison operators ...
+
+Minimal operator+(const Convenient&, const Convenient&);
+// ... and the other arithmetic operators ...
+
+void f(const Convenient& x, const Convenient& y) {
+    if (!(x == y)) { /* ... */
+    }                // OK
+    if (x != y) {    /* ... */
+    }                // OK
+
+    while (!(x < y)) { /* ... */
+    }                  // OK
+    while (x >= y) {   /* ... */
+    }                  // OK
+
+    x = x + y; // OK
+    x += y;    // OK
+}
+```
+- It can be a nuisance to define all operators, but not hard. Ideally, that rule should be language supported by giving you comparison operators by default.
+
+
+## T.22: Specify axioms for concepts
+- An **axiom in the mathematical sense: something that can be assumed without proof.**
+- A meaningful/useful concept has a semantic meaning.
+  - Expressing these semantics in an informal, semi-formal, or formal way makes the concept comprehensible to readers and the effort to express it can catch conceptual errors.
+- Specifying semantics is a powerful design tool.
+
+```cpp
+template <typename T>
+// The operators +, -, *, and / for a number are assumed to follow the usual
+// mathematical rules
+// axiom(T a, T b) {
+//      a + b == b + a;
+//      a - a == 0;
+//      a * (b + c) == a * b + a * c;
+//      //...
+// }
+concept Number = requires(T a, T b) {
+    { a + b } -> convertible_to<T>;
+    { a - b } -> convertible_to<T>;
+    { a * b } -> convertible_to<T>;
+    { a / b } -> convertible_to<T>;
+};
+```
+
+- In general, axioms are not provable, and when they are the proof is often beyond the capability of a compiler. An axiom might not be general, but the template writer can assume that it holds for all inputs actually used (similar to a precondition).
+- Note: In this context axioms are Boolean expressions.
+  - Currently, C++ does not support axioms (even the ISO Concepts TS), so we have to make do with comments for a longish while.
+  - Once language support is available, the // in front of the axiom can be removed
+- Note: The GSL concepts have well-defined semantics; see the Palo Alto TR and the Ranges TS.
+- Exception: Early versions of a new "concept" still under development will often just define simple sets of constraints without a well-specified semantics. -
+- Finding good semantics can take effort and time. An incomplete set of constraints can still be very useful:
+
+```cpp
+// balancer for a generic binary tree
+template <typename Node>
+concept Balancer = requires(Node* p) {
+    add_fixup(p);
+    touch(p);
+    detach(p);
+};
+```
+- So a Balancer must supply at least these operations on a tree Node, but we are not yet ready to specify detailed semantics because a new kind of balanced tree might require more operations and the precise general semantics for all nodes is hard to pin down in the early stages of design.
+- A "concept" that is incomplete or without a well-specified semantics can still be useful.
+  - For example, it allows for some checking during initial experimentation.
+  - However, it should not be assumed to be stable. Each new use case might require such an incomplete concept to be improved.
+
+
+## T.23: Differentiate a refined concept from its more general case by adding new use patterns.
+- Otherwise they cannot be distinguished automatically by the compiler.
+- Example:
+```cpp
+template <typename I>
+// Note: input_iterator is defined in <iterator>
+concept Input_iter = requires(I iter) {
+    ++iter;
+};
+
+template <typename I>
+// Note: forward_iterator is defined in <iterator>
+concept Fwd_iter = Input_iter<I> && requires(I iter) {
+    iter++;
+};
+```
+- The compiler can determine refinement based on the sets of required operations (here, suffix ++).
+- This decreases the burden on implementers of these types since they do not need any special declarations to "hook into the concept".
+- If two concepts have exactly the same requirements, they are logically equivalent (there is no refinement).
+
+
+## T.24: Use tag classes or traits to **differentiate concepts that differ only in semantics.**
+- Two concepts requiring the same syntax but having different semantics leads to ambiguity unless the programmer differentiates them.
+
+```cpp
+template <typename I> // iterator providing random access
+// Note: random_access_iterator is defined in <iterator>
+concept RA_iter = ...;
+
+template <typename I> // iterator providing random access to contiguous data
+// Note: contiguous_iterator is defined in <iterator>
+concept Contiguous_iter =
+    RA_iter<I> && is_contiguous_v<I>; // using is_contiguous trait
+```
+- The programmer (in a library) must define `is_contiguous` (a trait) appropriately.
+- Wrapping a tag class into a concept leads to a simpler expression of this idea:
+
+```cpp
+template <typename I>
+concept Contiguous = is_contiguous_v<I>;
+
+template <typename I>
+concept Contiguous_iter = RA_iter<I> && Contiguous<I>;
+```
+- Note: Traits can be trait classes or type traits. These can be user-defined or standard-library ones. Prefer the standard-library ones.
+- The programmer (in a library) must define `is_contiguous` (a trait) appropriately.
+
+
+## T.25: Avoid complementary constraints
+- Clarity. Maintainability. Functions with complementary requirements expressed using negation are brittle.
+- Example: Initially, people will try to define functions with complementary requirements:
+
+```cpp
+template <typename T>
+requires !C<T> // bad
+    void f();
+
+template <typename T>
+requires C<T>
+void f();
+
+// This is better:
+
+template <typename T> // general template
+void f();
+
+template <typename T> // specialization by concept
+requires C<T>
+void f();
+```
+- The compiler will choose the unconstrained template only when `C<T>` is unsatisfied.
+- If you do not want to (or cannot) define an unconstrained version of `f()`, then delete it.
+
+```cpp
+template<typename T>
+void f() = delete;
+```
+- The compiler will select the overload, or emit an appropriate error.
+- Note: Complementary constraints are unfortunately common in `enable_if` code:
+
+```cpp
+template <typename T>
+enable_if<!C<T>, void> // bad
+f();
+
+template <typename T> enable_if<C<T>, void> f();
+```
+- Note: Complementary requirements on **one requirement is sometimes (wrongly) considered manageable**.
+- However, for two or more requirements the number of definitions needs can go up exponentially (2,4,8,16,...) Now the opportunities for errors multiply....
+```cpp
+C1<T> && C2<T>
+!C1<T> && C2<T>
+C1<T> && !C2<T>
+!C1<T> && !C2<T>
+```
+
+## T.26: Prefer to define concepts in terms of use-patterns rather than simple syntax
+- The definition is more readable and corresponds directly to what a user has to write.
+- Conversions are taken into account. You don't have to remember the names of all the type traits.
+
+- Example: You might be tempted to define a concept Equality like this:
+```cpp
+template<typename T> concept Equality = has_equal<T> && has_not_equal<T>;
+```
+- Obviously, it would be better and easier just to use the standard `equality_comparable`, but - just as an example - if you had to define such a concept, prefer:
+```cpp
+template<typename T> concept Equality = requires(T a, T b) {
+    { a == b } -> std::convertible_to<bool>;
+    { a != b } -> std::convertible_to<bool>;
+    // axiom { !(a == b) == (a != b) }
+    // axiom { a = b; => a == b }  // => means "implies"
+};
+```
+- as opposed to defining two meaningless concepts `has_equal` and `has_not_equal` just as helpers in the definition of Equality.
+  - By "meaningless" we mean that we cannot specify the semantics of `has_equal` in isolation.
