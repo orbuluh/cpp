@@ -43,6 +43,7 @@
 - [E:          Error handling](E.md)
 - [Con:        Constants and immutability](CON.md)
   - [T.gp: Generic programming](T.gp.md)
+  - [T.interface Templates interfaces](T.interface.md)
 # TO READ
 - P: Philosophy
 
