@@ -11,4 +11,4 @@
 - [T.gp: Generic programming](T.gp.md)
 - [T.concepts: Concept rules](T.concept.md)
 - [T.interface Templates interfaces](T.interface.md)
-
+- [T.def: Template definitions](T.def.md)

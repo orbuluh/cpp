@@ -44,6 +44,7 @@
 - [Con:        Constants and immutability](CON.md)
   - [T.gp: Generic programming](T.gp.md)
   - [T.interface Templates interfaces](T.interface.md)
+  - [T.def: Template definitions](T.def.md)
 # TO READ
 - P: Philosophy
 
