@@ -45,6 +45,8 @@
   - [T.gp: Generic programming](T.gp.md)
   - [T.interface Templates interfaces](T.interface.md)
   - [T.def: Template definitions](T.def.md)
+  - [T.hier: Template and hierarchy rules](T.hire.md)
+  - [T.var: Variadic template rules](T.md#tvar-variadic-template-rules)
 # TO READ
 - P: Philosophy
 
