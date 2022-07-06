@@ -2,6 +2,13 @@
 - **Templates are the backbone of C++'s support for generic programming** and **class hierarchies the backbone of its support for object-oriented programming**. 
 - The two language mechanisms can be used effectively in combination, but a few design pitfalls must be avoided.
 
+- [T.temp-hier: Template and hierarchy rules:](#ttemp-hier-template-and-hierarchy-rules)
+  - [T.80: Do not naively templatize a class hierarchy](#t80-do-not-naively-templatize-a-class-hierarchy)
+  - [T.81: Do not mix hierarchies and arrays](#t81-do-not-mix-hierarchies-and-arrays)
+  - [T.82: Linearize a hierarchy when virtual functions are undesirable](#t82-linearize-a-hierarchy-when-virtual-functions-are-undesirable)
+  - [T.83: Do not declare a member function template `virtual`](#t83-do-not-declare-a-member-function-template-virtual)
+  - [T.84: Use a non-template core implementation to provide an ABI-stable interface](#t84-use-a-non-template-core-implementation-to-provide-an-abi-stable-interface)
+
 ## T.80: Do not naively templatize a class hierarchy
 - Templating a class hierarchy that has many functions, especially many virtual functions, can lead to code bloat.
 

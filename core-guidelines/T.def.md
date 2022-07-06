@@ -1,6 +1,16 @@
 # T.def: Template definitions
 - This section focuses on what is specific to template implementation. In particular, it focuses on a template definition's dependence on its context.
 
+- [T.def: Template definitions](#tdef-template-definitions)
+  - [T.60: Minimize a template's context dependencies](#t60-minimize-a-templates-context-dependencies)
+  - [T.61: Do not over-parameterize members (SCARY)](#t61-do-not-over-parameterize-members-scary)
+  - [T.62: Place non-dependent class template members in a non-templated base class](#t62-place-non-dependent-class-template-members-in-a-non-templated-base-class)
+  - [T.64: Use specialization to provide alternative implementations of class templates](#t64-use-specialization-to-provide-alternative-implementations-of-class-templates)
+  - [T.65: Use tag dispatch to provide alternative implementations of a function](#t65-use-tag-dispatch-to-provide-alternative-implementations-of-a-function)
+  - [T.67: Use specialization to provide alternative implementations for irregular types](#t67-use-specialization-to-provide-alternative-implementations-for-irregular-types)
+  - [T.68: Use {} rather than () within templates to avoid ambiguities](#t68-use--rather-than--within-templates-to-avoid-ambiguities)
+  - [T.69: Inside a template, don't make an unqualified non-member function call unless you intend it to be a customization point](#t69-inside-a-template-dont-make-an-unqualified-non-member-function-call-unless-you-intend-it-to-be-a-customization-point)
+
 ## T.60: Minimize a template's context dependencies
 - Eases understanding. Minimizes errors from unexpected dependencies. Eases tool creation.
 

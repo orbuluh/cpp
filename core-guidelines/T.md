@@ -13,6 +13,9 @@
 - [T.interface Templates interfaces](T.interface.md)
 - [T.def: Template definitions](T.def.md)
 - [T.hier: Template and hierarchy rules](T.hire.md)
+- [T.var: Variadic template rules](#tvar-variadic-template-rules)
+- [T.meta: Template metaprogramming (TMP)](T.meta.md)
+- [T.other: Other template rules](T.other.md)
 
 # T.var: Variadic template rules
 - (mostly to be added)

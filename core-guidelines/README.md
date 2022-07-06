@@ -2,7 +2,6 @@
 - A fork with my simplified reading notes.
 
 # On going
-- [T:          Templates and generic programming](T.md)
 - [F:          Functions](F.md)
 - [I:          Interfaces](I.md)
 - [NL:         Naming and layout rules](NL.md)
@@ -42,11 +41,14 @@
   - [CP.etc:     Etc. concurrency rules](CP.etc.md)
 - [E:          Error handling](E.md)
 - [Con:        Constants and immutability](CON.md)
+- [T:          Templates and generic programming](T.md)
   - [T.gp: Generic programming](T.gp.md)
   - [T.interface Templates interfaces](T.interface.md)
   - [T.def: Template definitions](T.def.md)
   - [T.hier: Template and hierarchy rules](T.hire.md)
   - [T.var: Variadic template rules](T.md#tvar-variadic-template-rules)
+  - [T.meta: Template metaprogramming (TMP)](T.meta.md)
+  - [T.other: Other template rules](T.other.md)
 # TO READ
 - P: Philosophy
 
