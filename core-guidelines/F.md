@@ -1,7 +1,15 @@
 # F: Functions
 
-## F.7: For general use, take `T*` or `T&` arguments rather than smart pointers
-- NOT YET READ
+- A function specifies an action or a computation that takes the system from one consistent state to the next.
+- It is the fundamental building block of programs.
+- It should be possible to name a function meaningfully, to specify the requirements of its argument, and clearly state the relationship between the arguments and the result.
+- An implementation is not a specification. Try to think about what a function does as well as about how it does it.
+- Functions are the most critical part in most interfaces, so see the interface rules.
+
+
+
+
+
 
 ## F.20: For "out" output values, prefer return values to output parameters
 - A return value is self-documenting, whereas a `&` could be either in-out or out-only and is liable to be misused.

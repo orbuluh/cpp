@@ -3,6 +3,7 @@
 
 # On going
 - [F:          Functions](F.md)
+- [F.def:      Function definitions](F.def.md)
 - [I:          Interfaces](I.md)
 - [NL:         Naming and layout rules](NL.md)
 - [Pro:        Profiles](Pro.md)

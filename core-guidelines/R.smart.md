@@ -76,7 +76,7 @@ class bar {
 ```
 
 ## R.30: Take smart pointers as parameters only to explicitly express lifetime semantics
-- [F.7](F.md)
+- [F.7](F.def.md#f7-for-general-use-take-t-or-t-arguments-rather-than-smart-pointers)
 
 ## R.31: If you have non-std smart pointers, follow the basic pattern from std
 - Any type (including primary template or specialization) that overloads unary `*` and `->` is considered a smart pointer:
