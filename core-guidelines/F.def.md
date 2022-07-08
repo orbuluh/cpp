@@ -154,4 +154,87 @@ vector<string> collect(istream& is) noexcept {
 
 
 ## F.7: For general use, take `T*` or `T&` arguments rather than smart pointers
-- NOT YET READ
+- Passing a smart pointer transfers or shares ownership and should only be used when ownership semantics are intended.
+- A function that does not manipulate lifetime should take raw pointers or references instead.
+- Passing by smart pointer restricts the use of a function to callers that use smart pointers.
+- A function that needs a `widget` should be able to accept any `widget` object, not just ones whose lifetimes are managed by a particular kind of smart pointer.
+- Passing a shared smart pointer (e.g., `std::shared_ptr`) implies a run-time cost.
+
+```cpp
+// Example
+// accepts any int*
+void f(int*);
+
+// can only accept ints for which you want to transfer ownership
+void g(unique_ptr<int>);
+
+// can only accept ints for which you are willing to share ownership
+void g(shared_ptr<int>);
+
+// doesn't change ownership, but requires a particular ownership of the caller
+void h(const unique_ptr<int>&);
+
+// accepts any int
+void h(int&);
+```
+```cpp
+// Example, bad
+//callee
+void f(shared_ptr<widget>& w) {
+    // ...
+    use(*w); // only use of w -- the lifetime is not used at all
+    // ...
+};
+
+// caller
+shared_ptr<widget> my_widget = /* ... */;
+f(my_widget);
+
+widget stack_widget;
+f(stack_widget); // error
+```
+```cpp
+//Example, good
+// callee
+void f(widget& w) {
+// ...
+use(w);
+// ...
+};
+
+// caller
+shared_ptr<widget> my_widget = /* ... */;
+f(*my_widget);
+
+widget stack_widget;
+f(stack_widget); // ok -- now this works
+```
+- Note: We can catch many common cases of dangling pointers statically (see lifetime safety profile).
+- Function arguments naturally live for the lifetime of the function call, and so have fewer lifetime problems.
+- See also:
+    - Prefer T* over T& when "no argument" is a valid option
+    - Smart pointer rule summary
+
+## F.8: Prefer pure functions
+- Pure functions are easier to reason about, sometimes easier to optimize (and even parallelize), and sometimes can be memoized.
+
+## F.9: Unused parameters should be unnamed
+- Readability. Suppression of unused parameter warnings.
+```cpp
+widget* find(const set<widget>& s, const widget& w, Hint);   // once upon a time, a hint was used
+```
+- Note: Allowing parameters to be unnamed was introduced in the early 1980 to address this problem.
+- If parameters are conditionally unused, declare them with the `[[maybe_unused]]` attribute. For example:
+```cpp
+template <typename Value>
+Value* find(const set<Value>& s, const Value& v, [[maybe_unused]] Hint h) {
+    if constexpr (sizeof(Value) > CacheSize) {
+        // a hint is used only if Value is of a certain size
+    }
+}
+```
+
+
+
+
+
