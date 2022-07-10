@@ -9,6 +9,7 @@
 - [NL:         Naming and layout rules](NL.md)
 - [Pro:        Profiles](Pro.md)
 - [SL:         The Standard Library](SL.md)
+- [SL.str:     String](SL.str.md)
 
 # Completed
 - [C:          Classes and class hierarchies](C.md)
