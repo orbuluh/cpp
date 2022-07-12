@@ -286,3 +286,143 @@ void print(const vector<int>& r)
 ```
 - Note: It is possible, but **not valid C++ to construct a reference that is essentially a `nullptr`** (e.g., T* p = nullptr; T& r = *p;). That error is very uncommon.
 - Note: If you prefer the pointer notation (`->` and/or `*` vs. `.`), `not_null<T*>` provides the same guarantee as `T&`.
+
+
+## F.22: Use `T*` or `owner<T*>` to designate a single object
+- Readability: it makes the meaning of a plain pointer clear. Enables significant tool support.
+- In traditional C and C++ code, plain `T*` is used for many weakly-related purposes, such as:
+  - Identify a (single) object (not to be deleted by this function)
+  - Point to an object allocated on the free store (and delete it later)
+  - Hold the nullptr
+  - Identify a C-style string (zero-terminated array of characters)
+  - Identify an array with a length specified separately
+  - Identify a location in an array
+- This makes it hard to understand what the code does and is supposed to do. It complicates checking and tool support.
+
+```cpp
+void use(int* p, int n, char* s, int* q) {
+    p[n - 1] = 666; // Bad: we don't know if p points to n elements;
+                    // assume it does not or use span<int>
+    cout << s; // Bad: we don't know if that s points to a zero-terminated array
+               // of char; assume it does not or use zstring
+    delete q; // Bad: we don't know if *q is allocated on the free store;
+              // assume it does not or use owner
+}
+```cpp
+//better
+void use2(span<int> p, zstring s, owner<int*> q) {
+    p[p.size() - 1] = 666; // OK, a range error can be caught
+    cout << s;             // OK
+    delete q;              // OK
+}
+```
+- Note: `owner<T*>` represents ownership, zstring represents a C-style string.
+- Also: Assume that a `T*` obtained from a smart pointer to `T` (e.g.,` unique_ptr<T>`) points to a single element.
+
+## F.23: Use a `not_null<T>` to indicate that "null" is not a valid value
+- Clarity. A function with a `not_null<T> `parameter makes it clear that the caller of the function is responsible for any nullptr checks that might be necessary.
+- Similarly, a function with a return value of `not_null<T>` makes it clear that the caller of the function does not need to check for `nullptr`.
+- `not_null<T*>` makes it obvious to a reader (human or machine) that a test for `nullptr` is not necessary before dereference.
+- Additionally, when debugging, `owner<T*>` and `not_null<T>` can be instrumented to check for correctness.
+- Consider:
+```cpp
+int length(Record* p);
+```
+- When I call `length(p)` should I check if `p` is `nullptr` first? Should the implementation of `length()` check if `p` is `nullptr`?
+```cpp
+// it is the caller's job to make sure p != nullptr
+int length(not_null<Record*> p);
+
+// the implementor of length() must assume that p == nullptr is possible
+int length(Record* p);
+```
+- Note: A `not_null<T*>` is assumed not to be the `nullptr`; a `T*` might be the `nullptr`; both can be represented in memory as a `T*` (so no run-time overhead is implied).
+- Note: `not_null` is not just for built-in pointers. It works for `unique_ptr`, `shared_ptr`, and other pointer-like types.
+
+## F.24: Use a `span<T>` or a `span_p<T>` to designate a half-open sequence
+- Informal/non-explicit ranges are a source of errors.
+
+```cpp
+X* find(span<X> r, const X& v); // find v in r
+
+vector<X> vec;
+// ...
+auto p = find({vec.begin(), vec.end()}, X{}); // find X{} in vec
+```
+- Note: Ranges are extremely common in C++ code. Typically, they are implicit and their correct use is very hard to ensure.
+- In particular, given a pair of arguments `(p, n)` designating an array `[p:p+n)`, it is in general impossible to know if there really are `n` elements to access following `*p`.
+- `span<T>` and `span_p<T>` are simple helper classes designating a `[p:q)` range and a range starting with `p` and ending with the first element for which a predicate is true, respectively.
+- Example: A `span` represents a range of elements, but how do we manipulate elements of that range?
+```cpp
+void f(span<int> s) {
+    // range traversal (guaranteed correct)
+    for (int x : s)
+        cout << x << '\n';
+
+    // C-style traversal (potentially checked)
+    for (gsl::index i = 0; i < s.size(); ++i)
+        cout << s[i] << '\n';
+
+    // random access (potentially checked)
+    s[7] = 9;
+
+    // extract pointers (potentially checked)
+    std::sort(&s[0], &s[s.size() / 2]);
+}****
+```
+- Note: A `span<T>` object does not own its elements and is so small that it can be passed by value.
+- Passing a span object as an argument is exactly as efficient as passing a pair of pointer arguments or passing a pointer and an integer count.
+
+## F.25: Use a `zstring` or a `not_null<zstring>` to designate a C-style string
+- C-style strings are ubiquitous. They are defined by convention: **zero-terminated arrays of characters**.
+- We must distinguish C-style strings from a pointer to a single character or an old-fashioned pointer to an array of characters.
+- If you don't need null termination, use `string_view`.
+```cpp
+int length(const char* p);
+```
+- When I call `length(s)` should I check if `s` is `nullptr` first? Should the implementation of `length()` check if `p` is nullptr?
+```cpp
+// the implementor of length() must assume that p == nullptr is possible
+int length(zstring p);
+
+// it is the caller's job to make sure p != nullptr
+int length(not_null<zstring> p);
+```
+- Note: zstring does not represent ownership.
+
+## F.26: Use a `unique_ptr<T>` to transfer ownership where a pointer is needed
+- Using `unique_ptr` is the cheapest way to pass a pointer safely.
+- See also: [C.50](C.ctor.md#c50-use-a-factory-function-if-you-need-virtual-behavior-during-initialization) regarding when to return a shared_ptr from a factory.
+```cpp
+unique_ptr<Shape> get_shape(istream& is) // assemble shape from input stream
+{
+    auto kind =
+        read_header(is); // read header and identify the next shape on input
+    switch (kind) {
+    case kCircle:
+        return make_unique<Circle>(is);
+    case kTriangle:
+        return make_unique<Triangle>(is);
+        // ...
+    }
+}
+```
+- Note: You need to pass a pointer rather than an object if what you are transferring is an object from a class hierarchy that is to be used through an interface (base class).
+
+## F.27: Use a `shared_ptr<T>` to share ownership
+- Using `std::shared_ptr `is the standard way to represent shared ownership. That is, the last owner deletes the object.
+
+```cpp
+shared_ptr<const Image> im { read_image(somewhere) };
+
+std::thread t0 {shade, args0, top_left, im};
+std::thread t1 {shade, args1, top_right, im};
+std::thread t2 {shade, args2, bottom_left, im};
+std::thread t3 {shade, args3, bottom_right, im};
+
+// detach threads
+// last thread to finish deletes the image
+```
+- Note: Prefer a `unique_ptr` over a `shared_ptr` if there is never more than one owner at a time. `shared_ptr` is for shared ownership.
+- Note that pervasive use of `shared_ptr` has a cost (atomic operations on the shared_ptr's reference count have a measurable aggregate cost).
+- Alternative: Have a single object own the shared object (e.g. a scoped object) and destroy that (preferably implicitly) when all users have completed.
