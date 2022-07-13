@@ -1,6 +1,17 @@
 # F.def: Function definitions
 - A function definition is a function declaration that also specifies the function's implementation, the function body.
 
+- [F.def: Function definitions](#fdef-function-definitions)
+  - [F.1: "Package" meaningful operations as carefully named functions](#f1-package-meaningful-operations-as-carefully-named-functions)
+  - [F.2: A function should perform a single logical operation](#f2-a-function-should-perform-a-single-logical-operation)
+  - [F.3: Keep functions short and simple](#f3-keep-functions-short-and-simple)
+  - [F.4: If a function might have to be evaluated at compile time, declare it `constexpr`](#f4-if-a-function-might-have-to-be-evaluated-at-compile-time-declare-it-constexpr)
+  - [F.5: If a function is very small and time-critical, declare it `inline`](#f5-if-a-function-is-very-small-and-time-critical-declare-it-inline)
+  - [F.6: If your function must not throw, declare it `noexcept`](#f6-if-your-function-must-not-throw-declare-it-noexcept)
+  - [F.7: For general use, take `T*` or `T&` arguments rather than smart pointers](#f7-for-general-use-take-t-or-t-arguments-rather-than-smart-pointers)
+  - [F.8: Prefer pure functions](#f8-prefer-pure-functions)
+  - [F.9: Unused parameters should be unnamed](#f9-unused-parameters-should-be-unnamed)
+
 ## F.1: "Package" meaningful operations as carefully named functions
 - Factoring out common code makes code more readable, more likely to be reused, and limit errors from complex code.
 - If something is a well-specified action, separate it out from its surrounding code and give it a name.

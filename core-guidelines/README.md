@@ -2,9 +2,6 @@
 - A fork with my simplified reading notes.
 
 # On going
-- [F:          Functions](F.md)
-- [F.call:     Parameter passing](F.call.md)
-- [F.def:      Function definitions](F.def.md)
 - [I:          Interfaces](I.md)
 - [NL:         Naming and layout rules](NL.md)
 - [Pro:        Profiles](Pro.md)
@@ -52,6 +49,9 @@
   - [T.var: Variadic template rules](T.md#tvar-variadic-template-rules)
   - [T.meta: Template metaprogramming (TMP)](T.meta.md)
   - [T.other: Other template rules](T.other.md)
+- [F:          Functions](F.md)
+  - [F.call:     Parameter passing](F.call.md)
+  - [F.def:      Function definitions](F.def.md)
 # TO READ
 - P: Philosophy
 

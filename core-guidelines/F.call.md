@@ -1,5 +1,35 @@
 # F.call: Parameter passing
 
+- [F.call: Parameter passing](#fcall-parameter-passing)
+  - [F.15: Prefer simple and conventional ways of passing information](#f15-prefer-simple-and-conventional-ways-of-passing-information)
+  - [F.16: For "in" parameters, pass cheaply-copied types by value and others by reference to `const`](#f16-for-in-parameters-pass-cheaply-copied-types-by-value-and-others-by-reference-to-const)
+  - [F.17: For "in-out" parameters, pass by reference to non-const](#f17-for-in-out-parameters-pass-by-reference-to-non-const)
+  - [F.18: For "will-move-from" parameters, pass by `X&&` and `std::move` the parameter](#f18-for-will-move-from-parameters-pass-by-x-and-stdmove-the-parameter)
+  - [F.19: For "forward" parameters, pass by `TP&&` and only `std::forward` the parameter](#f19-for-forward-parameters-pass-by-tp-and-only-stdforward-the-parameter)
+  - [F.20: For "out" output values, prefer return values to output parameters](#f20-for-out-output-values-prefer-return-values-to-output-parameters)
+  - [F.21: To return multiple "out" values, prefer returning a `struct` or `tuple`](#f21-to-return-multiple-out-values-prefer-returning-a-struct-or-tuple)
+  - [F.60: Prefer `T*` over `T&` when "no argument" is a valid option](#f60-prefer-t-over-t-when-no-argument-is-a-valid-option)
+  - [F.22: Use `T*` or `owner<T*>` to designate a single object](#f22-use-t-or-ownert-to-designate-a-single-object)
+  - [F.23: Use a `not_null<T>` to indicate that "null" is not a valid value](#f23-use-a-not_nullt-to-indicate-that-null-is-not-a-valid-value)
+  - [F.24: Use a `span<T>` or a `span_p<T>` to designate a half-open sequence](#f24-use-a-spant-or-a-span_pt-to-designate-a-half-open-sequence)
+  - [F.25: Use a `zstring` or a `not_null<zstring>` to designate a C-style string](#f25-use-a-zstring-or-a-not_nullzstring-to-designate-a-c-style-string)
+  - [F.26: Use a `unique_ptr<T>` to transfer ownership where a pointer is needed](#f26-use-a-unique_ptrt-to-transfer-ownership-where-a-pointer-is-needed)
+  - [F.27: Use a `shared_ptr<T>` to share ownership](#f27-use-a-shared_ptrt-to-share-ownership)
+  - [F.42: Return a `T*` to indicate a position (only)](#f42-return-a-t-to-indicate-a-position-only)
+  - [F.43: Never (directly or indirectly) return a pointer or a reference to a local object](#f43-never-directly-or-indirectly-return-a-pointer-or-a-reference-to-a-local-object)
+  - [F.44: Return a `T&` when copy is undesirable and "returning no object" isn't needed](#f44-return-a-t-when-copy-is-undesirable-and-returning-no-object-isnt-needed)
+  - [F.45: Don't return a `T&&`](#f45-dont-return-a-t)
+  - [F.46: `int` is the return type for `main()`](#f46-int-is-the-return-type-for-main)
+  - [F.47: Return `T&` from assignment operators](#f47-return-t-from-assignment-operators)
+  - [F.48: Don't return `std::move(local)`](#f48-dont-return-stdmovelocal)
+  - [F.50: Use a lambda when a function won't do (to capture local variables, or to write a local function)](#f50-use-a-lambda-when-a-function-wont-do-to-capture-local-variables-or-to-write-a-local-function)
+  - [F.51: Where there is a choice, prefer default arguments over overloading](#f51-where-there-is-a-choice-prefer-default-arguments-over-overloading)
+  - [F.52: Prefer capturing by reference in lambdas that will be used locally, including passed to algorithms](#f52-prefer-capturing-by-reference-in-lambdas-that-will-be-used-locally-including-passed-to-algorithms)
+  - [F.53: Avoid capturing by reference in lambdas that will be used non-locally, including returned, stored on the heap, or passed to another thread](#f53-avoid-capturing-by-reference-in-lambdas-that-will-be-used-non-locally-including-returned-stored-on-the-heap-or-passed-to-another-thread)
+  - [F.54: If you capture `this`, capture all variables explicitly (no default capture)](#f54-if-you-capture-this-capture-all-variables-explicitly-no-default-capture)
+  - [F.55: Don't use `va_arg` arguments](#f55-dont-use-va_arg-arguments)
+  - [F.56: Avoid unnecessary condition nesting](#f56-avoid-unnecessary-condition-nesting)
+
 ## F.15: Prefer simple and conventional ways of passing information
 - Using "unusual and clever" techniques causes surprises, slows understanding by other programmers, and encourages bugs.
 - If you really feel the need for an optimization beyond the common techniques, measure to ensure that it really is an improvement, and document/comment because the improvement might not be portable.
@@ -426,3 +456,349 @@ std::thread t3 {shade, args3, bottom_right, im};
 - Note: Prefer a `unique_ptr` over a `shared_ptr` if there is never more than one owner at a time. `shared_ptr` is for shared ownership.
 - Note that pervasive use of `shared_ptr` has a cost (atomic operations on the shared_ptr's reference count have a measurable aggregate cost).
 - Alternative: Have a single object own the shared object (e.g. a scoped object) and destroy that (preferably implicitly) when all users have completed.
+
+## F.42: Return a `T*` to indicate a position (only)
+- That's what pointers are good for. Returning a `T*` to transfer ownership is a misuse.
+
+```cpp
+Node* find(Node* t, const string& s)  // find s in a binary tree of Nodes
+{
+    if (!t || t->name == s) return t;
+    if ((auto p = find(t->left, s))) return p;
+    if ((auto p = find(t->right, s))) return p;
+    return nullptr;
+}
+```
+- If it isn't the nullptr, the pointer returned by find indicates a Node holding s.
+- Importantly, that does not imply a transfer of ownership of the pointed-to object to the caller.
+- Note: **Positions can also be transferred by iterators, indices, and references.*
+- A **reference is often a superior alternative to a pointer** if there is no need to use `nullptr` or if the object referred to should not change.
+- Note: Do not return a pointer to something that is not in the caller's scope; see [F.43](#f43-never-directly-or-indirectly-return-a-pointer-or-a-reference-to-a-local-object).
+
+
+## F.43: Never (directly or indirectly) return a pointer or a reference to a local object
+- To avoid the crashes and data corruption that can result from the use of such a dangling pointer.
+- Here on one popular implementation I got the output
+- Note: This applies to references as well:
+
+```cpp
+int& f() {
+    int x = 7;
+    // ...
+    return x; // Bad: returns reference to object that is about to be destroyed
+}
+```
+- Note: This applies only to non-static local variables. All static variables are (as their name indicates) statically allocated, so that pointers to them cannot dangle.
+- Note: The address of a local variable can be "returned"/leaked by a return statement, by a `T&` out-parameter, as a member of a returned object, as an element of a returned array, and more.
+- Note: Similar examples can be constructed "leaking" a pointer from an inner scope to an outer one; such examples are handled equivalently to leaks of pointers out of a function.
+- A slightly different variant of the problem is placing pointers in a container that outlives the objects pointed to.
+
+## F.44: Return a `T&` when copy is undesirable and "returning no object" isn't needed
+- The language guarantees that a T& refers to an object, so that testing for nullptr isn't necessary.
+- See also: The return of a reference must not imply transfer of ownership: discussion of dangling pointer prevention and discussion of ownership.
+
+```cpp
+class Car {
+    array<wheel, 4> w;
+    // ...
+  public:
+    wheel& get_wheel(int i) {
+        Expects(i < w.size());
+        return w[i];
+    }
+    // ...
+};
+
+void use() {
+    Car c;
+    wheel& w0 = c.get_wheel(0); // w0 has the same lifetime as c
+}
+```
+
+
+## F.45: Don't return a `T&&`
+- It's asking to return a reference to a destroyed temporary object. A `&&` is a magnet for temporary objects.
+- **A returned rvalue reference goes out of scope at the end of the full expression to which it is returned:**
+```cpp
+auto&& x = max(0, 1);   // OK, so far
+foo(x);                 // Undefined behavior
+```
+- This kind of use is a frequent source of bugs, often incorrectly reported as a compiler bug.
+- An implementer of a function should avoid setting such traps for users.
+- The lifetime safety profile will (when completely implemented) catch such problems.
+- Example: Returning an rvalue reference is fine when the reference to the temporary is being passed "downward" to a callee;
+  - then, the temporary is guaranteed to outlive the function call (see [F.18](#f18-for-will-move-from-parameters-pass-by-x-and-stdmove-the-parameter) and [F.19](#f19-for-forward-parameters-pass-by-tp-and-only-stdforward-the-parameter)).
+  - However, it's not fine when passing such a reference "upward" to a larger caller scope.
+  - For passthrough functions that pass in parameters (by ordinary reference or by perfect forwarding) and want to return values, use simple `auto` return type deduction (not `auto&&`).
+- Assume that `F` returns by value:
+
+```cpp
+template <class F> auto&& wrapper(F f) {
+    log_call(typeid(f)); // or whatever instrumentation
+    return f();          // BAD: returns a reference to a temporary
+}
+
+// Better:
+
+template <class F> auto wrapper(F f) {
+    log_call(typeid(f)); // or whatever instrumentation
+    return f();          // OK
+}
+```
+- Exception: `std::move` and `std::forward` do return `&&`, but they are just casts -- used by convention only in **expression contexts where a reference to a temporary object is passed along within the same expression before the temporary is destroyed**. We don't know of any other good examples of returning **&&**.
+
+
+## F.46: `int` is the return type for `main()`
+- It's a language rule, but violated through "language extensions" so often that it is worth mentioning.
+- Declaring `main` (the one global main of a program) `void` limits portability.
+
+```cpp
+void main() {/* ... */}; // bad, not C++
+int main() { std::cout << "This is the way to do it\n"; }
+```
+- Note: We mention this only because of the persistence of this error in the community.
+- Note that **despite its non-void return type, the main function does not require an explicit return statement.**
+
+## F.47: Return `T&` from assignment operators
+- The convention for operator overloads (especially on concrete types) is for `operator=(const T&)` to perform the assignment and then return (non-const) `*this`.
+- This ensures consistency with standard-library types and follows the principle of "do as the ints do."
+
+- Note: Historically there was some guidance to make the assignment operator return `const T&`. This was primarily to avoid code of the form `(a = b) = c` -- such code is not common enough to warrant violating consistency with standard types.
+
+```cpp
+class Foo {
+  public:
+    ...
+    Foo& operator=(const Foo& rhs) {
+        // Copy members.
+        ... return *this;
+    }
+};
+```
+
+
+## F.48: Don't return `std::move(local)`
+- With guaranteed copy elision, it is now almost always a pessimization to expressly use `std::move` in a return statement.
+```cpp
+// DON'T
+S f() {
+    S result;
+    return std::move(result);
+}
+// DO
+S f() {
+    S result;
+    return result;
+}
+```
+
+## F.50: Use a lambda when a function won't do (to capture local variables, or to write a local function)
+- Functions can't capture local variables or be defined at local scope; if you need those things, prefer a lambda where possible, and a handwritten function object where not.
+- On the other hand, lambdas and function objects don't overload; **if you need to overload, prefer a function (**the workarounds to make lambdas overload are ornate).
+- **If either will work, prefer writing a function; use the simplest tool necessary.**
+
+```cpp
+// writing a function that should only take an int or a string
+// -- overloading is natural
+void f(int);
+void f(const string&);
+
+// writing a function object that needs to capture local state and appear
+// at statement or expression scope -- a lambda is natural
+vector<work> v = lots_of_work();
+for (int tasknum = 0; tasknum < max; ++tasknum) {
+    pool.run([=, &v] {
+        /*
+        ...
+        ... process 1 / max - th of v, the tasknum - th chunk
+        ...
+        */
+    });
+}
+pool.join();
+```
+- Exception: Generic lambdas offer a concise way to write function templates and so can be useful even when a normal function template would do equally well with a little more syntax.
+- This advantage will probably disappear in the future once all functions gain the ability to have `Concept` parameters.
+
+
+## F.51: Where there is a choice, prefer default arguments over overloading
+- Default arguments simply provide alternative interfaces to a single implementation.
+- There is no guarantee that a set of overloaded functions all implement the same semantics.
+- The use of default arguments can avoid code replication.
+- Note: There is a choice between using default argument and overloading when the alternatives are from a set of arguments of the same types.
+```cpp
+void print(const string& s, format f = {});
+// as opposed to
+void print(const string& s);  // use default format
+void print(const string& s, format f);
+```
+- There is not a choice when a set of functions are used to do a semantically equivalent operation to a set of types. For example:
+```cpp
+void print(const char&);
+void print(int);
+void print(zstring);
+```
+
+## F.52: Prefer capturing by reference in lambdas that will be used locally, including passed to algorithms
+- For efficiency and correctness, you nearly always want to **capture by reference when using the lambda locally**.
+- This includes when writing or calling parallel algorithms that are local because they `join` before returning.
+- The efficiency consideration is that most types are cheaper to pass by reference than by value.
+- The correctness consideration is that many calls want to perform side effects on the original object at the call site (see example below). Passing by value prevents this.
+- Note: Unfortunately, **there is no simple way to capture by reference** to `const` to get the efficiency for a local call but also prevent side effects.
+- Example: Here, a large object (a network message) is passed to an iterative algorithm, and it is not efficient or correct to copy the message (which might not be copyable):
+```cpp
+std::for_each(begin(sockets), end(sockets), [&message](auto& socket)
+{
+    socket.send(message);
+});
+```
+- Example: This is a simple three-stage parallel pipeline. Each stage object encapsulates a worker thread and a queue, has a process function to enqueue work, and in its destructor automatically blocks waiting for the queue to empty before ending the thread.
+```cpp
+void send_packets(buffers& bufs)
+{
+    stage encryptor([](buffer& b) { encrypt(b); });
+    stage compressor([&](buffer& b) { compress(b); encryptor.process(b); });
+    stage decorator([&](buffer& b) { decorate(b); compressor.process(b); });
+    for (auto& b : bufs) { decorator.process(b); }
+}  // automatically blocks waiting for pipeline to finish
+```
+
+## F.53: Avoid capturing by reference in lambdas that will be used non-locally, including returned, stored on the heap, or passed to another thread
+- Pointers and references to locals shouldn't outlive their scope.
+- Lambdas that capture by reference are just another place to store a reference to a local object, and shouldn't do so if they (or a copy) outlive the scope.
+
+```cpp
+//Example, bad
+int local = 42;
+// Want a reference to local.
+// Note, that after program exits this scope,
+// local no longer exists, therefore
+// process() call will have undefined behavior!
+thread_pool.queue_work([&] { process(local); });
+
+//Example, good
+int local = 42;
+// Want a copy of local.
+// Since a copy of local is made, it will
+// always be available for the call.
+thread_pool.queue_work([=] { process(local); });
+```
+
+## F.54: If you capture `this`, capture all variables explicitly (no default capture)
+- It's confusing. Writing [=] in a member function appears to capture by value, but actually captures data members by reference because it actually captures the invisible this pointer by value.
+- If you meant to do that, write this explicitly.
+
+```cpp
+class My_class {
+    int x = 0;
+    // ...
+
+    void f() {
+        int i = 0;
+        // ...
+
+        auto lambda = [=] {
+            use(i, x);
+        }; // BAD: "looks like" copy/value capture
+        // [&] has identical semantics and copies the this pointer under the
+        // current rules
+        // [=,this] and [&,this] are not much better, and confusing
+
+        x = 42;
+        lambda(); // calls use(0, 42);
+        x = 43;
+        lambda(); // calls use(0, 43);
+
+        // ...
+
+        auto lambda2 = [i, this] {
+            use(i, x);
+        }; // ok, most explicit and least confusing
+
+        // ...
+    }
+};
+```
+- Note: This is under active discussion in standardization, and might be addressed in a future version of the standard by adding a new capture mode or possibly adjusting the meaning of [=]. For now, just be explicit.
+
+
+## F.55: Don't use `va_arg` arguments
+- Reading from a va_arg assumes that the correct type was actually passed.
+- Passing to `va_arg` assumes the correct type will be read.
+- This is fragile because it cannot generally be enforced to be safe in the language and so relies on programmer discipline to get it right.
+
+```cpp
+int sum(...)
+{
+    // ...
+    while (/*...*/)
+        result += va_arg(list, int); // BAD, assumes it will be passed ints
+    // ...
+}
+sum(3, 2); // ok
+sum(3.14159, 2.71828); // BAD, undefined
+```
+```cpp
+template<class ...Args>
+auto sum(Args... args) // GOOD, and much more flexible
+{
+    return (... + args); // note: C++17 "fold expression"
+}
+
+sum(3, 2); // ok: 5
+sum(3.14159, 2.71828); // ok: ~5.85987
+```
+- Alternatives:
+  - overloading
+  - variadic templates
+  - variant arguments
+  - initializer_list (homogeneous)
+- Note: Declaring a `...` parameter is sometimes useful for techniques that don't involve actual argument passing, notably to declare "take-anything" functions so as to disable "everything else" in an overload set or express a catchall case in a template metaprogram.
+
+## F.56: Avoid unnecessary condition nesting
+- Shallow nesting of conditions makes the code easier to follow. It also makes the intent clearer.
+- Strive to place the essential code at outermost scope, unless this obscures intent.
+- Example: Use a guard-clause to take care of exceptional cases and return early.
+```cpp
+// Bad: Deep nesting
+void foo() {
+    ...
+    if (x) { computeImportantThings(x); }
+}
+
+// Bad: Still a redundant else.
+void foo() {
+    ...
+    if (!x) { return; }
+    else {
+        computeImportantThings(x);
+    }
+}
+
+// Good: Early return, no redundant else
+void foo() {
+    ...
+    if (!x) return;
+    computeImportantThings(x);
+}
+```
+```cpp
+// Example
+// Bad: Unnecessary nesting of conditions
+void foo() {
+    ...
+    if (x) {
+        if (y) {
+            computeImportantThings(x);
+        }
+    }
+}
+
+// Good: Merge conditions + return early
+void foo() {
+    ...
+    if (!(x && y)) return;
+
+    computeImportantThings(x);
+}
+```
