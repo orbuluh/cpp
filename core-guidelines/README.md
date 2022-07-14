@@ -6,7 +6,6 @@
 - [NL:         Naming and layout rules](NL.md)
 - [Pro:        Profiles](Pro.md)
 - [SL:         The Standard Library](SL.md)
-- [SL.str:     String](SL.str.md)
 
 # Completed
 - [C:          Classes and class hierarchies](C.md)
@@ -52,9 +51,12 @@
 - [F:          Functions](F.md)
   - [F.call:     Parameter passing](F.call.md)
   - [F.def:      Function definitions](F.def.md)
+
+- [SL.str:     String](SL.str.md)
+
+
 # TO READ
 - P: Philosophy
-
 - CPL: C-style programming
 - SF: Source files
 - A: Architectural ideas
