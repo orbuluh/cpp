@@ -343,6 +343,203 @@ if (error_code) {
   - Always carefully measure before making performance claims.
 
 
+## I.11: Never transfer ownership by a raw pointer (`T*`) or reference (`T&`)
+- If there is any doubt whether the caller or the callee owns an object, leaks or premature destruction will occur.
+```cpp
+X* compute(args) // don't
+{
+    X* res = new X{};
+    // ...
+    return res;
+}
+```
+- Who deletes the returned X? The problem would be harder to spot if compute returned a reference. Consider returning the result by value (use move semantics if the result is large):
+```cpp
+vector<double> compute(args)  // good
+{
+    vector<double> res(10000);
+    // ...
+    return res;
+}
+```
+- Alternative: Pass ownership using a "smart pointer", such as `unique_ptr` (for exclusive ownership) and `shared_ptr` (for shared ownership).
+- However, that is less elegant and often less efficient than returning the object itself, so **use smart pointers only if reference semantics are needed.**
+- Alternative: Sometimes older code can't be modified because of ABI compatibility requirements or lack of resources. In that case, mark owning pointers using owner from the guidelines support library:
+```cpp
+owner<X*> compute(args)    // It is now clear that ownership is transferred
+{
+    owner<X*> res = new X{};
+    // ...
+    return res;
+}
+```
+- This tells analysis tools that res is an owner. That is, its value must be deleted or transferred to another owner, as is done here by the return.
+- owner is used similarly in the implementation of resource handles.
+- Note: Every object passed as a raw pointer (or iterator) is assumed to be owned by the caller, so that its lifetime is handled by the caller.
+- Viewed another way: ownership transferring APIs are relatively rare compared to pointer-passing APIs, so the default is "no ownership transfer."
+
+## I.12: Declare a pointer that must not be null as `not_null`
+- To help avoid dereferencing `nullptr` errors. To improve performance by avoiding redundant checks for `nullptr`.
+```cpp
+int length(const char* p);            // it is not clear whether length(nullptr) is valid
+length(nullptr);                      // OK?
+int length(not_null<const char*> p);  // better: we can assume that p cannot be nullptr
+int length(const char* p);            // we must assume that p can be nullptr
+```
+- By stating the intent in source, implementers and tools can provide better diagnostics, such as finding some classes of errors through static analysis, and perform optimizations, such as removing branches and null tests.
+- Note: `not_null` is defined in the guidelines support library.
+- Note: The assumption that the pointer to char pointed to a C-style string (a zero-terminated string of characters) was still implicit, and a potential source of confusion and errors. Use `czstring` in preference to `const char*`.
+
+```cpp
+// we can assume that p cannot be nullptr
+// we can assume that p points to a zero-terminated array of characters
+int length(not_null<zstring> p);
+```
+- Note: `length()` is, of course, `std::strlen()` in disguise.
+
+## I.13: Do not pass an array as a single pointer
+- (pointer, size)-style interfaces are error-prone. Also, a plain pointer (to array) must rely on some convention to allow the callee to determine the size.
+- Example: Consider:
+```cpp
+void copy_n(const T* p, T* q, int n); // copy from [p:p+n) to [q:q+n)
+```
+- What if there are fewer than n elements in the array pointed to by q? Then, we overwrite some probably unrelated memory.
+- What if there are fewer than n elements in the array pointed to by p? Then, we read some probably unrelated memory.
+- Either is undefined behavior and a potentially very nasty bug.
+- Alternative: Consider using explicit spans:
+```cpp
+void copy(span<const T> r, span<T> r2); // copy r to r2
+```
+```cpp
+void draw(Shape* p, int n);  // poor interface; poor code
+Circle arr[10];
+// ...
+draw(arr, 10);
+```
+- Passing 10 as the n argument might be a mistake: the most common convention is to assume [0:n) but that is nowhere stated.
+- Worse is that the call of `draw()` compiled at all: there was an **implicit conversion from array to pointer (array decay)** and then another implicit conversion from `Circle` to `Shape`.
+- There is no way that `draw()` can safely iterate through that array: it has no way of knowing the size of the elements.
+- Alternative: Use a support class that ensures that the number of elements is correct and prevents dangerous implicit conversions.
+- For example:
+```cpp
+void draw2(span<Circle>);
+Circle arr[10];
+// ...
+draw2(span<Circle>(arr));  // deduce the number of elements
+draw2(arr);    // deduce the element type and array size
+
+void draw3(span<Shape>);
+draw3(arr);    // error: cannot convert Circle[10] to span<Shape>
+```
+- This `draw2()` passes the same amount of information to `draw()`, but makes the fact that it is supposed to be a range of Circles explicit.
+- Exception: `czstring` to represent C-style, zero-terminated strings.
+- But when doing so, use `std::string_view` or `span<char>` from the GSL to prevent range errors.
+
+
+## I.22: Avoid complex initialization of global objects
+- Complex initialization can lead to undefined order of execution.
+
+```cpp
+// file1.c
+extern const X x;
+//...
+const Y y = f(x);   // read x; write y
+```
+```cpp
+// file2.c
+extern const Y y;
+//...
+const X x = g(y);   // read y; write x
+```
+- Since x and y are in different translation units the **order of calls to `f()` and `g()` is undefined**;
+  - one will access an uninitialized const. This shows that the **order-of-initialization problem for global (namespace scope) objects is not limited to global variables.**
+- Note: Order of initialization problems become particularly difficult to handle in concurrent code. It is usually best to avoid global (namespace scope) objects altogether.
+
+## I.23: Keep the number of function arguments low
+- Having many arguments opens opportunities for confusion.
+- Passing lots of arguments is often costly compared to alternatives.
+
+- Discussion: The two most common reasons why functions have too many parameters are:
+  - Missing an abstraction. There is an abstraction missing, so that a compound value is being passed as individual elements instead of as a single object that enforces an invariant. This not only expands the parameter list, but it leads to errors because the component values are no longer protected by an enforced invariant.
+  - Violating "one function, one responsibility." The function is trying to do more than one job and should probably be refactored.
+
+- Example: The standard-library `merge()` is at the limit of what we can comfortably handle:
+
+```cpp
+template<class InputIterator1, class InputIterator2, class OutputIterator, class Compare>
+OutputIterator merge(InputIterator1 first1, InputIterator1 last1,
+                     InputIterator2 first2, InputIterator2 last2,
+                     OutputIterator result, Compare comp);
+```
+- Note that this is because of problem 1 above -- missing abstraction. Instead of passing a `range` (abstraction), STL passed iterator pairs (unencapsulated component values).
+- Here, we have four template arguments and six function arguments. To simplify the most frequent and simplest uses, the comparison argument can be defaulted to `<`:
+```cpp
+template<class InputIterator1, class InputIterator2, class OutputIterator>
+OutputIterator merge(InputIterator1 first1, InputIterator1 last1,
+                     InputIterator2 first2, InputIterator2 last2,
+                     OutputIterator result);
+```
+- This doesn't reduce the total complexity, but it reduces the surface complexity presented to many users.
+- To really reduce the number of arguments, we need to bundle the arguments into higher-level abstractions:
+
+```cpp
+template<class InputRange1, class InputRange2, class OutputIterator>
+OutputIterator merge(InputRange1 r1, InputRange2 r2, OutputIterator result);
+```
+- **Grouping arguments into "bundles" is a general technique to reduce the number of arguments and to increase the opportunities for checking.**
+- Alternatively, we could use a standard library concept to define the notion of three types that must be usable for merging:
+
+```cpp
+template<class In1, class In2, class Out>
+  requires mergeable<In1, In2, Out>
+Out merge(In1 r1, In2 r2, Out result);
+```
+- Example: The safety Profiles recommend replacing
+```cpp
+void f(int* some_ints, int some_ints_length);  // BAD: C style, unsafe
+```
+- with
+```cpp
+void f(gsl::span<int> some_ints);              // GOOD: safe, bounds-checked
+```
+- Here, using an abstraction has safety and robustness benefits, and naturally also reduces the number of parameters.
+- Note: How many parameters are too many? Try to use fewer than four (4) parameters. There are functions that are best expressed with four individual parameters, but not many.
+
+- Alternative: Use better abstraction: **Group arguments into meaningful objects and pass the objects** (by value or by reference).
+- Alternative: Use **default arguments** or **overloads** to allow the **most common forms of calls to be done with fewer arguments**.
+
+
+## I.24: Avoid adjacent parameters that can be invoked by the same arguments in either order with different meaning
+- Adjacent arguments of the same type are easily swapped by mistake.
+
+```cpp
+// Example, bad
+void copy_n(T* p, T* q, int n);  // copy from [p:p + n) to [q:q + n)
+```
+- This is a nasty variant of a K&R C-style interface. It is easy to reverse the "to" and "from" arguments.
+- Use `const` for the "from" argument:
+```cpp
+void copy_n(const T* p, T* q, int n);  // copy from [p:p + n) to [q:q + n)
+```
+- Exception: If the order of the parameters is not important, there is no problem:
+```cpp
+int max(int a, int b);
+```
+- Alternative: Don't pass arrays as pointers, pass an object representing a range (e.g., a `span`):
+```cpp
+void copy_n(span<const T> p, span<T> q);  // copy from p to q
+```
+- Alternative: Define a struct as the parameter type and name the fields for those parameters accordingly:
+```cpp
+struct SystemParams {
+    string config_file;
+    string output_path;
+    seconds timeout;
+};
+void initialize(SystemParams p);
+```
+- This tends to make invocations of this clear to future readers, as the parameters are often filled in by name at the call site.
+- Note: Only the interface's designer can adequately address the source of violations of this guideline.
 
 ## I.25: Prefer empty abstract classes as interfaces to class hierarchies
 - not yet read
