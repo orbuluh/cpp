@@ -7,6 +7,15 @@
 - See also: [regular expressions](SL.md#slregex-regex)
 - Here, we use "sequence of characters" or "string" to refer to a sequence of characters meant to be read as text (somehow, eventually).
 
+- [SL.str: String](#slstr-string)
+  - [SL.str.1: Use `std::string` to own character sequences](#slstr1-use-stdstring-to-own-character-sequences)
+  - [SL.str.2: Use `std::string_view` or `gsl::span<char>` to refer to character sequences](#slstr2-use-stdstring_view-or-gslspanchar-to-refer-to-character-sequences)
+  - [SL.str.3: Use `zstring` or `czstring` to refer to a C-style, zero-terminated, sequence of characters](#slstr3-use-zstring-or-czstring-to-refer-to-a-c-style-zero-terminated-sequence-of-characters)
+  - [SL.str.4: Use `char*` to refer to a single character](#slstr4-use-char-to-refer-to-a-single-character)
+  - [SL.str.5: Use `std::byte` to refer to byte values that do not necessarily represent characters](#slstr5-use-stdbyte-to-refer-to-byte-values-that-do-not-necessarily-represent-characters)
+  - [SL.str.10: Use `std::string` when you need to perform locale-sensitive string operations](#slstr10-use-stdstring-when-you-need-to-perform-locale-sensitive-string-operations)
+  - [SL.str.11: Use `gsl::span<char>` rather than `std::string_view` when you need to mutate a string](#slstr11-use-gslspanchar-rather-than-stdstring_view-when-you-need-to-mutate-a-string)
+  - [SL.str.12: Use the s suffix for string literals meant to be standard-library strings](#slstr12-use-the-s-suffix-for-string-literals-meant-to-be-standard-library-strings)
 
 ## SL.str.1: Use `std::string` to own character sequences
 - string correctly handles allocation, ownership, copying, gradual expansion, and offers a variety of useful operations.
