@@ -2,7 +2,7 @@
 - A fork with my simplified reading notes.
 
 # On going
-- [I:          Interfaces](I.md)
+
 - [NL:         Naming and layout rules](NL.md)
 - [Pro:        Profiles](Pro.md)
 - [SL:         The Standard Library](SL.md)
@@ -51,7 +51,7 @@
 - [F:          Functions](F.md)
   - [F.call:     Parameter passing](F.call.md)
   - [F.def:      Function definitions](F.def.md)
-
+- [I:          Interfaces](I.md)
 - [SL.str:     String](SL.str.md)
 
 

@@ -3,6 +3,28 @@
   - Precisely stating what is expected of a supplier of a service and a user of that service is essential.
   - Having good (easy-to-understand, encouraging efficient use, not error-prone, supporting testing, etc.) **interfaces is probably the most important single aspect of code organization.**
 
+- [I: Interfaces](#i-interfaces)
+  - [I.1: Make interfaces explicit](#i1-make-interfaces-explicit)
+  - [I.2: Avoid non-const global variables](#i2-avoid-non-const-global-variables)
+  - [I.3: Avoid singletons](#i3-avoid-singletons)
+  - [I.4: Make interfaces precisely and strongly typed](#i4-make-interfaces-precisely-and-strongly-typed)
+  - [I.5: State preconditions (if any)](#i5-state-preconditions-if-any)
+  - [I.6: Prefer `Expects()` for expressing preconditions](#i6-prefer-expects-for-expressing-preconditions)
+  - [I.7: State postconditions](#i7-state-postconditions)
+  - [I.8: Prefer `Ensures()` for expressing postconditions](#i8-prefer-ensures-for-expressing-postconditions)
+  - [I.9: If an interface is a template, document its parameters using concepts](#i9-if-an-interface-is-a-template-document-its-parameters-using-concepts)
+  - [I.10: Use exceptions to signal a failure to perform a required task](#i10-use-exceptions-to-signal-a-failure-to-perform-a-required-task)
+  - [I.11: Never transfer ownership by a raw pointer (`T*`) or reference (`T&`)](#i11-never-transfer-ownership-by-a-raw-pointer-t-or-reference-t)
+  - [I.12: Declare a pointer that must not be null as `not_null`](#i12-declare-a-pointer-that-must-not-be-null-as-not_null)
+  - [I.13: Do not pass an array as a single pointer](#i13-do-not-pass-an-array-as-a-single-pointer)
+  - [I.22: Avoid complex initialization of global objects](#i22-avoid-complex-initialization-of-global-objects)
+  - [I.23: Keep the number of function arguments low](#i23-keep-the-number-of-function-arguments-low)
+  - [I.24: Avoid adjacent parameters that can be invoked by the same arguments in either order with different meaning](#i24-avoid-adjacent-parameters-that-can-be-invoked-by-the-same-arguments-in-either-order-with-different-meaning)
+  - [I.25: Prefer empty abstract classes as interfaces to class hierarchies](#i25-prefer-empty-abstract-classes-as-interfaces-to-class-hierarchies)
+  - [I.26: If you want a cross-compiler ABI, use a C-style subset](#i26-if-you-want-a-cross-compiler-abi-use-a-c-style-subset)
+  - [I.27: For stable library ABI, consider the `Pimpl` idiom](#i27-for-stable-library-abi-consider-the-pimpl-idiom)
+  - [I.30: Encapsulate rule violations](#i30-encapsulate-rule-violations)
+
 ## I.1: Make interfaces explicit
 - Correctness. Assumptions not stated in an interface are easily overlooked and hard to test.
 - Controlling the behavior of a function through a global (namespace scope) variable (a call mode) is implicit and potentially confusing.
@@ -542,6 +564,125 @@ void initialize(SystemParams p);
 - Note: Only the interface's designer can adequately address the source of violations of this guideline.
 
 ## I.25: Prefer empty abstract classes as interfaces to class hierarchies
-- not yet read
-## I.27: For stable library ABI, consider the Pimpl idiom
-- not yet read
+- Abstract classes that are empty (have no non-static member data) are more likely to be stable than base classes with state.
+```cpp
+// Example, bad
+//  You just knew that Shape would turn up somewhere :-)
+class Shape { // bad: interface class loaded with data
+  public:
+    Point center() const { return c; }
+    virtual void draw() const;
+    virtual void rotate(int);
+    // ...
+  private:
+    Point c;
+    vector<Point> outline;
+    Color col;
+};
+```
+- This will force every derived class to compute a center -- even if that's non-trivial and the center is never used.
+- Similarly, not every Shape has a Color, and many Shapes are best represented without an outline defined as a sequence of Points.
+- Using an abstract class is better:
+```cpp
+class Shape {    // better: Shape is a pure interface
+public:
+    virtual Point center() const = 0;   // pure virtual functions
+    virtual void draw() const = 0;
+    virtual void rotate(int) = 0;
+    // ...
+    // ... no data members ...
+    // ...
+    virtual ~Shape() = default;
+};
+```
+
+## I.26: If you want a cross-compiler ABI, use a C-style subset
+- **Different compilers implement different binary layouts for classes, exception handling, function names, and other implementation details.**
+- Common ABIs are emerging on some platforms freeing you from the more draconian restrictions.
+- Note: If you use a single compiler, you can use full C++ in interfaces.
+  - That might require recompilation after an upgrade to a new compiler version.
+
+## I.27: For stable library ABI, consider the `Pimpl` idiom
+- Because **private data members participate in class layout and private member functions participate in overload resolution**, changes to those implementation details require recompilation of all users of a class that uses them.
+- A non-polymorphic interface class holding a pointer to implementation (`Pimpl`) can isolate the users of a class from changes in its implementation at the cost of an indirection.
+
+```cpp
+// Example: interface (widget.h)
+class widget {
+    class impl;
+    std::unique_ptr<impl> pimpl;
+
+  public:
+    void draw(); // public API that will be forwarded to the implementation
+    widget(int); // defined in the implementation file
+    ~widget();   // defined in the implementation file, where impl is a complete
+                 // type
+    widget(widget&&); // defined in the implementation file
+    widget(const widget&) = delete;
+    widget& operator=(widget&&); // defined in the implementation file
+    widget& operator=(const widget&) = delete;
+};
+// implementation (widget.cpp)
+
+class widget::impl {
+    int n; // private data
+  public:
+    void draw(const widget& w) { /* ... */
+    }
+    impl(int n) : n(n) {}
+};
+void widget::draw() { pimpl->draw(*this); }
+widget::widget(int n) : pimpl{std::make_unique<impl>(n)} {}
+widget::widget(widget&&) = default;
+widget::~widget() = default;
+widget& widget::operator=(widget&&) = default;
+
+```
+- Notes: See GOTW #100 and cppreference for the trade-offs and additional implementation details associated with this idiom.
+
+## I.30: Encapsulate rule violations
+- To keep code simple and safe. Sometimes, ugly, unsafe, or error-prone techniques are necessary for logical or performance reasons.
+- If so, keep them local, rather than "infecting" interfaces so that larger groups of programmers have to be aware of the subtleties.
+- **Implementation complexity should, if at all possible, not leak through interfaces into user code.**
+- Example: Consider a program that, depending on some form of input (e.g., arguments to main), should consume input from a file, from the command line, or from standard input. We might write
+```cpp
+bool owned;
+owner<istream*> inp;
+switch (source) {
+case std_in:
+    owned = false;
+    inp = &cin;
+    break;
+case command_line:
+    owned = true;
+    inp = new istringstream{argv[2]};
+    break;
+case file:
+    owned = true;
+    inp = new ifstream{argv[2]};
+    break;
+}
+istream& in = *inp;
+```
+- This violated the rule against uninitialized variables, the rule against ignoring ownership, and the rule against magic constants. In particular, someone has to remember to somewhere write `if (owned) delete inp;`
+- We could handle this particular example by using `unique_ptr` with a special `deleter` that does nothing for `cin`, but that's complicated for novices (who can easily encounter this problem) and the example is an example of a more general problem where a property that we would like to consider `static` (here, ownership) needs infrequently be addressed at run time.
+- The common, most frequent, and safest examples can be handled statically, so we don't want to add cost and complexity to those. But we must also cope with the uncommon, less-safe, and necessarily more expensive cases. Such examples are discussed in [Str15].
+
+- So, we write a class
+```cpp
+class Istream { [[gsl::suppress(lifetime)]]
+public:
+    enum Opt { from_line = 1 };
+    Istream() { }
+    Istream(zstring p) : owned{true}, inp{new ifstream{p}} {}            // read from file
+    Istream(zstring p, Opt) : owned{true}, inp{new istringstream{p}} {}  // read from command line
+    ~Istream() { if (owned) delete inp; }
+    operator istream&() { return *inp; }
+private:
+    bool owned = false;
+    istream* inp = &cin;
+};
+```
+- Now, the dynamic nature of istream ownership has been encapsulated.
+- Presumably, a bit of checking for potential errors would be added in real code.
+
