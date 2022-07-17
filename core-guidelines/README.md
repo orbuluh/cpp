@@ -5,7 +5,7 @@
 
 - [NL:         Naming and layout rules](NL.md)
 - [Pro:        Profiles](Pro.md)
-- [SL:         The Standard Library](SL.md)
+
 
 # Completed
 - [C:          Classes and class hierarchies](C.md)
@@ -52,8 +52,10 @@
   - [F.call:     Parameter passing](F.call.md)
   - [F.def:      Function definitions](F.def.md)
 - [I:          Interfaces](I.md)
-- [SL.str:     String](SL.str.md)
-- [SL.con:     Containers](SL.con.md)
+- [SL:         The Standard Library](SL.md)
+  - [SL.str:     String](SL.str.md)
+  - [SL.con:     Containers](SL.con.md)
+  - [SL.io:      Iostream](SL.io.md)
 
 # TO READ
 - P: Philosophy
