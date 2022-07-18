@@ -2,10 +2,8 @@
 - A fork with my simplified reading notes.
 
 # On going
-
 - [NL:         Naming and layout rules](NL.md)
 - [Pro:        Profiles](Pro.md)
-
 
 # Completed
 - [C:          Classes and class hierarchies](C.md)
