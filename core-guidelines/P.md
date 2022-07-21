@@ -214,3 +214,21 @@ owner<int*> f7(int n) // bad: loses n and we might forget to delete
 }
 ```
 
+## P.7: Catch run-time errors early
+- Avoid "mysterious" crashes. Avoid errors leading to (possibly unrecognized) wrong results.
+
+## P.8: Don't leak any resources
+- Even a slow growth in resources will, over time, exhaust the availability of those resources.
+- This is particularly important for long-running programs, but is an essential piece of responsible programming behavior.
+
+- Note: **A leak is colloquially "anything that isn't cleaned up."**
+- The more important classification is "anything that can no longer be cleaned up."
+  - For example, allocating an object on the heap and then losing the last pointer that points to that allocation.
+- This rule should not be taken as requiring that allocations within long-lived objects must be returned during program shutdown.
+  - For example, relying on system guaranteed cleanup such as file closing and memory deallocation upon process shutdown can simplify code.
+  - However, relying on abstractions that implicitly clean up can be as simple, and often safer.
+
+- Note: Enforcing the lifetime safety profile eliminates leaks.
+  - When combined with resource safety provided by RAII, it eliminates the need for "garbage collection" (by generating no garbage).
+  - Combine this with enforcement of the type and bounds profiles and you get complete type- and resource-safety, guaranteed by tools.
+
