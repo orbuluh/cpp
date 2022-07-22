@@ -232,3 +232,74 @@ owner<int*> f7(int n) // bad: loses n and we might forget to delete
   - When combined with resource safety provided by RAII, it eliminates the need for "garbage collection" (by generating no garbage).
   - Combine this with enforcement of the type and bounds profiles and you get complete type- and resource-safety, guaranteed by tools.
 
+## P.9: Don't waste time or space
+- Note: Time and space that you spend well to achieve a goal (e.g., speed of development, resource safety, or simplification of testing) is not wasted.
+- "Another benefit of striving for efficiency is that the process forces you to understand the problem in more depth." - Alex Stepanov
+
+Example, bad
+```cpp
+struct X {
+    char ch;
+    int i;
+    string s;
+    char ch2;
+
+    X& operator=(const X& a);
+    X(const X&);
+};
+```
+- Note that the layout of X guarantees that at least 6 bytes (and most likely more) are wasted.
+- The spurious definition of copy operations disables move semantics so that the return operation is slow (please note that the Return Value Optimization, RVO, is not guaranteed here).
+```cpp
+Example, bad
+void lower(zstring s)
+{
+    for (int i = 0; i < strlen(s); ++i) s[i] = tolower(s[i]);
+}
+```
+- This is actually an example from production code. We can see that in our condition we have i < strlen(s). This expression will be evaluated on every iteration of the loop, which means that `strlen` must walk through string every loop to discover its length.
+- While the string contents are changing, it's assumed that toLower will not affect the length of the string, so it's better to cache the length outside the loop and not incur that cost each iteration.
+
+- Note: An individual example of waste is rarely significant, and where it is significant, it is typically easily eliminated by an expert.
+- However, waste spread liberally across a code base can easily be significant and experts are not always as available as we would like.
+- The aim of this rule (and the more specific rules that support it) is to eliminate most waste related to the use of C++ before it happens.
+- After that, we can look at waste related to algorithms and requirements, but that is beyond the scope of these guidelines.
+
+## P.10: Prefer immutable data to mutable data
+- It is easier to reason about constants than about variables.
+- Something immutable cannot change unexpectedly.
+- Sometimes immutability enables better optimization.
+- You can't have a data race on a constant.
+
+
+## P.11: Encapsulate messy constructs, rather than spreading through the code
+- Messy code is more likely to hide bugs and harder to write. A good interface is easier and safer to use.
+- Messy, low-level code breeds more such code.
+
+```cpp
+int sz = 100;
+int* p = (int*) malloc(sizeof(int) * sz);
+int count = 0;
+// ...
+for (;;) {
+    // ... read an int into x, exit loop if end of file is reached ...
+    // ... check that x is valid ...
+    if (count == sz)
+        p = (int*) realloc(p, sizeof(int) * sz * 2);
+    p[count++] = x;
+    // ...
+}
+```
+- This is low-level, verbose, and error-prone. For example, we "forgot" to test for memory exhaustion. Instead, we could use vector:
+```cpp
+vector<int> v;
+v.reserve(100);
+// ...
+for (int x; cin >> x; ) {
+    // ... check that x is valid ...
+    v.push_back(x);
+}
+```
+- Note: The standards library and the GSL are examples of this philosophy. For example, instead of messing with the arrays, unions, cast, tricky lifetime issues, gsl::owner, etc., that are needed to implement key abstractions, such as vector, span, lock_guard, and future, we use the libraries designed and implemented by people with more time and expertise than we usually have.
+- Similarly, we can and should design and implement more specialized libraries, rather than leaving the users (often ourselves) with the challenge of repeatedly getting low-level code well.
+- This is a variant of the subset of superset principle that underlies these guidelines.
