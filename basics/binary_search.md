@@ -4,7 +4,7 @@
 - [examples](binarySearch.h)
 # std::lower_bound: find the first large or equal than tgt
 - First element in the range [first,last) which >= taget val
-- If all the element in the range compare less than val, the function returns last (a.k.a. end).
+- **If all the element in the range compare less than val, the function returns last (a.k.a. the not included search right bound).**
 - comp signature: `bool pred(const Type1 &a, const Type2 &b);`
     - binary predicate which returns ​true if the first argument is less than (i.e. is ordered before) the second.
     - The type Type1 must be such that an object of *type ForwardIt* can be dereferenced and then implicitly converted to *Type1*.
@@ -12,7 +12,7 @@
     - e.g. comp could be -  `[](const vec_value_t& v, target_val_t tgt_val) { return f(v) < tgt_val; }`
 # std::upper_bound: find the first bigger than tgt
 - Returns an iterator pointing to the first element in the range [first,last) which compares greater than val.
-- If no element in the range compares greater than val, the function returns last (a.k.a. end).
+- **If no element in the range compares greater than val, the function returns last (a.k.a. the not included search right bound).**
 - omp signature: `bool pred(const Type1 &a, const Type2 &b);`
     - binary predicate which returns ​true if the first argument is less than (i.e. is ordered before) the second.
     - The type Type1 must be such that an object of *type T* can be implicitly converted to *Type1*.
