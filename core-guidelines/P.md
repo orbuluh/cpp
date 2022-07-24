@@ -3,6 +3,21 @@
 - Philosophical rules are generally not mechanically checkable. However, individual rules reflecting these philosophical themes are.
 - Without a philosophical basis, the more concrete/specific/checkable rules lack rationale.
 
+- [P: Philosophy](#p-philosophy)
+  - [P.1: Express ideas directly in code](#p1-express-ideas-directly-in-code)
+  - [P.2: Write in ISO Standard C++](#p2-write-in-iso-standard-c)
+  - [P.3: Express intent](#p3-express-intent)
+  - [P.4: Ideally, a program should be statically type safe](#p4-ideally-a-program-should-be-statically-type-safe)
+  - [P.5: Prefer compile-time checking to run-time checking](#p5-prefer-compile-time-checking-to-run-time-checking)
+  - [P.6: What cannot be checked at compile time should be checkable at run time](#p6-what-cannot-be-checked-at-compile-time-should-be-checkable-at-run-time)
+  - [P.7: Catch run-time errors early](#p7-catch-run-time-errors-early)
+  - [P.8: Don't leak any resources](#p8-dont-leak-any-resources)
+  - [P.9: Don't waste time or space](#p9-dont-waste-time-or-space)
+  - [P.10: Prefer immutable data to mutable data](#p10-prefer-immutable-data-to-mutable-data)
+  - [P.11: Encapsulate messy constructs, rather than spreading through the code](#p11-encapsulate-messy-constructs-rather-than-spreading-through-the-code)
+  - [P.12: Use supporting tools as appropriate](#p12-use-supporting-tools-as-appropriate)
+  - [P.13: Use support libraries as appropriate](#p13-use-support-libraries-as-appropriate)
+
 ## P.1: Express ideas directly in code
 - Compilers don't read comments (or design documents) and neither do many programmers (consistently).
 - What is expressed in code has defined semantics and can (in principle) be checked by compilers and other tools.
@@ -303,3 +318,15 @@ for (int x; cin >> x; ) {
 - Note: The standards library and the GSL are examples of this philosophy. For example, instead of messing with the arrays, unions, cast, tricky lifetime issues, gsl::owner, etc., that are needed to implement key abstractions, such as vector, span, lock_guard, and future, we use the libraries designed and implemented by people with more time and expertise than we usually have.
 - Similarly, we can and should design and implement more specialized libraries, rather than leaving the users (often ourselves) with the challenge of repeatedly getting low-level code well.
 - This is a variant of the subset of superset principle that underlies these guidelines.
+
+## P.12: Use supporting tools as appropriate
+- There are many things that are done better "by machine".
+- Computers don't tire or get bored by repetitive tasks. We typically have better things to do than repeatedly do routine tasks.
+- Be careful not to become dependent on over-elaborate or over-specialized tool chains. Those can make your otherwise portable code non-portable.
+
+## P.13: Use support libraries as appropriate
+- Using a well-designed, well-documented, and well-supported library saves time and effort; its quality and documentation are likely to be greater than what you could do if the majority of your time must be spent on an implementation.
+- The cost (time, effort, money, etc.) of a library can be shared over many users.
+- A widely used library is more likely to be kept up-to-date and ported to new systems than an individual application.
+- Knowledge of a widely-used library can save time on other/future projects. So, if a suitable library exists for your application domain, use it.
+- Note: If no well-designed, well-documented, and well-supported library exists for an important domain, maybe you should design and implement it, and then use it.

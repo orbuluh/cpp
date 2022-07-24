@@ -2,7 +2,7 @@
 - A fork with my simplified reading notes.
 
 # On going
-- [P:          Philosophy](P.md)
+
 - [Pro:        Profiles](Pro.md)
 
 # Completed
@@ -55,6 +55,7 @@
   - [SL.con:     Containers](SL.con.md)
   - [SL.io:      Iostream](SL.io.md)
 - [NL:         Naming and layout rules](NL.md)
+- [P:          Philosophy](P.md)
 # TO READ
 
 - CPL: C-style programming
