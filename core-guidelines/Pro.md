@@ -76,3 +76,35 @@
 - With the type-safety profile you can trust that every operation is applied to a valid object.
 - An exception can be thrown to indicate errors that cannot be detected statically (at compile time).
 - Note that this type-safety can be complete only if we also have Bounds safety and Lifetime safety. Without those guarantees, a region of memory could be accessed independent of which object, objects, or parts of objects are stored in it.
+
+# Pro.bounds: Bounds safety profile
+- This profile makes it easier to construct code that operates within the bounds of allocated blocks of memory.
+- It does so by focusing on removing the primary sources of bounds violations: pointer arithmetic and array indexing.
+- One of the core features of this profile is to restrict pointers to only refer to single objects, not arrays.
+
+- We define bounds-safety to be the property that a program does not use an object to access memory outside of the range that was allocated for it.
+- Bounds safety is intended to be **complete only when combined with Type safety and Lifetime safety**, which cover other unsafe operations that allow bounds violations.
+
+## Bounds.1: Don't use pointer arithmetic. Use span instead: Pass pointers to single objects (only) and Keep pointer arithmetic simple.
+## Bounds.2: Only index into arrays using constant expressions: Pass pointers to single objects (only) and Keep pointer arithmetic simple.
+## Bounds.3: No array-to-pointer decay: Pass pointers to single objects (only) and Keep pointer arithmetic simple.
+## Bounds.4: Don't use standard-library functions and types that are not bounds-checked: Use the standard library in a type-safe manner.
+
+- Impact
+  - Bounds safety implies that access to an object - notably arrays - does not access beyond the object's memory allocation.
+  - This eliminates a large class of insidious and hard-to-find errors, including the (in)famous "buffer overflow" errors.
+  - This closes security loopholes as well as a prominent source of memory corruption (when writing out of bounds).
+  - **Even if an out-of-bounds access is "just a read", it can lead to invariant violations (when the accessed isn't of the assumed type) and "mysterious values."**
+
+# Pro.lifetime: Lifetime safety profile
+- Accessing through a pointer that doesn't point to anything is a major source of errors, and very hard to avoid in many traditional C or C++ styles of programming.
+- For example, a pointer might be uninitialized, the `nullptr`, point beyond the range of an array, or to a deleted object.
+
+## Lifetime.1: Don't dereference a possibly invalid pointer: detect or avoid.
+
+- Impact:
+  - Once completely enforced through a combination of style rules, static analysis, and library support, this profile eliminates one of the major sources of nasty errors in C++
+  - eliminates a major source of potential security violations
+  - improves performance by eliminating redundant "paranoia" checks
+  - increases confidence in correctness of code
+  - avoids undefined behavior by enforcing a key C++ language rule

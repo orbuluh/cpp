@@ -3,7 +3,7 @@
 
 # On going
 
-- [Pro:        Profiles](Pro.md)
+
 
 # Completed
 - [C:          Classes and class hierarchies](C.md)
@@ -56,6 +56,7 @@
   - [SL.io:      Iostream](SL.io.md)
 - [NL:         Naming and layout rules](NL.md)
 - [P:          Philosophy](P.md)
+- [Pro:        Profiles](Pro.md)
 # TO READ
 
 - CPL: C-style programming
