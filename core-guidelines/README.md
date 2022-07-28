@@ -3,8 +3,6 @@
 
 # On going
 
-
-
 # Completed
 - [C:          Classes and class hierarchies](C.md)
   - [C.concrete: Concrete types](C.concrete.md)
@@ -57,10 +55,11 @@
 - [NL:         Naming and layout rules](NL.md)
 - [P:          Philosophy](P.md)
 - [Pro:        Profiles](Pro.md)
-# TO READ
+- [SF:         Source files](SF.md)
 
+
+# TO READ
 - CPL: C-style programming
-- SF: Source files
 - A: Architectural ideas
 - NR: Non-Rules and myths
 - RF: References
