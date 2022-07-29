@@ -56,11 +56,11 @@
 - [P:          Philosophy](P.md)
 - [Pro:        Profiles](Pro.md)
 - [SF:         Source files](SF.md)
-
+- [A:          Architectural ideas](A.md)
 
 # TO READ
 - CPL: C-style programming
-- A: Architectural ideas
+
 - NR: Non-Rules and myths
 - RF: References
 - GSL: Guidelines support library
