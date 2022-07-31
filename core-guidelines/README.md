@@ -60,11 +60,10 @@
 - [A:          Architectural ideas](A.md)
 - [NR:         Non-Rules and myths](NR.md)
 - [CPL:        C-style programming](CPL.md)
-
+- [GSL:        Guidelines support library](GSL.md)
 # TO READ
 
 - RF: References
-- GSL: Guidelines support library
 - FAQ: Answers to frequently asked questions
 - Appendix A: Libraries
 - Appendix B: Modernizing code
