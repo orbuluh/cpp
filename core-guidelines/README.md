@@ -59,8 +59,10 @@
 - [SF:         Source files](SF.md)
 - [A:          Architectural ideas](A.md)
 - [NR:         Non-Rules and myths](NR.md)
+- [CPL:        C-style programming](CPL.md)
+
 # TO READ
-- CPL: C-style programming
+
 - RF: References
 - GSL: Guidelines support library
 - FAQ: Answers to frequently asked questions
