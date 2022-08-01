@@ -2,7 +2,7 @@
 - A fork with my simplified reading notes.
 
 # On going
-
+[Appendix C: Discussion](Discussion.md)
 
 # Completed
 - [C:          Classes and class hierarchies](C.md)
@@ -61,12 +61,13 @@
 - [NR:         Non-Rules and myths](NR.md)
 - [CPL:        C-style programming](CPL.md)
 - [GSL:        Guidelines support library](GSL.md)
-# TO READ
 
-- RF: References
-- FAQ: Answers to frequently asked questions
-- Appendix A: Libraries
-- Appendix B: Modernizing code
-- Appendix C: Discussion
-- Appendix D: Supporting tools
-- Glossary
+
+
+
+# Skip
+- [RF: References](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#S-references)
+- [Glossary: A relatively informal definition of terms used in the guidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#Glossary)
+- [FAQ: Answers to frequently asked questions](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#S-faq)
+- [Appendix A: Libraries](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#S-libraries)
+- [Appendix D: Supporting tools]()

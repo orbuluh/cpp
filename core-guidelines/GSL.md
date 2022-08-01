@@ -15,6 +15,10 @@
 - We plan for a "ISO C++ standard style" semi-formal specification of the GSL.
 - We rely on the ISO C++ Standard Library and hope for parts of the GSL to be absorbed into the standard library.
 
+## FAQ.54: Has the GSL (guidelines support library) been approved by the ISO C++ standards committee?
+- No. The GSL exists only to supply a few types and aliases that are not currently in the standard library.
+- If the committee decides on standardized versions (of these or other types that fill the same need) then they can be removed from the GSL.
+
 # GSL.view: Views
 - These types allow the user to distinguish between **owning and non-owning pointers** and **between pointers to a single object and pointers to the first element of a sequence**.
 - **These "views" are never owners.**
@@ -61,6 +65,13 @@ czstring // a const char* supposed to be a C-style string; that is, a zero-termi
 - **A sequence of characters that is not assumed to be zero-terminated should be a `span<char>`**, or if that is impossible because of ABI issues a `char*`, rather than a `zstring`.
 - Use `not_null<zstring>` for C-style strings that cannot be nullptr.
 
+## FAQ.55: If you're using the standard types where available, why is the GSL `span<char>` different from the `string_view` ...
+- The consensus on the taxonomy of views for the C++ Standard Library was that **"view" means "read-only", and "span" means "read/write".**
+  - If you only need a read-only view of characters that does not need guaranteed bounds-checking and you have C++17, use C++17 `std::string_view`.
+  - Otherwise, if you need a **read-write** view that does not need guaranteed bounds-checking and you have C++20, use C++20 `std::span<char>`.
+  - Otherwise, use `gsl::span<char>`.
+
+
 # GSL.owner: Ownership pointers
 ```cpp
 unique_ptr<T> // unique ownership: std::unique_ptr<T>
@@ -68,6 +79,20 @@ shared_ptr<T> // shared ownership: std::shared_ptr<T> (a counted pointer)
 stack_array<T> // A stack-allocated array. The number of elements are determined at construction and fixed thereafter. The elements are mutable unless T is a const type.
 dyn_array<T> // ??? needed ??? A heap-allocated array. The number of elements are determined at construction and fixed thereafter. The elements are mutable unless T is a const type. Basically a span that allocates and owns its elements.
 ```
+
+## FAQ.56: Is `owner` the same as the proposed `observer_ptr`?
+- No. owner owns, is an alias, and can be applied to any indirection type.
+- The main intent of `observer_ptr` is to signify a **non-owning pointer**.
+
+## FAQ.57: Is `stack_array` the same as the standard array?
+- No. `stack_array` is **guaranteed to be allocated on the stack.**
+- Although a `std::array` contains its storage directly inside itself, **the `array` object can be put anywhere, including the heap.**
+
+## FAQ.58: Is `dyn_array` the same as `vector` or the proposed `dynarray`?
+- No. `dyn_array` is not resizable, and is a safe way to refer to a **heap-allocated fixed-size array.**
+- Unlike `vector`, it is intended to replace `array-new[]`.
+- Unlike the `dynarray` that has been proposed in the committee, this does not anticipate compiler/language magic to somehow allocate it on the stack 
+  - when it is a member of an object that is allocated on the stack; it simply **refers to a "dynamic" or heap-based array.**
 
 # GSL.assert: Assertions
 ```cpp
@@ -78,6 +103,13 @@ Ensures // post-condition assertion. Currently placed in function bodies. Later,
 ```
 - These assertions are currently macros (yuck!) and must appear in function definitions (only) pending standard committee decisions on contracts and assertion syntax.
 - See the contract proposal; using the **attribute** syntax, for example, `Expects(p)` will become `[[expects: p]]`.
+
+## FAQ.59: Is Expects the same as assert?
+- No. It is a placeholder for language support for contract preconditions.
+
+## FAQ.60: Is Ensures the same as assert?
+- No. It is a placeholder for language support for contract postconditions.
+
 
 # GSL.util: Utilities
 ```cpp
