@@ -1,9 +1,6 @@
 [Cpp Core guidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
 - A fork with my simplified reading notes.
 
-# On going
-[Appendix C: Discussion](Discussion.md)
-
 # Completed
 - [C:          Classes and class hierarchies](C.md)
   - [C.concrete: Concrete types](C.concrete.md)
@@ -61,9 +58,7 @@
 - [NR:         Non-Rules and myths](NR.md)
 - [CPL:        C-style programming](CPL.md)
 - [GSL:        Guidelines support library](GSL.md)
-
-
-
+- [Appendix C: Discussion](Discussion.md)
 
 # Skip
 - [RF: References](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#S-references)

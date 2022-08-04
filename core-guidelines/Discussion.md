@@ -191,3 +191,213 @@ T& T::operator=(const T& other)
 - (For exceptions, simply wrap everything sensitive that your destructor does in a `try/catch(...)` block.)
 - This is particularly important because a destructor might be called in a crisis situation, such as failure to allocate a system resource (e.g., memory, files, locks, ports, windows, or other system objects).
 - **When using exceptions as your error handling mechanism, always document this behavior by declaring these functions `noexcept`**. (See Item 75.)
+
+# Define Copy, move, and destroy consistently
+- **Note: If you define a copy constructor, you must also define a copy assignment operator.**
+- **Note: If you define a move constructor, you must also define a move assignment operator.**
+
+```cpp
+class X {
+public:
+    X(const X&) { /* stuff */ }
+
+    // BAD: failed to also define a copy assignment operator
+
+    X(x&&) noexcept { /* stuff */ }
+
+    // BAD: failed to also define a move assignment operator
+
+    // ...
+};
+
+X x1;
+X x2 = x1; // ok
+x2 = x1;   // pitfall: either fails to compile, or does something suspicious
+```
+- **If you define a destructor, you should not use the compiler-generated copy or move operation; you probably need to define or suppress copy and/or move.**
+
+```cpp
+class X {
+    HANDLE hnd;
+    // ...
+public:
+    ~X() { /* custom stuff, such as closing hnd */ }
+    // suspicious: no mention of copying or moving -- what happens to hnd?
+};
+
+X x1;
+X x2 = x1; // pitfall: either fails to compile, or does something suspicious
+x2 = x1;   // pitfall: either fails to compile, or does something suspicious
+```
+- If you define copying, and any base or member has a type that defines a move operation, you should also define a move operation.
+
+```cpp
+class X {
+    string s; // defines more efficient move operations
+    // ... other data members ...
+public:
+    X(const X&) { /* stuff */ }
+    X& operator=(const X&) { /* stuff */ }
+
+    // BAD: failed to also define a move construction and move assignment
+    // (why wasn't the custom "stuff" repeated here?)
+};
+
+X test()
+{
+    X local;
+    // ...
+    return local;  // pitfall: will be inefficient and/or do the wrong thing
+}
+```
+- If you define any of the copy constructor, copy assignment operator, or destructor, you probably should define the others.
+- Note: If you need to define any of these five functions, it means you need it to do more than its default behavior -- and the five are asymmetrically interrelated. Here's how:
+
+- **If you write/disable either of the copy constructor or the copy assignment operator, you probably need to do the same for the other:** If one does "special" work, probably so should the other because the two functions should have similar effects. (See Item 53, which expands on this point in isolation.)
+- **If you explicitly write the copying functions, you probably need to write the destructor**: If the "special" work in the copy constructor is to allocate or duplicate some resource (e.g., memory, file, socket), you need to deallocate it in the destructor.
+- **If you explicitly write the destructor, you probably need to explicitly write or disable copying**: If you have to write a non-trivial destructor, it's often because you need to manually release a resource that the object held. If so, it is likely that those resources require careful duplication, and then you need to pay attention to the way objects are copied and assigned, or disable copying completely.
+
+- In many cases, holding properly encapsulated resources using RAII "owning" objects can eliminate the need to write these operations yourself. (See Item 13.)
+
+- Prefer compiler-generated (including `=default`) special members;
+  - only these can be classified as "trivial", and at least one major standard library vendor heavily optimizes for classes having trivial special members. This is likely to become common practice.
+
+- Exceptions:
+  - **When any of the special functions are declared only to make them non-public or `virtual`, but without special semantics, it doesn't imply that the others are needed.**
+  - In rare cases, classes that have members of strange types (such as reference members) are an exception because they have peculiar copy semantics.
+  - In a class holding a reference, you likely need to write the copy constructor and the assignment operator, but the default destructor already does the right thing.
+  - (Note that using a reference member is almost always wrong.)
+
+# Discussion: Provide strong resource safety; that is, never leak anything that you think of as a resource
+- Prevent leaks. Leaks can lead to performance degradation, mysterious error, system crashes, and security violations.
+- Alternative formulation: **Have every resource represented as an object of some class managing its lifetime.**
+
+```cpp
+template<class T>
+class Vector {
+private:
+    T* elem;   // sz elements on the free store, owned by the class object
+    int sz;
+    // ...
+};
+```
+- This class is a resource handle. It manages the lifetime of the Ts.
+- To do so, Vector must define or delete the set of special operations (constructors, a destructor, etc.).
+
+# Discussion: Never return or throw while holding a resource not owned by a handle
+- That would be a leak.
+
+```cpp
+void f(int i)
+{
+    FILE* f = fopen("a file", "r");
+    ifstream is { "another file" };
+    // ...
+    if (i == 0) return;
+    // ...
+    fclose(f);
+}
+```
+- If i == 0 the file handle for a file is leaked. On the other hand, the `ifstream` for another file will correctly close its file (upon destruction). 
+- If you must use an explicit pointer, rather than a resource handle with specific semantics, use a `unique_ptr` or a `shared_ptr` with a custom deleter:
+
+```cpp
+void f(int i)
+{
+    unique_ptr<FILE, int(*)(FILE*)> f(fopen("a file", "r"), fclose);
+    // ...
+    if (i == 0) return;
+    // ...
+}
+```
+- Better:
+```cpp
+void f(int i)
+{
+    ifstream input {"a file"};
+    // ...
+    if (i == 0) return;
+    // ...
+}
+```
+
+# Discussion: A "raw" pointer or reference is never a resource handle
+- To be able to distinguish owners from views.
+- Note: This is independent of how you "spell" pointer: `T*`, `T&`, `Ptr<T>` and `Range<T>` are not owners.
+
+# Discussion: Never let a pointer outlive the object it points to
+- Reason: To avoid extremely hard-to-find errors.
+- Dereferencing such a pointer is undefined behavior and could lead to violations of the type system.
+
+```cpp
+string* bad() // really bad
+{
+    vector<string> v = {"This", "will", "cause", "trouble", "!"};
+    // leaking a pointer into a destroyed member of a destroyed object (v)
+    return &v[0];
+}
+
+void use() {
+    string* p = bad();
+    vector<int> xx = {7, 8, 9};
+    // undefined behavior: x might not be the string "This"
+    string x = *p;
+    // undefined behavior: we don't know what (if anything) is allocated a
+    // location p
+    *p = "Evil!";
+}
+```
+- The strings of `v` are destroyed upon exit from `bad()` and so is `v` itself.
+- The returned pointer points to unallocated memory on the free store. This memory (pointed into by `p`) might have been reallocated by the time `*p` is executed. There might be no string to read and a write through `p` could easily corrupt objects of unrelated types.
+
+
+# Discussion: Use templates to express containers (and other resource handles)
+- To provide statically type-safe manipulation of elements.
+
+```cpp
+template<typename T> class Vector {
+    // ...
+    T* elem;   // point to sz elements of type T
+    int sz;
+};
+```
+
+# Discussion: Return containers by value (relying on move or copy elision for efficiency)
+- To simplify code and eliminate a need for explicit memory management. To bring an object into a surrounding scope, thereby extending its lifetime.
+- See also: F.20, the general item about "out" output values
+
+```cpp
+vector<int> get_large_vector()
+{
+    return ...;
+}
+auto v = get_large_vector(); //  return by value is ok, most modern compilers will do copy elision
+```
+- Exception: See the Exceptions in [F.20](F.call.md#f20-for-out-output-values-prefer-return-values-to-output-parameters).
+
+
+# Discussion: If a class is a resource handle, it needs a constructor, a destructor, and copy and/or move operations
+- To provide **complete control of the lifetime of the resource**.
+- To provide **a coherent set of operations on the resource.**
+
+- Note: If all members are resource handles, rely on the default special operations where possible.
+
+```cpp
+template<typename T> struct Named {
+    string name;
+    T value;
+};
+```
+- Now `Named` has a default constructor, a destructor, and efficient copy and move operations, provided `T` has.
+
+# Discussion: If a class is a container, give it an initializer-list constructor
+- It is common to need an initial set of elements.
+
+```cpp
+template<typename T> class Vector {
+public:
+    Vector(std::initializer_list<T>);
+    // ...
+};
+Vector<string> vs { "Nygaard", "Ritchie" };
+```
