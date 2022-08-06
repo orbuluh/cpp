@@ -1,6 +1,9 @@
 [Cpp Core guidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
 - A fork with my simplified reading notes.
 
+# Why guidelines
+> as with all general principles, its **value lies not in being an absolute rule for every case, but rather a default rule, a guideline that should be followed in the absence of a good reason not to**; the reality is that the m**ajority of everyday work is not special and the result is better if this principle is followed.**  -- from: [Hands-On Design Patterns with C++](https://www.packtpub.com/product/hands-on-design-patterns-with-c/9781788832564)
+
 # Completed
 - [C:          Classes and class hierarchies](C.md)
   - [C.concrete: Concrete types](C.concrete.md)

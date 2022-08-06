@@ -1,4 +1,5 @@
 # Notes/practices from book:
+- [Hands-On Design Patterns with C++](https://www.packtpub.com/product/hands-on-design-patterns-with-c/9781788832564)
 - [Dive Into Design Patterns](https://refactoring.guru/design-patterns/book)
   - so much better than next book...
 - [Design Patterns in Modern C++ Reusable Approaches for Object-Oriented Software Design](https://www.amazon.com/Design-Patterns-Modern-Approaches-Object-Oriented/dp/1484236025)
