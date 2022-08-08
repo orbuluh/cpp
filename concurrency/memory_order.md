@@ -1,4 +1,17 @@
 # [Memory order](https://en.cppreference.com/w/cpp/atomic/memory_order)
+- 
+
+# Quick facts
+- From [C++ High Performance...](https://www.amazon.com/High-Performance-Master-optimizing-functioning/dp/1839216549)
+- When it comes to shared variables in multi-threaded programs, we need to be aware of instruction re-orderings.
+- The compiler (and hardware) does all its optimizations based on what is true and observable **for one thread only**.
+- The compiler cannot know what other threads are able to observe through shared variables, so it is our job as programmers to inform the compiler of what re-orderings are allowed.
+- When protecting a critical section with a mutex, it is guaranteed that only the thread that currently owns the lock can execute the critical section.
+  - But, the **mutex is also creating memory fences around the critical section to inform the system that certain re-orderings are not allowed at the critical section boundaries**.
+  - When **acquiring the lock, an acquire fence is added, and when releasing the lock, a release fence is added.**
+
+# Herb Sutter - atomic Weapons
+- [part 1](https://youtu.be/A8eCGOqgvH4) / []()
 
 # [Arvid Norberg: The C++ memory model: an intuition](https://youtu.be/OyNG4qiWnmU)
 - About considering sharing...
@@ -31,7 +44,7 @@ mutex.lock() // acquire updates from other thread
 // store to memory, updates not available to other threads during critical sections
 //-----
 mutex.unlock() // release updates from this thread to other thread
-// store to memory, updates not available to other threads during critical sections
+// memory updates NOT available to other threads until they call lock() / acquire the updates
 ```
 
 
