@@ -3,6 +3,8 @@
 
 - [Double dispatch](notes/double_dispatch.md)
 
+- [Curiously Recurring Template Pattern](notes/crtp.md)
+
 
 ## To Read
 
