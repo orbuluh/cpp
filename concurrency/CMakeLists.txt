@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory(CIA/ch2.managing_threads ManagingThreads)
 add_subdirectory(event_loop EventLoop)
+include_directories("demo")
 
 list(APPEND EXTRA_LIBS
     ManagingThreads

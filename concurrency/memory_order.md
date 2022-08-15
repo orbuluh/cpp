@@ -1,5 +1,149 @@
-# [Memory order](https://en.cppreference.com/w/cpp/atomic/memory_order)
-- 
+# Memory order
+- Notes taken from
+  - [modernescpp.com post 1](https://www.modernescpp.com/index.php/synchronization-and-ordering-constraints)
+  - [modernescpp.com post 2](https://www.modernescpp.com/index.php/sequential-consistency-applied)
+  - [modernescpp.com post 3](https://www.modernescpp.com/index.php/acquire-release-semantic)
+  - [modernescpp.com post 4](https://www.modernescpp.com/index.php/transivity-of-the-acquire-release-semantic)
+  - [modernescpp.com post 5](https://www.modernescpp.com/index.php/acquire-release-semantic-the-typical-misunderstanding)
+  - [cppreference](https://en.cppreference.com/w/cpp/atomic/memory_order)
+
+- You can not configure the atomicity of an [atomic data type](momory_model.md), but you can adjust very accurately the synchronization and ordering constraints of atomic operations.
+
+# The six variants of the C++ memory model
+- C++ has six variants of the memory model.
+- The default for atomic operations is `std::memory_order_seq_cst`. But you can explicitly specify one of the other five
+```cpp
+enum memory_order{
+  memory_order_relaxed,
+  memory_order_consume,
+  memory_order_acquire,
+  memory_order_release,
+  memory_order_acq_rel,
+  memory_order_seq_cst
+}
+```
+# Types of atomic operations
+- For which type of atomic operations should you use the memory model?
+- The memory model deals with reading and/or writing atomic operations.
+  - read operation: `memory_order_acquire` and `memory_order_consume`
+    - `is_lock_free`
+    - `load`
+  - write operation: `memory_order_release`
+    - `clear`
+    - `store`
+  - read-modify-write operation: `memory_order_acq_rel` and `memory_order_seq_cst`
+    - `test_and_set`
+    - `exchange`
+    - `compare_exchange_strong`, `compare_exchange_weak`
+    - `fetch_add`, `+=`, `fetch-sub`, `-=`
+    - `fetch_or`, `|=`, `fetch_and`, `&=`, `fetch_xor`, `^=`
+    - `++`, `--`
+- `memory_order_relaxed` defines no synchronization and ordering constraints. So it will not fit in this taxonomy.
+
+# Synchronization/ordering constraints
+- Which synchronization and ordering constraints are defined by the memory model?
+  - **Sequential consistency**: `memory_order_seq_cst`
+  - **Acquire-release**: `memory_order_consume`, `memory_order_acquire`, `memory_order_release` and `memory_order_acq_rel`
+  - **Relaxed**: `memory_order_relaxed`
+- While the sequential consistency establishes a global order between threads, the acquire-release semantic establishes an ordering between reading and write operations **on the same atomic variable on different threads**.
+- The relaxed semantic only guarantees that **operations on the same atomic data type in the same thread can not be reordered.** That guarantee is called **modification order consistency**. But **other threads can see this operation in a different order.**
+
+# Sequential consistency example
+- Check: [memory_order::demo()](demo/memory_order.h)
+- program will always return "done" when the memory order is `memory_order_seq_cst`
+- In producer:
+  - `work= "done"` is **sequenced-before** `ready=true` / `work= "done"` **happens-before** `ready=true`
+- In consumer:
+  - `while(!ready.load()){}` is **sequenced-before** `std::cout<< work ...`, / `while(!ready.load()){}` is **happens-before** `std::cout<< work ...`.
+- Producer and consumer is synchronized by the atomic variable `ready`
+  - `ready = true` synchronizes-with `while(!ready.load()){}`
+  - `ready = true` **inter-thread happens-before** `while (!ready.load()){}`
+  - `ready = true` **happens-before** `while (!ready.load()){}`
+
+# From the sequential consistency to the acquire-release semantic
+- Check [memory_order::demo()](demo/memory_order.h) - run few times and you will see.
+- When using `memory_order_seq_cst`, a thread sees the operations of another thread and therefore of all other threads in the same order.
+- If we use the acquire-release semantic for atomic operations, the key characteristic of the sequential consistency will not hold.
+  - There is no global synchronization between threads in the acquire-release semantic, there is **only a synchronization between atomic operations on the same atomic variable.**
+  - So a **write** operation on one thread **synchronizes** with a **read** operation on another thread **on the same atomic variable**.
+  - This synchronization relation on the same atomic variable helps to establish a **happens-before** relation **between atomic variables and therefore between threads.**
+  - e.g. In acquire-release semantic, we will not reason about the synchronization of threads. We have to reason about the synchronization **of the same atomic in different threads**.
+
+# Synchronization and ordering constraints
+- The acquire-release semantic is based on one key idea.
+  - A *release* operation synchronizes with an *acquire* operation on the same atomic and establishes, in addition, an ordering constraint.
+  - So, **all read and write operations** can **not** be moved **before** an *acquire* operation, all read and write operations can **not** be move **behind** a *release* operation.
+- But what is an acquire or release operation?
+  - The reading of an atomic variable with `load` or `test_and_set` is an *acquire* operation. It's like acquiring/locking of a lock.
+  - Accordingly, a `store` or `clear` operation on an atomic variable is a *release* operation. It's like a releasing/unlocking of a lock.
+- That implies, that
+  - **an operation on a variable can not moved outside of a critical section. That hold for both directions.**
+  - a variable **can** be moved **inside** of a critical section. Because the variable moves from the not protected to the protected area.
+
+
+- A *release* operation **synchronizes** with an *acquire* operation on **the same atomic variable** and establishes, in addition, ordering constraints.
+- Check [memory_order_sync_with_atomic::demo](demo/memory_order.h)
+- These are the components to synchronize threads in a performant way, in case they **act** on the same atomic.
+- How? Because the transitivity of the acquire-release semantic, threads can be synchronized, which act independently of each other.
+```cpp
+void dataProducer() {
+    taskQ.push(10);                                              // 1
+    dataProduced.store(true, std::memory_order::release);        // 2
+}
+
+void broker() {
+    while (!dataProduced.load(std::memory_order::acquire)) {;}   // 3
+    dataConsumed.store(true, std::memory_order::release);        // 4
+}
+
+void dataConsumer() {
+    while (!dataConsumed.load(std::memory_order::acquire)) {;}   // 5
+    std::cout << taskQ.front() << '\n';                          // 6
+    taskQ.pop();
+}
+```
+- (1, 2) / (3, 4) / (5, 6) has the **sequenced-before** relations.
+  - That means, that all operations in one thread will be executed in source code order
+  - 1 before 2, 3 before 4, 5 before 6
+- (2, 3), (4, 5) are the **synchronize-with** relations.
+  - The reason is the **acquire-release semantic of the atomic operations on the same atomic**.
+  - So the synchronization between the threads takes place.
+  - e.g. because the sync at (2, 3) - 4 cannot happen before 1,
+    - all read and write operations can **not** be move **after** a *release* operation. (1 wont happen after 2)
+  - similarly, because the sync at (4, 5) - and 6 can not happen before 3
+    - all read and write operations can **not** be moved **before** an *acquire* operation. (4 won't happen before 3)
+
+# Closer look
+- Compare below 2 snippets, step 3 in second snippet doesn't have the while loop
+  - Snippet will segfault - because although 2 should sync with 3, there is no guarantee that 2 will happen before 3.
+  - So the purpose of the while loop in 3 of snippet 1 is basically making sure that `dataProduced.store(true, std::memory_order::release)` happens before `dataProduced.load(std::memory_order::acquire)` evaluate to true.
+```cpp
+// OK example
+void dataProducer() {
+    taskQ.push(10);                                              // 1
+    dataProduced.store(true, std::memory_order::release);        // 2
+}
+
+void dataConsumer() {
+    while (!dataProduced.load(std::memory_order::acquire)) {;}   // 3
+    taskQ.pop();                                                 // 4
+}
+```
+```cpp
+// Bad!
+void dataProducer() {
+    taskQ.push(10);                                              // 1
+    dataProduced.store(true, std::memory_order::release);        // 2
+}
+
+void dataConsumer() {
+    dataProduced.load(std::memory_order::acquire);               // 3
+    taskQ.pop();                                                 // 4
+}
+```
+
+
+
 
 # Quick facts
 - From [C++ High Performance...](https://www.amazon.com/High-Performance-Master-optimizing-functioning/dp/1839216549)

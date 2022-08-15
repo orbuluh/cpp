@@ -158,4 +158,4 @@ T fetch_mult(std::atomic<T>& shared, T mult) {
 - For the user-defined type `std::atomic<MyType>` only a reduced set of operations is supported.
 
 # Memory order
-- [:point_right: check :notebook:](momory_order.md)
+- [:point_right: check :notebook:](memory_order.md)
