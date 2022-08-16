@@ -1,6 +1,7 @@
 # Random Cpp related learning notes
 - [Benchmark playground](benchmark/README.md)
 - [Boost quick reference](boost/README.md)
+- [GNU playground](gnu/README.md)
 - [Concurrency](concurrency/README.md)
 - [Core guidelines](core-guidelines/README.md)
 - [C++ idioms](cpp-idioms/README.md)
