@@ -5,6 +5,16 @@
   - [modernescpp.com post 3](https://www.modernescpp.com/index.php/the-atomic-flag)
   - [modernescpp.com post 4](https://www.modernescpp.com/index.php/the-atomic-boolean)
   - [modernescpp.com post 5](https://www.modernescpp.com/index.php/atomics)
+  - [preshing.com](https://preshing.com/20120930/weak-vs-strong-memory-models)
+
+# Weak vs. Strong Memory Models
+- There are many types of memory reordering, and not all types of reordering occur equally often.
+  - **It all depends on processor you’re targeting and/or the toolchain you’re using for development.**
+- A memory model tells you, for a given processor or toolchain, exactly what types of memory reordering to expect at runtime relative to a given source code listing
+![image from original preshing,com blog post](https://preshing.com/images/weak-strong-table.png)
+  - Each physical device pictured above represents **a hardware memory model**.
+  - A **hardware memory model tells you what kind of memory ordering to expect at runtime relative to an assembly (or machine) code listing**.
+- There are software memory models as well. Technically, once you’ve written (and debugged) portable lock-free code in C11, C++11 or Java, only the software memory model is supposed to matter. Nonetheless, a general understanding of hardware memory models may come in handy.
 
 
 # Before C++11 there was only one contract.

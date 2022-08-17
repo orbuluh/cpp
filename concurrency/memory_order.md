@@ -1,11 +1,85 @@
 # Memory order
 - Notes taken from
+  - [preshing.com](https://preshing.com/20130702/the-happens-before-relation/)
   - [modernescpp.com post 1](https://www.modernescpp.com/index.php/synchronization-and-ordering-constraints)
   - [modernescpp.com post 2](https://www.modernescpp.com/index.php/sequential-consistency-applied)
   - [modernescpp.com post 3](https://www.modernescpp.com/index.php/acquire-release-semantic)
   - [modernescpp.com post 4](https://www.modernescpp.com/index.php/transivity-of-the-acquire-release-semantic)
   - [modernescpp.com post 5](https://www.modernescpp.com/index.php/acquire-release-semantic-the-typical-misunderstanding)
   - [cppreference](https://en.cppreference.com/w/cpp/atomic/memory_order)
+
+# [Memory interactions can be reordered when executing lock-free code.](https://preshing.com/20121019/this-is-why-they-call-it-a-weakly-ordered-cpu/)
+
+
+# The Happens-Before Relation
+- the common definition can be stated as follows:
+> Let A and B represent operations performed by a multithreaded process. If A happens-before B, then **the memory effects of A effectively become visible to the thread performing B before B is performed.**
+
+- When you consider the various ways in which memory reordering can complicate lock-free programming, the guarantee that A happens-before B is a desirable one.
+- There are several ways to obtain this guarantee, differing slightly from one programming language to next
+  - though obviously, **all languages must rely on the same mechanisms at the processor level.**
+- No matter which programming language you use, they all have one thing in common:
+  - If operations A and B are performed by the **same** thread, and A’s **statement** comes before B’s **statement** in program order, then A happens-before B. This is basically a formalization of the "cardinal rule of memory ordering"
+- That’s not the only way to achieve a happens-before relation. The C++11 standard states that, among other methods, you also can achieve it between operations **in different threads using acquire and release semantics**.
+
+# "happens-before" (with hyphen) v.s. "happening before" (no hyphen)
+- The happens-before relation, under the definition given above, is **not the same as A actually happening before B**!
+- In particular,
+  - A **happens-before** B does not imply A **happening** before B.
+  - A **happening** before B does not imply A **happens-before** B.
+- Remember, **happens-before is a formal relation between operations, defined by a family of language specifications; it exists independently of the concept of time**.
+  - This is different from what we usually mean when we say that “A happens before B”; referring the order, in time, of real-world events.
+  - Throughout this post, I’ve been careful to always hyphenate the former term **happens-before**, in order to distinguish it from the latter.
+
+## "happens-before" Does Not Imply "happening before"
+```cpp
+int A = 0;
+int B = 0;
+
+void foo()
+{
+    A = B + 1;              // (1)
+    B = 1;                  // (2)
+}
+```
+- From compiler, store to B has completed before store to A. E.g.  (1) doesn’t actually happen before (2)!
+- However, as the store to A doesn’t actually influence the store to B, the rule of "memory effects of (1) must effectively be visible before (2)" has not break.
+
+## "happening before" Does Not Imply "happens-before"
+```cpp
+// assume that plain loads and stores of int are atomic.
+int isReady = 0;
+int answer = 0;
+
+void publishMessage() // assume processed by thread 1
+{
+    answer = 42;                      // (1)
+    isReady = 1;                      // (2)
+}
+
+void consumeMessage() // assume processed by thread 2
+{
+    if (isReady)                      // (3) <-- Let's suppose this line reads 1
+        printf("%d\n", answer);       // (4)
+}
+```
+- Imagine that one thread calls publishMessage, while another thread calls consumeMessage.
+- Because of program ordering, there is a happens-before relation between (1) and (2), and another happens-before relation between (3) and (4).
+- Furthermore, let’s suppose that at runtime, the line marked (3) ends up reading 1, the value that was stored at line (2) in the other thread.
+  - In this case, we know that (2) must have happened before (3).
+  - But that doesn’t mean there is a happens-before relationship between (2) and (3)!
+- **The happens-before relationship only exists where the language standards say it exists**.
+- And since these are plain loads and stores, t**he C++11 standard has no rule which introduces a happens-before relation between (2) and (3), even when (3) reads the value written by (2).**
+- Furthermore, because there is no happens-before relation between (2) and (3), **there is no happens-before relation between (1) and (4), either.**
+- Therefore, **the memory interactions of (1) and (4) can be reordered, either due to compiler instruction reordering or memory reordering on the processor itself**, such that (4) ends up printing “0”, even though (3) reads 1.
+
+
+
+
+
+
+
+
 
 - You can not configure the atomicity of an [atomic data type](momory_model.md), but you can adjust very accurately the synchronization and ordering constraints of atomic operations.
 
@@ -141,6 +215,8 @@ void dataConsumer() {
     taskQ.pop();                                                 // 4
 }
 ```
+
+
 
 
 
