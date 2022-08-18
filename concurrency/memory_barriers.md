@@ -52,7 +52,7 @@
 ## #LoadLoad
 - A **LoadLoad** barrier effectively prevents **reordering of loads performed before the barrier with loads performed after the barrier**.
   - In our analogy, the **#LoadLoad** fence instruction is basically equivalent to **a pull from the central repository**.
-  - Think git pull, hg pull, p4 sync, svn update or cvs update, all acting on the entire repository.
+  - Think git pull - all acting on the entire repository.
   - If there are any merge conflicts with his local changes, let’s just say they’re resolved randomly.
   - Mind you, there’s no guarantee that #LoadLoad will pull the latest, or head, revision of the entire repository!
   - It could very well pull an older revision than the head, as long as that revision is at least as new as the newest value which leaked from the central repository into his local machine.
@@ -67,6 +67,61 @@ if (IsPublished)                   // Load and check shared flag
 ```
   - Obviously, this example depends on having the IsPublished flag leak into Sergey’s working copy by itself. It doesn’t matter exactly when that happens; once the leaked flag has been observed, he issues a #LoadLoad fence to prevent reading some value of Value which is older than the flag itself.
 
+
+## #StoreStore
+A StoreStore barrier effectively **prevents reordering of stores performed before the barrier with stores performed after the barrier.**
+- In our analogy, the #StoreStore fence instruction corresponds to a push to the central repository.
+- Think git push, acting on the entire repository.
+- As an added twist, let’s suppose that #StoreStore instructions are not instant. They’re performed in a delayed, asynchronous manner. So, even though Larry executes a #StoreStore, we can’t make any assumptions about when all his previous stores finally become visible in the central repository.
+- This, too, may sound like a weak guarantee, but again, it’s perfectly sufficient to prevent Sergey from seeing any stale data published by Larry. Returning to the same example as above, Larry needs only to publish some data to shared memory, issue a #StoreStore barrier, then set the shared flag to true:
+
+```cpp
+Value = x;                         // Publish some data
+STORESTORE_FENCE();
+IsPublished = 1;                   // Set shared flag to indicate availability of data
+```
+
+## #LoadStore
+- Unlike #LoadLoad and #StoreStore, there’s no clever metaphor for #LoadStore in terms of source control operations.
+- The best way to understand a #LoadStore barrier is, quite simply, in terms of **instruction reordering**.
+- Imagine Larry has a set of instructions to follow.
+  - Some instructions make him load data from his private working copy into a register, and
+  - some make him store data from a register back into the working copy.
+  - Larry has the ability to juggle instructions, but only in specific cases.
+  - Whenever he encounters a load, **he looks ahead at any stores that are coming up after that**; if the stores are completely unrelated to the current load, then he’s allowed to skip ahead, do the stores first, then come back afterwards to finish up the load.
+  - In such cases, the cardinal rule of memory ordering – never modify the behavior of a single-threaded program – is still followed.
+- On a real CPU, such instruction reordering might happen on certain processors if, say, there is a cache miss on the load followed by a cache hit on the store. But in terms of understanding the analogy, such hardware details don’t really matter.
+- Let’s just say Larry has a boring job
+  - and this is one of the few times when he’s allowed to get creative.
+  - Whether or not he chooses to do it is completely unpredictable.
+  - Fortunately, this is a relatively inexpensive type of reordering to prevent; when Larry encounters a #LoadStore barrier, he simply refrains from such reordering around that barrier.
+- In our analogy, it’s valid for Larry to perform this kind of LoadStore reordering even when there is a #LoadLoad or #StoreStore barrier between the load and the store. However, on a real CPU, instructions which act as a #LoadStore barrier typically act as at least one of those other two barrier types.
+
+
+## #StoreLoad
+- A StoreLoad barrier ensures that **all stores performed before the barrier are visible to other processors, and that all loads performed after the barrier receive the latest value that is visible at the time of the barrier.**
+- In other words, it e**ffectively prevents reordering of all stores before the barrier against all loads after the barrier respecting the way a sequentially consistent multiprocessor would perform those operations**.
+- #StoreLoad is unique. It’s the only type of memory barrier that will prevent the result r1 = r2 = 0 in the example given in Memory Reordering Caught in the Act; the same example I’ve repeated earlier in this post.
+
+- If you’ve been following closely, you might wonder: How is #StoreLoad different from a #StoreStore followed by a #LoadLoad?
+  - After all, a #StoreStore pushes changes to the central repository, while #LoadLoad pulls remote changes back.
+  - However, those two barrier types are insufficient. Remember, the push operation may be delayed for an arbitrary number of instructions, and the pull operation might not pull from the head revision.
+- In terms of the analogy, a #StoreLoad barrier could be achieved by pushing all local changes to the central repository, waiting for that operation to complete, then pulling the absolute latest head revision of the repository.
+- On most processors, instructions that act as a **#StoreLoad barrier tend to be more expensive than instructions acting as the other barrier types.**
+- If we throw a #LoadStore barrier into that operation, which shouldn’t be a big deal, then what we get is a full memory fence – acting as all four barrier types at once. As Doug Lea also points out, it just so happens that **on all current processors, every instruction which acts as a #StoreLoad barrier also acts as a full memory fence.**
+
+
+## How Far Does This Analogy Get You?
+- As I’ve mentioned previously, every processor has different habits when it comes to memory ordering.
+- The x86/64 family, in particular, has a strong memory model; it’s known to keep memory reordering to a minimum. PowerPC and ARM have weaker memory models, and the Alpha is famous for being in a league of its own.
+- Fortunately, the analogy presented in **this post corresponds to a weak memory model**.
+  - If you can wrap your head around it, and enforce correct memory ordering using the fence instructions given here, you should be able to handle most CPUs.
+  - The analogy also corresponds pretty well to the abstract machine targeted by both C++11 (formerly known as C++0x) and C11. Therefore, if you write lock-free code using the standard library of those languages while keeping the above analogy in mind, it’s more likely to function correctly on any platform.
+
+- In this analogy, I’ve said that each programmer represents a single thread of execution running on a separate core.
+  - On a real operating system, threads tend to move between different cores over the course of their lifetime, **but the analogy still works.**
+- I haven’t written about every type of memory barrier yet. For instance, there are also data dependency barriers.
+- Still, the four types given here are the big ones.
 
 
 # Fences are Memory Barriers
