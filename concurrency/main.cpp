@@ -8,5 +8,6 @@ int main() {
     //managing::threads::examples::threadOutOfScopeFailDemo();
     //managing::threads::examples::raiiThreadDemo();
     //memory_order::demo();
-    memory_order_sync_with_atomic::demo();
+    //memory_order_sync_with_atomic::demo();
+    memory_fence_producer_consumer::demo();
 }

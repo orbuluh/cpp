@@ -77,3 +77,47 @@ void demo() {
 }
 
 } // namespace memory_order_sync_with_atomic
+
+namespace memory_fence_producer_consumer {
+
+namespace {
+int nonAtomicInt = 0;
+std::atomic<int> atomicInt = 0;
+std::atomic<std::string*> atomicStrPtr;
+} // namespace
+
+void producer() {
+    std::string* p = new std::string("test");
+    nonAtomicInt = 1234;
+    atomicInt.store(4321, std::memory_order_relaxed);
+    // the write before the fence wno't be reordered, so these 2 int are also
+    // guarantee to be valid given we put a acquired fence before printing out
+    std::atomic_thread_fence(std::memory_order_release);
+    // intentionally put a relaxed write after the fence
+    // it's fine in consumer because we got the fence
+    atomicStrPtr.store(p, std::memory_order_relaxed);
+}
+
+void consumer() {
+    std::string* p = nullptr;
+    while (!(p = atomicStrPtr.load(std::memory_order_relaxed))) {
+        // the read here won't be reordered after the fence
+        // so p is guarantee to be valid, even with the relaxed operation
+        ;
+    }
+    // sync with fence ..release, the read before can't be reorder after the fence
+    std::atomic_thread_fence(std::memory_order_acquire);
+    std::cout << nonAtomicInt << '\n';
+    std::cout << atomicInt << '\n';
+    std::cout << *p << '\n'; // guarantee to be valid
+    delete p;
+}
+
+void demo() {
+    std::thread t1(producer);
+    std::thread t2(consumer);
+    t1.join();
+    t2.join();
+}
+
+} // namespace memory_fence_producer_consumer

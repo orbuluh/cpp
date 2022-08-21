@@ -3,6 +3,7 @@
   - [preshing.com post 1](https://preshing.com/20120710/memory-barriers-are-like-source-control-operations/)
   - [modernescpp.com post 1](https://www.modernescpp.com/index.php/fences-as-memory-barriers)
   - [modernescpp.com post 2](https://www.modernescpp.com/index.php/acquire-release-fences)
+  - [modernescpp.com post 3](https://www.modernescpp.com/index.php/relaxed-semantic)
 
 # Memory Barriers Are Like Source Control Operations
 - memory reordering could happen at compile time, and it could reordering at runtime, on the processor itself
@@ -155,8 +156,41 @@ IsPublished = 1;                   // Set shared flag to indicate availability o
   - But there is a more subtle difference. The acquire and release **memory barriers are more heavyweight.**
 
 # Atomic operations versus memory barriers
-> Define: "acquire operations" when I use memory barriers or atomic operations with acquire semantic. The same will hold for release operations.
+> Define: "**acquire operations**" as when I use memory barriers or atomic operations with **acquire semantic**. The same will hold for **release operations**.
 - The key idea of an acquire and a release operation is, that it establishes synchronizations and ordering constraints between thread.
 - This will also hold for atomic operations with relaxed semantic or non-atomic operations.
-- So you see, the acquire and release operations come in pairs. In addition, for the operations on atomic variables with acquire-release semantic must hold that these act on the same atomic variable.
+- So you see, the acquire and release operations come in pairs.
+- In addition, for the operations on atomic variables with acquire-release semantic must hold that these act on the same atomic variable.
 - Said that I will in the first step look at these operations in isolation. I start with the acquire operation.
+
+## Acquire operation
+- A read operation on an atomic variable attached with `std::memory_order_acquire` is an acquire operation.
+- There is the` std::atomic_thread_fence(std::memory_order_acquire)` with acquire semantic as well
+
+```cpp
+int ready = var.load(std::memory_order_relaxed); // load operations
+std::atomic_thread_fence(std::memory_order_acquire); // guarantee the read above happens before the fence
+// some load and store operations
+```
+- This comparison emphasize two points.
+  - A memory barrier with acquire semantic establishes stronger ordering constraints.
+  - Although the acquire operation on an atomic and on a memory barrier requires, that no read or write operation can be moved before the acquire operation, there is an additional guarantee with the **acquire memory barrier: No read operation can be moved after the acquire memory barrier.**
+  - The relaxed semantic is sufficient for the reading of the atomic variable `var`. The `std::atomc_thread_fence(std::memory_order_acquire)` ensures that this operation can not be moved after the acquire fence.
+  - The similar statement holds for the release memory barrier.
+
+## Release operation
+- The write operation on an atomic variable attached with the memory model `std::memory_order_release` is a release operation.
+- There is the` std::atomic_thread_fence(std::memory_order_release)` with acquire semantic:
+- In addition to the release operation on an atomic variable `var`, the release barrier guarantees two points:
+  - Store operations can't be moved before the memory barrier.
+  - It's sufficient for the variable var to have relaxed semantic.
+```cpp
+// some load and store operations
+std::atomic_thread_fence(std::memory_order_release); // guarantee the read above happens before the fence
+var.store(1, std::memory_order_relaxed); // store operations, can't happen before fence even it's relaxed
+```
+
+# Synchronization with atomic operations versus memory barriers
+- check code/comment in [memory_fence_producer_consumer::demo()](demo/memory_order.h)
+
+# Relaxed Semantic
