@@ -194,3 +194,7 @@ var.store(1, std::memory_order_relaxed); // store operations, can't happen befor
 - check code/comment in [memory_fence_producer_consumer::demo()](demo/memory_order.h)
 
 # Relaxed Semantic
+- The relaxed semantic is the weakest of all memory models and **guarantees only, that the operations on atomic variables are atomic**.
+- A typical example of an atomic operation where the sequence of operations doesn't matter, is a counter.
+  - check [memory_order_relaxed_counter::demo()](demo/memory_order.h)
+  - The key of a counter is not, in which order the different threads increment the counter. The key of the counter is, that all increments are atomic and that all threads are done at the end.

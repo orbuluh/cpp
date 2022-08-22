@@ -121,3 +121,33 @@ void demo() {
 }
 
 } // namespace memory_fence_producer_consumer
+
+namespace memory_order_relaxed_counter {
+
+namespace {
+int nonAtomicCounter = 0;
+std::atomic<int> atomicCounter = 0;
+} // namespace
+
+void write() {
+    for (int i = 0; i < 1000; ++i) {
+        nonAtomicCounter++;
+        atomicCounter.fetch_add(1, std::memory_order_relaxed);
+    }
+}
+
+void demo() {
+    std::vector<std::thread> threads;
+    for (int i = 0; i < 10; ++i) {
+        threads.emplace_back(write);
+    }
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    std::cout << "nonAtomicCounter=" << nonAtomicCounter << '\n';
+    std::cout << "atomicCounter=" << atomicCounter << '\n';
+}
+
+} // namespace memory_order_relaxed_counter
+
