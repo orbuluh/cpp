@@ -9,6 +9,7 @@
 - [Structural binding](structural_binding.md)
 
 ## `std` related
+- [`std::iostream`](iostream.md)
 - [`std::stringstream`](stingstream.md)
 
 ### `algorithm`
