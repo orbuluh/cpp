@@ -8,3 +8,4 @@
 - [Design pattern in C++](designPattern/README.md)
 - [Random C++ (advanced) language features](basics/README.md)
 - [Template (meta) related](template-meta/README.md)
+- [C++ weekly notes](c++weekly/README.md)
