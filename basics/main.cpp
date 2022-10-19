@@ -6,6 +6,7 @@
 #include "fold_expression.h"
 #include "structural_binding.h"
 #include "iterator_behavior.h"
+#include "list_ops.h"
 #include <gtest/gtest.h>
 #include <iostream>
 

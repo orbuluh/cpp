@@ -19,6 +19,7 @@
 ### data structure
 - [`std::vector`](vector_ops.md)
   - more about `insert` and `erase`
+- [`std::list`](list_ops.md)
 - [`std::priority_queue`](priority_queue.md)
 - [`std::find`](find.md)
   - about `find`'s customized comparator
