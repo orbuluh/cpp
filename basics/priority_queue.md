@@ -33,20 +33,23 @@ template<
 ```cpp
 struct RowProfile {
     int score{0};
-    int idx{-1};
+    std::string_view name;
 };
 
-// to make a min heap, need to define the relationship as such
-// that first argument is stronger than second argument:
+// r1 comes before r2 iff r1.score is larger than r2.score or if r1.name is
+// larger than r2.name. Because priority queue outputs later element first, it
+// means RowProfile with lower score or lexicographically smaller name will be
+// output first!
 auto comp = [](const RowProfile& r1, const RowProfile& r2) {
-return (r1.score != r2.score)? (r1.score > r2.score) : (r1.idx > r2.idx); };
+    return (r1.score != r2.score)? (r1.score > r2.score) : (r1.name > r2.name);
+};
 
 std::priority_queue<RowProfile, std::vector<RowProfile>, decltype(comp)> pq(comp);
 
 // the above could be replacing with std::greater for std::pair, as pair's < operator
 // would only compare second element < if first element eq
 
-using RowProfile = std::pair<int, int>;
+using RowProfile = std::pair<int, std::string_view>;
 std::priority_queue<RowProfile, std::vector<RowProfile>, std::greater<RowProfile>> pq();
 
 // on the contrary, by default, this will be a max-heap
