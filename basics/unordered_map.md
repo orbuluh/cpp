@@ -1,3 +1,19 @@
+[code](unordered_map_ops.h)
+
+# [Customized hash for user-defined key-type](https://stackoverflow.com/a/17017281/4924135)
+You need to define two things:
+> **A hash function**
+- this must be a class that overrides `operator()` and calculates the hash value given an object of the key-type.
+- One particularly straight-forward way of doing this is to specialize the `std::hash` template for your key-type.
+> **A comparison function for equality**
+- this is required because the hash cannot rely on the fact that the hash function will always provide a unique hash value for every distinct key (i.e., it needs to be able to deal with collisions), so it needs a way to compare two given keys for an exact match.
+- You can implement this either as a class that overrides operator(), or as a specialization of `std::equal`, or – easiest of all – by overloading `operator==()` for your key type (as you did already).
+
+The difficulty with the hash function is that if your key type consists of several members, you will usually have the hash function calculate hash values for the individual members, and then somehow combine them into one hash value for the entire object.
+- For good performance (i.e., few collisions) you should think carefully about how to combine the individual hash values to ensure you avoid getting the same output for different objects too often.
+- A fairly good starting point for a hash function is one that uses **bit shifting** and **bitwise XOR** to combine the individual hash values.
+
+
 # About `insert` - [from response](https://stackoverflow.com/a/4286924/4924135)
 
 ## `operator[]` and `insert` member functions are not functionally equivalent :
