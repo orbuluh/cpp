@@ -1,10 +1,17 @@
 # Quick fact
+- Working with a `priority_queue` is similar to managing a heap in some random access container, **with the benefit of not being able to accidentally invalidate the heap.**
+  - e.g. When you use `make_heap` you still have access to all elements. When you use `priority_queue`, you have only a few operations giving very limited access to elements.
 - `#include <queue>`
-- by default, `top()` return the **maximum** value (e.g. the default comparator is `std::less`)
-- To make it a min queue, you need to explicitly use `std::greater<T>` as the third template parameter.
+- by default, `top()` return the **maximum** value (e.g. the default comparator is `std::less<T>`)
+  - A user-provided Compare can be supplied to change the ordering, e.g. using `std::greater<T>` would cause the smallest element to appear as the `top()` (e.g. becomes min priority queue).
   - or you could have stored the negative value to reverse it basically
 - ops: `top()`, `push`, `emplace()`, `pop()`
 - If you want to customized comparator, it's the third argument. You have to specify container type.
+
+# Complexity
+- `template<class InputIt> priority_queue( InputIt first, InputIt last, ...)`: O(M) comparisons, where M is `std::distance(first, last)` - basically a heapify
+- `top()` is O(1) but `pop()` is O(log n) comparisons
+- `push()`, `emplace()` is basically O(log n) comparisons
 
 # Applicability
 - `{1, 2, 3, 4, 5, 6}`
