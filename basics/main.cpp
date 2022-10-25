@@ -1,12 +1,13 @@
 #include "binary_search.h"
 #include "vector_ops.h"
 #include "comma_op_magic.h"
-#include "heterogenous_lookup.h"
+//#include "heterogenous_lookup.h"
 #include "find_example.h"
 #include "fold_expression.h"
 #include "structural_binding.h"
 //#include "iterator_behavior.h"
 //#include "list_ops.h"
+#include "bitset_ops.h"
 #include "unordered_map_ops.h"
 #include <gtest/gtest.h>
 #include <iostream>
