@@ -9,6 +9,7 @@
 //#include "list_ops.h"
 #include "bitset_ops.h"
 #include "unordered_map_ops.h"
+#include "chrono_ops.h"
 #include <gtest/gtest.h>
 #include <iostream>
 

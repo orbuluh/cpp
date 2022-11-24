@@ -1,6 +1,7 @@
 # C++ random groceries / advanced language features
 
 ## Language related
+
 - [`static`](static.md)
 - [linkage](linkage.md)
 - [translation unit](translation_unit.md)
@@ -10,14 +11,18 @@
 - [Special members](special_members.md)
 
 ## `std` related
+
 - [`std::iostream`](iostream.md)
 - [`std::stringstream`](stingstream.md)
+- [`std::chrono`](chrono_ops.md)
 
 ### `algorithm`
+
 - [`std::binary_search`, `std::upper_bound`, `std::lower_bound`](binary_search.md)
 - [`std::next_permutation`](permutation.md)
 
 ### data structure
+
 - [`std::vector`](vector_ops.md)
   - more about `insert` and `erase`
 - [`std::list`](list_ops.md)
