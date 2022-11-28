@@ -15,6 +15,7 @@
 - [`std::iostream`](iostream.md)
 - [`std::stringstream`](stingstream.md)
 - [`std::chrono`](chrono_ops.md)
+- [`std::regex`](regex.md)
 
 ### `algorithm`
 
