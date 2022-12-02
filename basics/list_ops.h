@@ -6,8 +6,9 @@ namespace list_ops {
 
 void printList(const std::list<int>& li) {
     for (auto it = li.begin(); it != li.end(); ++it) {
-        std::cout << *it << '\n';
+        std::cout << *it << ' ';
     }
+    std::cout << '\n';
 }
 
 TEST(ListOps, Basics) {

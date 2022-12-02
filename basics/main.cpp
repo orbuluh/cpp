@@ -12,6 +12,7 @@
 //#include "chrono_ops.h"
 //#include "iostream_ops.h"
 //#include "regex_ops.h"
+#include "object_lifetime.h"
 
 #include <gtest/gtest.h>
 #include <iostream>
