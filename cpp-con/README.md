@@ -37,3 +37,9 @@
 -----------above only the talk on day 1 in [conference schedule](https://cppcon.digital-medium.co.uk/schedule)-----------
 
 </details>
+
+## CppCon 2020
+
+**Software design**
+
+- Breaking Dependencies: The SOLID Principles - Klaus Iglberger [:cinema:](https://youtu.be/Ntraj80qN2k) [:scroll:](2020/breaking_deps_the_solid_principles.md)
