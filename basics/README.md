@@ -32,3 +32,7 @@
   - about `find`'s customized comparator
 - [`std::is_transparent`](heterogenous_lookup.md)
   - use `std::string_view` to [unordered_]{set|map} with a `std::string` key
+
+### Misc
+
+- [CPU cache](cpu_cache.md)
