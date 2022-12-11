@@ -6,6 +6,9 @@
 
 - Can C++ be 10x Simpler & Safer? - Herb Sutter [:cinema:](https://youtu.be/ELeZAKCN4tY) [:scroll:](2022/can_cpp_be_10x_simpler_safer.md)
 
+**Basics**
+- Refresher on Containers, Algorithms and Performance in C++ - Vladimir Vishnevskii [:cinema:](https://youtu.be/F4n3ModsWHI) [:scroll:](2022/refresher_on_containers_algo_performance.md)
+
 <details><summary markdown="span">To watch</summary>
 
 - (Tooling) How much compilation speedup we will get from C++ Modules: A Case Study
