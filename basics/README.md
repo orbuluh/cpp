@@ -9,6 +9,7 @@
 - [Parameter pack](parameter_pack.md), [Fold expression](fold_expression.md)
 - [Structural binding](structural_binding.md)
 - [Special members](special_members.md)
+- [`utility`](utility.md)
 
 ## `std` related
 
