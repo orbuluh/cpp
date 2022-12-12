@@ -10,6 +10,10 @@
 - [Structural binding](structural_binding.md)
 - [Special members](special_members.md)
 - [`utility`](utility.md)
+- [smart_pointer](smart_pointer.md)
+- [Why can I access private variables from different instances of a class](why_instances_can_use_private.md)
+- [Constructor, things that you didn't think through](constructor.md)
+- [Destruct(or)](destructor.md)
 
 ## `std` related
 

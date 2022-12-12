@@ -1,6 +1,5 @@
 # About destruct(or)
 
-
 ## [delete nullptr is fine, delete deleted object is UB!!]()
 
 ```cpp
@@ -64,4 +63,74 @@ int* p;
 // ...
 destroy(f());	// error: trying to pass an rvalue by non-const reference
 destroy(p+1);	// error: trying to pass an rvalue by non-const reference
+```
+
+## destructor visibility, using pimpl idiom as example
+
+- from: [fluent C++](https://www.fluentcpp.com/2018/12/25/free-ebook-smart-pointers/)
+
+```cpp
+//  Fridge.h
+#include <memory>
+class Fridge {
+ public:
+  Fridge();
+  void coolDown();
+
+ private:
+  class FridgeImpl;
+  std::unique_ptr<FridgeImpl> impl_;
+};
+```
+
+```cpp
+//  Fridge.cpp
+#include "Engine.h"
+#include "Fridge.h"
+class FridgeImpl {
+ public:
+  void coolDown() { /* ... */ }
+
+ private:
+  Engine engine_;
+};
+Fridge::Fridge() : impl_(new FridgeImpl) {}
+```
+
+- This fails to compile: `use of undefined type 'FridgeImpl' can't delete an incomplete type`
+- The problem is: deleting a pointer leads to undefined behaviour if the type pointed to is incomplete. (For example, FridgeImpl is only forward declared in the header.)
+- `std::unique_ptr` happens to check in its destructor if the definition of the type is visible before calling delete. So it refuses to compile and to call delete if the type is only forward declared.
+- Since we didn't add the declaration of the destructor in the `Fridge` class, the compiler took over and defined it for us. But compiler-generated methods are declared ​inline​, so they are implemented in the header file directly. And there, the type of ​FridgeImpl is incomplete. Hence the error.
+
+Fix: declare the destructor and thus prevent the compiler from doing it for
+us.
+
+```cpp
+//  Fridge.h
+#include <memory>
+class Fridge {
+ public:
+  Fridge();
+  ~Fridge(); //!!!!!!! <----------FIX for above!
+  void coolDown();
+
+ private:
+  class FridgeImpl;
+  std::unique_ptr<FridgeImpl> impl_;
+};
+```
+
+```cpp
+//  Fridge.cpp
+#include "Engine.h"
+#include "Fridge.h"
+class FridgeImpl {
+ public:
+  void coolDown() { /* ... */ }
+
+ private:
+  Engine engine_;
+};
+Fridge::Fridge() : impl_(new FridgeImpl) {}
+Fridge::~Fridge() = default; //!!!!!!! <----------FIX for above!
 ```

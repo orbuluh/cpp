@@ -13,7 +13,8 @@
 //#include "iostream_ops.h"
 //#include "regex_ops.h"
 //#include "object_lifetime.h"
-#include "utility_ops.h"
+//#include "utility_ops.h"
+#include "smart_pointer_ops.h"
 
 
 #include <gtest/gtest.h>
