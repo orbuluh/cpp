@@ -7,7 +7,10 @@
 - Can C++ be 10x Simpler & Safer? - Herb Sutter [:cinema:](https://youtu.be/ELeZAKCN4tY) [:scroll:](2022/can_cpp_be_10x_simpler_safer.md)
 
 **Basics**
+
 - Refresher on Containers, Algorithms and Performance in C++ - Vladimir Vishnevskii [:cinema:](https://youtu.be/F4n3ModsWHI) [:scroll:](2022/refresher_on_containers_algo_performance.md)
+- Back to Basics: C++ Smart Pointers - David Olsen [:cinema:](https://youtu.be/YokY6HzLkXs) [:scroll:](2022/back_to_basics_c++_smart_pointers.md)
+
 
 <details><summary markdown="span">To watch</summary>
 
