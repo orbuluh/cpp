@@ -9,11 +9,25 @@
 - [CppCon 2022] Refresher on Containers, Algorithms and Performance in C++ - Vladimir Vishnevskii [:cinema:](https://youtu.be/F4n3ModsWHI) [:scroll:](cppcon-2022/refresher_on_containers_algo_performance.md)
 - [CppCon 2022] Back to Basics: C++ Smart Pointers - David Olsen [:cinema:](https://youtu.be/YokY6HzLkXs) [:scroll:](cppcon-2022/back_to_basics_c++_smart_pointers.md)
 
-## Software design 
+## Software design
 
 - [CppCon 2020] Breaking Dependencies: The SOLID Principles - Klaus Iglberger [:cinema:](https://youtu.be/Ntraj80qN2k) [:scroll:](cppcon-2020/breaking_deps_the_solid_principles.md)
+- [MUC++] "Embrace No Paradigm Programming!" - Klaus Iglberger [:cinema:](https://youtu.be/fwXaRH5ffJM) [:scroll:](misc/embrace_no_paradigm_programming.md)
 
-<details><summary markdown="span">To watch</summary>
+---
+
+TODOs
+- [CppCon 2019] Back to Basics: Object-Oriented Programming - Jon Kalb [:cinema:](https://youtu.be/32tDTD9UJCE)
+- [GoingNative 2013] Inheritance Is The Base Class of Evil - Sean Parent [:cinema:](https://youtu.be/2bLkxj6EVoM)
+- [CppCon 2020] Dynamic Polymorphism with Metaclasses and Code Injection - Sy Brand [:cinema:](https://youtu.be/8c6BAQcYF_E)
+- [CppCon 2019] What is C++ - Chandler Carruth, Titus Winters [:cinema:](https://youtu.be/LJh5QCV4wDg)
+- [CppCon 2019] “There Are No Zero-cost Abstractions” - Chandler Carruth [:cinema:](https://youtu.be/rHIkrotSwcc)
+- [CppCon 2019] “Algorithm Intuition (part 1 of 2)” - Conor Hoekstra [:cinema:](https://youtu.be/pUEnO6SvAMo)
+
+
+---
+
+<details><summary markdown="span">CppCon 2022</summary>
 
 - (Tooling) How much compilation speedup we will get from C++ Modules: A Case Study
 - (Tooling) Back to Basics Debugging
