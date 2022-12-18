@@ -445,7 +445,7 @@ Another example: `std::copy` yet again. `std::copy` owns the concept that its `I
 
 ## Related notes
 
-[Your book reading notes](../../../cpp/designPattern/design_principles/solid/README.md)
+[Your book reading notes](../../cpp/design-pattern/design_principles/solid/README.md)
 
 ---
 

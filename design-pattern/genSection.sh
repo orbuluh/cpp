@@ -25,7 +25,7 @@ echo "\tAPPEND EXTRA_LIBS(... $PatternName)"
 echo "\nAdding these to main.cpp"
 echo "\t#include \"$folder/${patternName}UseCase.h\""
 echo "\t${patternName}::demo();"
-echo "\nAppend designPattern/README.md"
+echo "\nAppend design-pattern/README.md"
 echo "\t[$PatternName]($folder)"
 
 
