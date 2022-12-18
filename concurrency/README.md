@@ -5,6 +5,7 @@
 # Random reads
 
 - [Common mistakes](common_mistakes.md)
+  - [Deadlock](deadlock.md)
 - [Event loop](event_loop/README.md)
 - [Memory model](memory_model.md)
 - [Memory order](memory_order.md)

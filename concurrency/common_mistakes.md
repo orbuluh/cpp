@@ -2,6 +2,10 @@
 
 > from [acodersjourney.com by Deb Haldar: Top 20 C++ multithreading mistakes and how to avoid them](https://www.acodersjourney.com/top-20-cplusplus-multithreading-mistakes/)
 
+See also:
+
+- [deadlock](deadlock.md)
+
 ---
 
 ## Mistake # 1: Not using `join()` to wait for background threads before terminating an application
