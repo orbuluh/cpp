@@ -3,8 +3,9 @@
 ## Notes
 
 - [Benchmark userguide](notes/benchmark_userguide.md)
-
-- [False sharing](notes/false_sharing.md)
+- [Cache effects](notes/cache_effects.md)
+  - [False sharing](notes/false_sharing.md)
+- [SIMD Vectorization](notes/simd_vectorization.md)
 
 ## Benchmark playground
 

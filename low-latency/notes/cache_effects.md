@@ -148,3 +148,52 @@ Logical Processor to Cache Map:
 ```
 
 So my computer has 48K K1, 1MB L2, 25MB L3, which is reflected in the exp result.
+
+
+## Item 4: Instruction-level parallelism
+
+[Code](../benchmark_playground/cache_behavior_item_4.h)
+
+<details><summary markdown="span">Exp result</summary>
+
+
+```cpp
+void computeOnSameElement(std::array<int, 2>& arr) {
+  for (int i = 0; i < accessTime; i++) {
+    benchmark::DoNotOptimize(arr[0]++);
+    benchmark::DoNotOptimize(arr[0]++);
+  }
+}
+
+// v.s.
+
+void computeOnDiffElement(std::array<int, 2>& arr) {
+  for (int i = 0; i < accessTime; i++) {
+    benchmark::DoNotOptimize(arr[0]++);
+    benchmark::DoNotOptimize(arr[1]++);
+  }
+}
+```
+...
+
+```bash
+---------------------------------------------------------
+Benchmark               Time             CPU   Iterations
+---------------------------------------------------------
+BM_SameElement        369 ms          369 ms            2
+BM_DiffElement        254 ms          254 ms            3
+```
+
+</details>
+
+- It turns out that the second loop is faster than the first loop. (Not 2x in my exp. And it's all 0 when optimized.)
+- Why? This has to do with the dependencies between operations in the two loop bodies.
+- In the body of the first loop, operations depend on each other as follows:
+  - `x = a[0]` -> `x++` -> `a[0] = x` -> `y = a[0]` -> `y++` -> `a[0] = y`
+- But in the second loop, we only have:
+  - `x = a[0]` -> `x++` -> `a[0] = x`
+  - `y = a[1]` -> `y++` -> `a[1] = y`
+- The modern processor has various parts that have a little bit of parallelism in them: it can access two memory locations in L1 at the same time, or perform two simple arithmetic operations. In the first loop, the processor cannot exploit this instruction-level parallelism, but in the second loop, it can.
+
+More reads on [SIMD/vectorization](simd_vectorization.md)
+
