@@ -4,7 +4,7 @@
 
 namespace cache_behavior {
 
-static constexpr auto arrSz = 1024 * 1024 * 1024;
+static constexpr auto arrSz = 32 * 1024 * 1024;
 
 void computeBaseline(std::array<int, arrSz>& arr) {
   for (int i = 0; i < arrSz; ++i) {

@@ -1,12 +1,12 @@
 #include <benchmark/benchmark.h>
-
+#include <limits>
 #include <array>
 
 namespace cache_behavior {
 
-static constexpr auto arrSz = 1024 * 1024;
+static constexpr auto arrSz = 32 * 1024 * 1024;
 
-void computeEveryStep(std::array<int, arrSz>& arr, int stepSz) {
+void computePerStep(std::array<int, arrSz>& arr, int stepSz) {
   for (int i = 0; i < arrSz; i += stepSz) {
     arr[i] *= 3;
   }
@@ -15,7 +15,7 @@ void computeEveryStep(std::array<int, arrSz>& arr, int stepSz) {
 static void BM_CacheLineEffect(benchmark::State& state) {
   std::array<int, arrSz> arr = {};
   for (auto _ : state) {
-    computeEveryStep(arr, state.range(0));
+    computePerStep(arr, state.range(0));
   }
 }
 
