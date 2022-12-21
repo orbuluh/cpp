@@ -4,7 +4,9 @@
 //#include "cache_behavior_item_1.h"
 //#include "cache_behavior_item_2.h"
 //#include "cache_behavior_item_3.h"
-#include "cache_behavior_item_4.h"
+//#include "cache_behavior_item_4.h"
+//#include "cache_behavior_item_6.h"
+#include "cache_behavior_item_7.h"
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // NOTE: some of the benchmark is using large array. If you run and getting

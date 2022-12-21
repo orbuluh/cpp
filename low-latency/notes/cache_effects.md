@@ -2,6 +2,7 @@
 
 > Taking notes from [Gallery of Processor Cache Effects from Igor Ostrovsky Blogging](http://igoro.com/archive/gallery-of-processor-cache-effects/)
 
+---
 
 ## Item 1. Memory accesses is much slower than computation
 
@@ -40,6 +41,8 @@ BM_Every16        9.71 ms         9.71 ms           73
 - The first loop multiplies every value in the array by 3, and the second loop multiplies only every 16-th.
 - The second loop only does about 6% of the work of the first loop, but on modern machines, the two for-loops take about the same time.
 - The reason why the loops take the same amount of time has to do with memory. **The running time of these loops is dominated by the memory accesses to the array, not by the integer multiplications.** And, **the hardware will perform the same main memory accesses for the two loops**. (Check item 2)
+
+---
 
 ## Item 2: Impact of cache lines
 
@@ -81,6 +84,8 @@ BM_CacheLineEffect_Step/1024      0.005 ms        0.005 ms       151489
 - When you read a particular memory location, the entire cache line is fetched from the main memory into the cache. And, **accessing other values from the same cache line is cheap!**
 - Since 16 ints take up 64 bytes (one cache line), for-loops with a step between 1 and 16 have to touch the same number of cache lines: all of the cache lines in the array. But once the step is 32, we’ll only touch roughly every other cache line, and once it is 64, only every fourth.
 - Understanding of cache lines can be important for certain types of program optimizations. For example, alignment of data may determine whether an operation touches one or two cache lines. As we saw in the example above, this can easily mean that in the misaligned case, the operation will be twice slower.
+
+---
 
 ## Item 3: L1 / L2 / L3 cache sizes
 
@@ -149,6 +154,7 @@ Logical Processor to Cache Map:
 
 So my computer has 48K K1, 1MB L2, 25MB L3, which is reflected in the exp result.
 
+---
 
 ## Item 4: Instruction-level parallelism
 
@@ -197,3 +203,139 @@ BM_DiffElement        254 ms          254 ms            3
 
 More reads on [SIMD/vectorization](simd_vectorization.md)
 
+---
+
+## Item 5: Cache associativity
+
+> Cache associativity is interesting to understand and can certainly be demonstrated, but **it tends to be less of a problem compared to the other issues** discussed in this article. It is certainly not something that should be at the forefront of your mind as you write programs.
+
+**What about**
+
+Effectively, the cache operates like a hash table. One key decision in cache design is whether each chunk of **main memory** can be stored in any cache slot, or in just some of them.
+
+There are three possible approaches to mapping cache slots to (main) memory chunks:
+
+1. **Direct mapped cache**
+
+- Each (main) memory chunk can only be stored only in one particular slot in the cache.
+- One simple solution is to map the (main) memory chunk with index `chunk_index` to cache slot (`chunk_index % cache_slots`).
+- Two (main) memory chunks that map to the same slot cannot be stored simultaneously in the cache.
+- Direct mapped caches can suffer from conflicts – when multiple values compete for the same slot in the cache, they keep evicting each other out, and the hit rate plummets.
+
+2. **Fully associative cache**
+
+- Each (main) memory chunk can be stored in any slot in the cache.
+- fully associative caches are complicated and costly to implement in the hardware.
+
+3. **N-way set associative cache**
+
+- Each (main) memory chunk can be stored in any one of N particular slots in the cache.
+- As an example, in a 16-way cache, each (main) memory chunk can be stored in 16 different cache slots.
+- Commonly, chunks with indices with the same lowest order bits will all share 16 slots.
+- N-way set associative caches are the typical solution for processor caches, as they make a good trade off between implementation simplicity and good hit rate.
+
+> [Extend reading](cp.eng.chula.ac.th/~prabhas//teaching/ads/ads2016/cache-memory.htm)
+
+<details><summary markdown="span">Example in the original post</summary>
+
+(original's cpu)
+
+For example, the 4MB L2 cache on my machine is 16-way associative.
+
+- All 64-byte memory chunks are partitioned into sets (based on the lowest order bits of the chunk index), and
+- chunks in the same set compete for 16 slots in the L2 cache.
+- Since the L2 cache has 65,536 slots, and each set will need 16 slots in the cache, we will have 4,096 sets.
+- So, the lowest 12 bits of the chunk index will determine which set the chunk belongs to (2^12 = 4,096).
+- As a result, cache lines at addresses that differ by a multiple of 262,144 bytes (4096 * 64) will compete for the same slot in the cache.
+- The cache on my machine can hold at most 16 such cache lines.
+- In order for the effects of cache associativity to become apparent, I need to repeatedly access more than 16 elements from the same set.
+
+```bash
+# TODO, do the example with your CPU
+**------------------  Unified Cache       0, Level 2,    1 MB, Assoc  10, LineSize  64
+```
+
+</details>
+
+---
+
+## Item 6: false (cache line) sharing
+
+Check [specific topic notes](false_sharing.md)
+
+[Code](../benchmark_playground/cache_behavior_item_4.h)
+
+<details><summary markdown="span">Exp result</summary>
+
+
+```cpp
+void work(std::vector<std::atomic<int>>& arr, int position) {
+  for (int j = 0; j < 100000000; j++) {
+    arr[position] = arr[position] + 3;
+  }
+}
+
+void sameFullOpsCntDifferentPos(std::vector<std::atomic<int>>& arr,
+                                int offset) {
+  std::vector<std::jthread> threads(4);
+  for (int i = 0; i < 4; ++i) {
+    threads[i] = std::jthread([&]() { work(arr, i * offset); });
+  }
+}
+
+// input offset with 1 and 16 and compare
+```
+...
+
+```bash
+-------------------------------------------------------------------------------------------------------
+Benchmark                                                             Time             CPU   Iterations
+-------------------------------------------------------------------------------------------------------
+FalseSharing_4_thread_same_ops_different_offset/1/real_time        4657 ms        0.132 ms            1
+FalseSharing_4_thread_same_ops_different_offset/16/real_time       2853 ms        0.118 ms            1
+```
+
+</details>
+
+- If offset is 1 and position is 0,1,2,3 from 5 different threads, it will take 4.6 seconds until all threads are done. On the other hand, if offset is 16 and position is 16,32,48,64 the operation will be done in 2.8 seconds!
+- Why? In the first case, all four values are very likely to end up on the same cache line. Each time a core increments the counter, it invalidates the cache line that holds all four counters. All other cores will suffer a cache miss the next time they access their own counters. This kind of thread behavior effectively disables caches, crippling the program’s performance.
+
+---
+
+## Item 7: Hardware complexities
+
+- Even when you know the basics of how caches work, the hardware will still sometimes surprise you. Different processors differ in optimizations, heuristics, and subtle details of how they do things.
+- On some processors, L1 cache can process two accesses in parallel if they access cache lines from different banks, and serially if they belong to the same bank. Also, processors can surprise you with clever optimizations.
+- The lesson of this example is that can be difficult to fully predict hardware performance. There is a lot that you can predict, but ultimately, it is very important to measure and verify your assumptions.
+
+
+<details><summary markdown="span">Example in the original post</summary>
+
+- Here is one odd example of “hardware weirdness” in original post (though [my experiment](../benchmark_playground/cache_behavior_item_7.h) didn't show that much)
+
+```csharp
+private static int A, B, C, D, E, F, G;
+private static void Weirdness()
+{
+    for (int i = 0; i < 200000000; i++)
+    {
+        <something>
+    }
+}
+```
+
+When I substitute three different blocks for “<something>”, I get these timings:
+
+```cpp
+<something>	        Time
+A++; B++; C++; D++;	719 ms
+A++; C++; E++; G++;	448 ms
+A++; C++;           518 ms
+```
+
+- Incrementing fields A,B,C,D takes longer than incrementing fields A,C,E,G.
+- And what’s even weirder, incrementing just A and C takes longer than increment A and C and E and G!
+
+- I don’t know for sure what is the reason behind these numbers, but I suspect it is related to memory banks. If someone can explain these numbers, I’d be very curious to hear about it.
+
+</details>

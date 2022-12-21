@@ -1,6 +1,5 @@
 // Modified from CoffeeBeforeArch's code
 
-
 #include <benchmark/benchmark.h>
 
 #include <array>
@@ -69,21 +68,23 @@ BENCHMARK(BM_falseSharing)
 // (C++17 feature to find L1 cache size)
 // https://en.cppreference.com/w/cpp/thread/hardware_destructive_interference_size
 #ifdef __cpp_lib_hardware_interference_size
-    using std::hardware_constructive_interference_size;
-    using std::hardware_destructive_interference_size;
+using std::hardware_constructive_interference_size;
+using std::hardware_destructive_interference_size;
 #else
-    // 64 bytes on x86-64 │ L1_CACHE_BYTES │ L1_CACHE_SHIFT │ __cacheline_aligned │ ...
-    constexpr std::size_t hardware_constructive_interference_size = 64;
-    constexpr std::size_t hardware_destructive_interference_size = 64;
+// 64 bytes on x86-64 │ L1_CACHE_BYTES │ L1_CACHE_SHIFT │ __cacheline_aligned │
+// ...
+constexpr std::size_t hardware_constructive_interference_size = 64;
+constexpr std::size_t hardware_destructive_interference_size = 64;
 #endif
 
 // can also run command `getconf LEVEL1_DCACHE_LINESIZE` to check L1 cache size
 
-struct alignas(hardware_constructive_interference_size) AlignedAtomic {
+struct alignas(hardware_destructive_interference_size) AlignedAtomic {
   std::atomic<int> val;
 };
 
-void eachThreadHasOwnAlignedAtomic(std::vector<AlignedAtomic>& alignedAtomics, int n) {
+void eachThreadHasOwnAlignedAtomic(std::vector<AlignedAtomic>& alignedAtomics,
+                                   int n) {
   std::vector<std::jthread> threads(n);
   for (int i = 0; i < n; ++i) {
     threads[i] = std::jthread([&]() { work(alignedAtomics[i].val, n); });
@@ -105,4 +106,6 @@ BENCHMARK(BM_NoSharing)
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
 
-} // namespace cache_behavior
+//------------------------------------------------------------
+
+}  // namespace cache_behavior

@@ -1,11 +1,27 @@
-# False sharing
+# Cache consistency and false sharing
 
-[Benchmark playground](../benchmark_playground/falseSharing.h)
+Benchmark playground [example 1](../benchmark_playground/falseSharing.h) and [example 2](../benchmark_playground/cache_behavior_item_6.h) about different ways to showcase false sharing.
 
 Resource
 
 - [CoffeeBeforeArch YT](https://youtu.be/FygXDrRsaU8)
 - [CoffeeBeforeArch Blog post](https://coffeebeforearch.github.io/2019/12/28/false-sharing-tutorial.html)
+- [Example 6 in Gallery of Processor Cache Effects](http://igoro.com/archive/gallery-of-processor-cache-effects/)
+
+Other cache behavior check [this note](cache_effects.md)
+
+
+**What**
+
+On multi-core machines, caches encounter another problem – **consistency**.
+
+- Different cores have fully or partly separate caches. On some machine, L1 caches are separate (as is common), and there are two pairs of processors, each pair sharing an L2 cache. While the details vary, a modern multi-core machine will have a multi-level cache hierarchy, where the faster and smaller caches belong to individual processors.
+
+**When one processor modifies a value in its cache, other processors cannot use the old value anymore.**
+
+- That memory location will be invalidated in all of the caches.
+- Furthermore, since **caches operate on the granularity of cache lines and not individual bytes, the entire cache line will be invalidated in all caches!**
+
 
 ## Direct sharing
 
@@ -20,6 +36,7 @@ Occurs when we unintentionally share data as data get transferred at the cache-l
 
 - Symptom of data layout and architecture
 - Unrelated data can get mapped to the same cache line.
+- Check [example 1](../benchmark_playground/falseSharing.h) and [example 2](../benchmark_playground/cache_behavior_item_6.h)
 
 
 ## How to know L1 cache size?

@@ -4,7 +4,7 @@
 
 - [Benchmark userguide](notes/benchmark_userguide.md)
 - [Cache effects](notes/cache_effects.md)
-  - [False sharing](notes/false_sharing.md)
+  - [Topic: Cache consistency and false sharing](notes/false_sharing.md)
 - [SIMD Vectorization](notes/simd_vectorization.md)
 
 ## Benchmark playground
