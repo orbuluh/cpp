@@ -14,6 +14,11 @@
 - [CppCon 2020] Breaking Dependencies: The SOLID Principles - Klaus Iglberger [:cinema:](https://youtu.be/Ntraj80qN2k) [:scroll:](cppcon-2020/breaking_deps_the_solid_principles.md)
 - [MUC++] "Embrace No Paradigm Programming!" - Klaus Iglberger [:cinema:](https://youtu.be/fwXaRH5ffJM) [:scroll:](misc/embrace_no_paradigm_programming.md)
 
+## Concurrency
+
+- [CppNow 2022] Concurrency in C++: A Programmer’s Overview (part 1 of 2) - Fedor Pikus [:cinema:](https://youtu.be/ywJ4cq67-uc) [:scroll:](misc/concurrency_in_cpp_part1.md)
+
+
 ---
 
 TODOs
