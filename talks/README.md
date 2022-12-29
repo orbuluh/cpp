@@ -8,6 +8,7 @@
 
 - [CppCon 2022] Refresher on Containers, Algorithms and Performance in C++ - Vladimir Vishnevskii [:cinema:](https://youtu.be/F4n3ModsWHI) [:scroll:](cppcon-2022/refresher_on_containers_algo_performance.md)
 - [CppCon 2022] Back to Basics: C++ Smart Pointers - David Olsen [:cinema:](https://youtu.be/YokY6HzLkXs) [:scroll:](cppcon-2022/back_to_basics_c++_smart_pointers.md)
+- [CppCon 2018] 105 STL Algorithms in Less Than an Hour - Jonathan Boccara [:cinema:](https://youtu.be/2olsGf6JIkU) [:scroll:](cppcon-2018/105_stl_algorithms.md)
 
 ## Software design
 
