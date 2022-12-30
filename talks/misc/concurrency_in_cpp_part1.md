@@ -1,6 +1,5 @@
 # Concurrency in C++: A Programmer’s Overview (part 1 of 2) - Fedor Pikus
 
-
 ## What has been in standard?
 
 **Pre-C++11**:

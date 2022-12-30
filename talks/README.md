@@ -18,7 +18,7 @@
 ## Concurrency
 
 - [CppNow 2022] Concurrency in C++: A Programmer’s Overview (part 1 of 2) - Fedor Pikus [:cinema:](https://youtu.be/ywJ4cq67-uc) [:scroll:](misc/concurrency_in_cpp_part1.md)
-
+- [CppNow 2022] Concurrency in C++: A Programmer’s Overview (part 2 of 2) - Fedor Pikus [:cinema:](https://youtu.be/R0V4xJ9HZpA) [:scroll:](misc/concurrency_in_cpp_part2.md)
 
 ---
 
