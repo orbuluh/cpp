@@ -20,6 +20,12 @@
 - [CppNow 2022] Concurrency in C++: A Programmer’s Overview (part 1 of 2) - Fedor Pikus [:cinema:](https://youtu.be/ywJ4cq67-uc) [:scroll:](misc/concurrency_in_cpp_part1.md)
 - [CppNow 2022] Concurrency in C++: A Programmer’s Overview (part 2 of 2) - Fedor Pikus [:cinema:](https://youtu.be/R0V4xJ9HZpA) [:scroll:](misc/concurrency_in_cpp_part2.md)
 
+## Tooling
+
+- [CppNow 2017] Effective CMake - Daniel Pfeifer [:cinema:](https://youtu.be/bsXLMQ6WgIk) [:scroll:](misc/effective_cmake.md)
+
+
+C++Now 2017: Daniel Pfeifer “Effective CMake"
 ---
 
 TODOs
