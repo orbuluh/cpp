@@ -184,4 +184,207 @@ endif()
 ## :bulb: Don't use `file(GLOB)` in projects
 
 - The fundamental problem is **CMake is not a build system, it's a build system generator**
-- 
+- File glob'ing in a build system is nice, because when you trigger a build system, it will evaluate the glob expression, and it will get the list of files.
+- But CMake is different, CMake generate the build system, it evaluates the glob expression and gives you a list of files. But then in the end, for the actual build system, it would only get the files CMake provide. So when you actually run the build system, it will have no idea if something has changed.
+- Can CMake not evaluate the glob and simply forward it to the build system? It can't because not all the build system supports glob. And CMake is trying to be the common denominator for all kinds of build system, hence it doesn't support to forward the glob.
+
+## Think CMake as an object oriented programming language
+
+- Imagine Targets as Objects
+- Constructors: `add_executable()`, `add_library()`
+- Member variables: All kinds of target properties
+- Member functions: (calling these functions will modify the member variables, e.g. properties of the target)
+  - `get_target_property()`
+  - `set_target_property()`
+  - `get_property(TARGET)`
+  - `set_property(TARGET)`
+  - `target_compile_definitions()`
+  - `target_compile_features()`
+  - `target_compile_options()`
+  - `target_include_directories()`
+  - `target_link_libraries()`
+  - `target_sources()`
+
+## Avoid these commands: `add_compile_options()`, `include_directories()`, `link_directories()`, `link_libraries()`
+
+- These commands are used in directory level. All the target created in the directory will inherit those properties. This will just make the build complicated to understand.
+- Always better to work on something that is on target level instead of directory level.
+
+```cmake
+target_compile_features(Foo
+    PUBLIC
+        cxx_strong_enums
+    PRIVATE
+        cxx_lambdas
+        cxx_range_for
+)
+```
+
+- Adds `cxx_strong_enums` to the target properties `COMPILE_FEATURES` and `INTERFACE_COMPILE_FEATURES`
+- Adds `cxx_lambdas;cxx_range_for` to the target property `COMPILE_FEATURES`
+- This tells CMake about the language features that you need inside the library
+
+## :bulb: Get your hands off CMAKE_CXX_FLAGS
+
+- These flags often broke in the future.
+- Only tell compiler what feature you need (like above example with cxx_range_for, ...etc), then let CMake figure out what compiler flag it needs.
+
+## Build specification and usage requirements
+
+- Non-`INTERFACE_` properties define the build specification of a target
+- `INTERFACE_` properties define the usage requirements of a target
+- `PRIVATE` populates the Non-`INTERFACE_` properties
+- `INTERFACE` populates the `INTERFACE_` properties
+- `PUBLIC` populates **both**
+
+## :bulb: Use `target_link_libraries()` to express direct dependencies
+
+```cmake
+target_link_libraries(Foo
+PUBLIC Bar::Bar
+PRIVATE Cow::Cow
+)
+```
+
+- Adds `Bar::Bar` to the target properties `LINK_LIBRARIES` and `INTERFACE_LINK_LIBRARIES`
+- Adds `Cow::Cow` to the target property `LINK_LIBRARIES`
+- **Effectively** adds all `INTERFACE_<property>` of `Bar::Bar` to `<property>` and `INTERFACE_<property>`
+- **Effectively** adds all `INTERFACE_<property>` of `Cow::Cow` to `<property>`
+  - Saying "Effectively" because it's not what the `target_link_libraries` do, but what is done later when the dependencies are resolved.
+- Also adds the generator `$<LINK_ONLY:Cow:Cow>` to `INTERFACE_LINK_LIBRARIES`
+  - Because imagine you have a static library, which depends on another library. If you want to link to the static library, on the command line, you will see both the libraries that your target depends on plus the dependencies of the libraries are in the command.
+  - On the contrary, in CMake, you just express this as the abstract interfaces. And therefore, CMake needs to know whether a target is LINK_ONLY
+
+## Library that are purely for usage requirements/build specifications
+
+```cmake
+add_library(Bar INTERFACE)
+target_compile_definitions(Bar INTERFACE BAR=1)
+```
+
+- `Bar` is actually not a library
+- `INTERFACE` libraries have no build specification
+- They only have usage requirements.
+- Here, every executable or library that links to `Bar` would have the `BAR` variable defined as `1`
+- This is very useful for header-only library. You create header-only library as a pure INTERFACE, you add `target_include_directories` as the property of the INTERFACE, then everyone who links (though not actually links, more like declares a dependency) to the pure interface "library" will therefore have the `target_include_directories` that contains those header.
+
+## :bulb: Don't abuse requirements!
+
+- Eg. `-Wall` is not a requirement to build a project
+
+## Project boundaries
+
+## How to use external libraries?
+
+**Always** like this:
+
+```cmake
+find_package(Foo 2.0 REQUIRED)
+#...
+target_link_libraries(... Foo::Foo ...)
+```
+
+Question: If `Foo` is a static library that depends on other libraries, how should this looks like? It should looks exactly the same.
+
+Question: If `Foo` is header-only library, how should it look like? Still the same.
+
+Hence the "Always"
+
+But then where is this `Foo` comes from? There should be a `FindFoo.cmake` somewhere...
+
+## `FindFoo.cmake`
+
+```cmake
+find_path(Foo_INCLUDE_DIR foo.h)
+find_library(Foo_LIBRARY foo)
+mark_as_advanced(Foo_INCLUDE_DIR Foo_LIBRARY)
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Foo
+    REQUIRED_VARS Foo_LIBRARY Foo_INCLUDE_DIR
+    )
+
+# Foo_FOUND set by find_package_handle_standard_args above
+
+if(Foo_FOUND AND NOT TARGET Foo::Foo)
+    # UNKNOWN means you don't know it's static or share lib
+    add_library(Foo::Foo UNKNOWN IMPORTED)
+    set_target_properties(Foo::Foo PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+        IMPORTED_LOCATION "${Foo_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${Foo_INCLUDE_DIR}"
+        )
+endif()
+```
+
+- This is a simple case, which doesn't handle version number, configurations (like debug build link to debug libs etc), ...etc.
+- This is just a basic example of how `find_package` would do. Library user should not provide this. In reality, a `FindFoo.cmake` would look much longer and deals with all the thing.
+
+## :bulb: Use a Find* module for **third party** libraries ~~that are not built with CMake~~ that do not support clients to use CMake. Also report this as a bug to the authors
+
+## How to export your library interface with CMake?
+
+- Below 3 snippets (though not as simple as author wants) are what you need for a library author
+
+```cmake
+find_package(Bar 2.0 REQUIRED)
+add_library(Foo ...)
+target_link_libraries(Foo PRIVATE Bar::Bar)
+
+install(TARGETS Foo EXPORT FooTargets
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+    )
+
+install(EXPORT FooTargets
+    FILE FooTargets.cmake
+    NAMESPACE Foo::
+    DESTINATION lib/cmake/Foo
+    )
+```
+
+**Handle version:**
+
+```cmake
+include(CMakePackageConfigHelpers)
+    write_basic_package_version_file("FooConfigVersion.cmake"
+    VERSION ${Foo_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+install(FILES "FooConfig.cmake" "FooConfigVersion.cmake"
+    DESTINATION lib/cmake/Foo
+    )
+```
+
+**Handle sub-dependencies of Foo**
+
+```cmake
+include(CMakeFindDependencyMacro)
+find_dependency(Bar 2.0)
+include("${CMAKE_CURRENT_LIST_DIR}/FooTargets.cmake")
+```
+
+:rotating_light: The library interface may change during installation. (E.g. when you install and when you build, they may be different) Use `BUILD_INTERFACE` and `INSTALL_INTERFACE` generator expressions as filters.
+
+```cmake
+target_include_directories(Foo PUBLIC
+    $<BUILD_INTERFACE:${Foo_BINARY_DIR}/include>
+    $<BUILD_INTERFACE:${Foo_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+    )
+```
+
+## Creating packages
+
+## CPack
+
+- CPack is a packaging tool distributed with CMake
+- `set()` varriables in `CPackCOnfig.cmake` or
+- `set()` variables in `CMakeLists.txt` and `include(CPack)`
+
+
+
+
