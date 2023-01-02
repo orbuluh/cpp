@@ -23,9 +23,8 @@
 ## Tooling
 
 - [CppNow 2017] Effective CMake - Daniel Pfeifer [:cinema:](https://youtu.be/bsXLMQ6WgIk) [:scroll:](misc/effective_cmake.md)
+- [CppCon 2017] Using Modern CMake Patterns to Enforce a Good Modular Design - Mathieu Ropert [:cinema:](https://youtu.be/eC9-iRN2b04) [:scroll:](cppcon-2017/modern_cmake_patterns.md)
 
-
-C++Now 2017: Daniel Pfeifer “Effective CMake"
 ---
 
 TODOs
