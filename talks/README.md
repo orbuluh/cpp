@@ -25,6 +25,10 @@
 - [CppNow 2017] Effective CMake - Daniel Pfeifer [:cinema:](https://youtu.be/bsXLMQ6WgIk) [:scroll:](misc/effective_cmake.md)
 - [CppCon 2017] Using Modern CMake Patterns to Enforce a Good Modular Design - Mathieu Ropert [:cinema:](https://youtu.be/eC9-iRN2b04) [:scroll:](cppcon-2017/modern_cmake_patterns.md)
 
+## Compile
+
+- [CppCon 2021] Back to Basics: Compiling and Linking - Ben Saks [:cinema:](https://youtu.be/cpkDQaYttR4) [:scroll:](cppcon-2021/compiling_and_linking.md)
+
 ---
 
 TODOs
