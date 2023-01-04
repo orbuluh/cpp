@@ -70,6 +70,36 @@ Now we see even more syntax.
 - You can also make an **ALIAS** library with an existing library, which simply gives you a new name for a target.
 - The one benefit to this is that you can make libraries with `::` in the name (which you'll see later)
 
+## Targets
+
+If you have more than one file with dependencies, you need to be able to tell CMake about the structure of your project, and it will help you build it. To do so, you will need targets.
+
+**Targets are much like “objects” in other languages; they have properties (member variables) that hold information.**
+
+```cmake
+add_executable(myexample simple.cpp)
+```
+
+- This creates an **“executable” target** with the name `myexample`
+- The SOURCES property, for example, will have simple.cpp in it.
+- Target names must be unique (and there is a way to set the executable name to something other than the target name if you really want to).
+
+Another type of target is a library:
+
+```cmake
+add_library(mylibrary simplelib.cpp)
+```
+
+- You can add the keywords STATIC, SHARED, or MODULE if you know what kind of library you want to make; the default is sort-of an “auto” library that is user selectable with BUILD_SHARED_LIBS.
+- You can make non-built libraries too.
+
+## Linking
+
+Once you have several targets, you can describe the relationship between them with `target_link_libraries` and a keyword; one of `PUBLIC`, `PRIVATE`, and `INTERFACE`.
+
+> :rotating_light: Don’t forget this keyword when making a library! CMake goes into an old compatibility mode for this target that generally breaks things.
+
+
 ## Targets are your friend
 
 Now we've specified a target `one` through `add_library(one STATIC two.cpp three.h)`, how do we add information about it?
