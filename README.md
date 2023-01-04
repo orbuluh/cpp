@@ -18,6 +18,8 @@
 
 [Boost quick reference](boost/README.md)
 
+[Third party lib quick reference](third-party-lib/README.md)
+
 [GNU playground](gnu/README.md)
 
 ---
