@@ -6,7 +6,9 @@
 //#include "cache_behavior_item_3.h"
 //#include "cache_behavior_item_4.h"
 //#include "cache_behavior_item_6.h"
-#include "cache_behavior_item_7.h"
+//#include "cache_behavior_item_7.h"
+//#include "concurrency_comp.h"
+#include "atomic_sharing.h"
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // NOTE: some of the benchmark is using large array. If you run and getting

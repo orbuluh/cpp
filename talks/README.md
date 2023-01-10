@@ -19,11 +19,13 @@
 
 - [CppNow 2022] Concurrency in C++: A Programmer’s Overview (part 1 of 2) - Fedor Pikus [:cinema:](https://youtu.be/ywJ4cq67-uc) [:scroll:](misc/concurrency_in_cpp_part1.md)
 - [CppNow 2022] Concurrency in C++: A Programmer’s Overview (part 2 of 2) - Fedor Pikus [:cinema:](https://youtu.be/R0V4xJ9HZpA) [:scroll:](misc/concurrency_in_cpp_part2.md)
+  - Also check: Lightning Talk: A Spinlock Implementation - Fedor Pikus - CppNow 2022 [:cinema:](https://youtu.be/rmGJc9PXpuE)
 
 ## Tooling
 
 - [CppNow 2017] Effective CMake - Daniel Pfeifer [:cinema:](https://youtu.be/bsXLMQ6WgIk) [:scroll:](misc/effective_cmake.md)
 - [CppCon 2017] Using Modern CMake Patterns to Enforce a Good Modular Design - Mathieu Ropert [:cinema:](https://youtu.be/eC9-iRN2b04) [:scroll:](cppcon-2017/modern_cmake_patterns.md)
+
 
 ## Compile
 

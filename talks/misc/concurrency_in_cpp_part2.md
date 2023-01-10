@@ -149,7 +149,7 @@ T y = x.load(); // Same as T y = x;
 x.store(y);  // same as x = y;
 ```
 
-- Atomic exchange
+- Atomic exchange, unconditional
 
 ```cpp
 T z = x.exchange(y); // Atomically do z = x; x = y;
@@ -158,37 +158,188 @@ T z = x.exchange(y); // Atomically do z = x; x = y;
 - Conditional exchange: compare-and-swap (The key to most lock-free algorithms)
 
 ```cpp
+// y is old value you assume, z is what you want to become
+// if you ignore y, it's a unconditional exchange, but with y, there is condition
 bool success = x.compare_exchange_strong(y, z); // T& y
 // If x == y, make x = z and return true
 // otherwise set y = x and return false
+//
+// e.g. exchange only happen if your guess of old value (y) is the same as the
+// actually old value (x) while performing the operation.
+//
+// Note that y is a reference. If you guess wrong, then y is set to the actual
+// current value of x
+```
+## What is so special about CAS?
+
+- Compare-and-swap (CAS) is used in most lock-free algorithms
+- Example: atomic increment with CAS
+
+```cpp
+std::atomic<int> x{0};
+int oldVal = x;
+while (!x.compare_exchange_strong(oldVal, oldVal + 1)) {}
+// or you can simply
+// x += 1;
+// but it's because atomic support the += 1 operation.
 ```
 
-=============TEMPORARY @ around 15:38=============================
+For `int`, we have atomic increment, but CAS can be used to increment doubles, multiply integers and many more.
+
+```cpp
+while (!x.compare_exchange_strong(oldVal, oldVal * 2)) {}
+```
+
+## What other operations can be done on `std::atomic<int>`?
+
+```cpp
+std::atomic<int> x;
+x.fetch_add(y);  // same as x += y;
+int z = x.fetch_add(y); // same as z = (x += y) - y;
+```
+
+- Also `fetch_sub()`, `fetch_and()`, `fetch_or()`, `fetch_xor()`
+  - Same as `-=`, `&=`, `|=`, `^=`
+- More verbose but less error-prone than operators and expressions
+  - Including `load()` and `store()` instead of `operator=()`
+
+## :rotating_light: better avoid std::atomic overloaded operations
+
+- `std::atomic<T>` provides operator overloads only for atomic operations (incorrect code does not compile)
+- Any expression with atomic variables will not be computed atomically (easy to make mistakes)
+- Member functions make atomic operations explicit
+- Compilers understand you either way and do exactly what you asked (But not necessarily what you wanted)
+- Programmers tend to see what they thought you meant, not what you really meant (for example, `x = x + 1` isn't atomic increment, but `x += 1` is! So just use `x.fetch_add(1)` for safety!)
+
+## Question, how fast are atomic operations?
+
+To measure, few things to note:
+
+- Caution: measurement results will be hardware and compiler specific and should not be over-generalized!
+- Caution: comparing atomic and non-atomic operations may be instructsive for understanding of what the hardware does, but it rarely directly useful (Comparing atomic operation with a thread-safe alternative is valid and useful)
+- Experiment below, the higher the better (e.g. # operations per second).
+- Check out [code](../../low-latency/benchmark_playground/concurrency_comp.h)
+- Note that Fidor uses `-mavx2` [in the talk for compiling](https://youtu.be/R0V4xJ9HZpA?t=1710)
 
 
 
+### Atomic v.s. non-atomic
+
+![](../pics/concurrency_comp_atomic_nonatomic.JPG)
+
+- read/atomic read are scaled with thread #
+- write/atomic write aren't scaled with thread # (as at hardware level, there will be constraint)
+
+### Atomic v.s. locks v.s. CAS
+
+- std::mutex could be slow, but checkout [Fedor's spinlock implementation](../../low-latency/benchmark_playground/spinlock.h)
+- Still, it's just in this context, spinlock is fast. `std::mutex` might be okay in other context.
+
+![](../pics/concurrency_comp_atomic_lock_cas.JPG)
+
+
+## Is atomic the same as lock-free?
+
+:bulb: The big secret is, it's always atomic, but it's not always lock-free. E.g. it's not always done by atomic hardware instructions. Note that it will still be transactional, because of using lock.
+
+- Throw below into godbolt.org
+
+<table>
+<tr><td> Code </td> <td> gcc </td></tr>
+<tr>
+
+<td>
+
+```cpp
+long f1(const std::atomic<long>& i) { return i.load(std::memory_order_relaxed); }
+struct S { int i, j, k; };
+S f1(const std::atomic<S>& i) { return i.load(std::memory_order_relaxed); }
+```
+
+</td>
+
+<td>
+
+```txt
+f1(std::atomic<long> const&):
+        mov     rax, QWORD PTR [rdi]
+        ret
+f1(std::atomic<S> const&):
+        sub     rsp, 40
+        mov     rsi, rdi
+        xor     ecx, ecx
+        mov     edi, 12
+        lea     rdx, [rsp+16]
+        call    __atomic_load
+        mov     edx, DWORD PTR [rsp+24]
+        mov     rax, QWORD PTR [rsp+16]
+        add     rsp, 40
+        ret
+```
+
+</td></tr>
+</table>
+
+```cpp
+long x; // std::atomic<long> is lock-free
+struct A { long x; }; // // std::atomic<A> is lock-free
+struct B { long x; long y; }; // nope
+struct C { long x; int y; };  // nope
+struct D { int x; int y; int z; }; // nope
+struct E { long x; long y; long z; }; // nope
+```
+
+- Note that `std::atomic<long>` is lock-free in practice, but not required by standard
+- Generally you can examine with `std::atomic<T>::is_lock_free()` or `constexpr std::atomic<T>::is_always_lock_free`
+- Only `std::atomic_flag` is guaranteed to be lock-free.
+- Compilers generate appropriate exclusion code for non-lock-free atomics.
+  - (Often hidden behind library calls (`libatomic`)), and probably with certain spinlock + compare and swap mechanics.
+
+## Do atomic operations wait on each other?
+
+- Yes, when cacheline is shared, check out [code](../../low-latency/benchmark_playground/atomic_sharing.h)
+
+![](../pics/concurrency_comp_atomic_sharing.JPG)
+
+## What's really going on?
+
+|||
+|-- |-- |
+| ![](../pics/concurrency_cache_sharing.JPG) | ![](../pics/concurrency_cache_sharing_2.JPG) |
+
+- Cacheline is 64 bytes on x86 machine
+- If you want to acquire hardware level cache, on the cache, it must lock 64 bytes at a time. And if your thread access it, it's the only one they can access the 64 bytes, even though the thread might only want to access 4 bytes out of them.
+- Atomic operations do wait on each other.
+  - In particular, write operations do
+  - Read-only operations can scale near-perfectly
+- Atomic operations have to wait for cacheline access
+  - Price of data sharing without races
+- Accessing different locations in the same cacheline still incurs run-time penalty (false sharing)
+- Avoid false sharing by aligning per-thread data to separate cachelines.
+  - On NUMA machines, maybe even on separate pages.
+
+## The C++17 cacheline size
+
+```cpp
+// (C++17 feature to find L1 cache size)
+// https://en.cppreference.com/w/cpp/thread/hardware_destructive_interference_size
+#ifdef __cpp_lib_hardware_interference_size
+using std::hardware_constructive_interference_size;
+using std::hardware_destructive_interference_size;
+#else
+// 64 bytes on x86-64 │ L1_CACHE_BYTES │ L1_CACHE_SHIFT │ __cacheline_aligned │
+// ...
+constexpr std::size_t hardware_constructive_interference_size = 64;
+constexpr std::size_t hardware_destructive_interference_size = 64;
+#endif
+```
+
+- What we are interested is `hardware_destructive_interference_size`, the distance implies, if you are closer than this, you will have "destructive interference", e.g. one variable could lock the other one.
+- On the other hand, `hardware_constructive_interference_size` guarantee that, if you are closer than the value, then caching one variable must bring the other one into cache(line) together.
+
+## 
 
 
 
-How fast are atomic operations?
-
-Are atomic operations slower than non-atomic?
-
-Are atomic operations faster than locks?
-
-Is "atomic" same as "lock-free"?
-
-If atomic operations avoid locks, there is no waiting, right?
-
-
-
-
-
-
-
-
-
-
-
-
+=============TEMPORARY @ around 44:24=============================
 
