@@ -337,7 +337,85 @@ constexpr std::size_t hardware_destructive_interference_size = 64;
 - What we are interested is `hardware_destructive_interference_size`, the distance implies, if you are closer than this, you will have "destructive interference", e.g. one variable could lock the other one.
 - On the other hand, `hardware_constructive_interference_size` guarantee that, if you are closer than the value, then caching one variable must bring the other one into cache(line) together.
 
-## 
+## Strong and weak compare-and-swap
+
+- C++ provides 2 versions of CAS - weak and strong
+- `x.compare_exchange_strong(old_x, new_x);` means:
+
+```cpp
+if (x == old_x) {
+  x = new_x;
+  return true;
+} else {
+  old_x = x;
+  return false;
+}
+```
+
+- `x.compare_exchange_weak(old_x, new_x);` means same thing, but can "spuriously fail" and return false even if `x == old_x`. But why would it?
+
+- CAS, conceptually in Pseudo-code. (Noted that all the "lock" in Psedudo code are some cacheline wise hardware lock)
+
+```cpp
+
+bool compare_exchange_strong(T& old_v, T new_v) {
+  Lock l; // say, the hardware cacheline lock
+  T tmp = value; // read current value of atomic
+  if (tmp != old_v) { // guess wrong
+    old_v = tmp;
+    return false;
+  }
+  // guess right
+  value = new_v;
+  return true;
+}
+
+bool compare_exchange_weak(T& old_v, T new_v) {
+  T tmp = value; // read current value of atomic without lock
+  if (tmp != old_v) { // guess wrong
+    old_v = tmp;
+    return false;
+  }
+  //-----------------------------------------
+  Lock l; // say, the hardware cacheline lock
+  tmp = value; // read again because value could have changed
+  if (tmp != old_v) { // validate again and guess wrong
+    old_v = tmp;
+    return false;
+  }
+  // guess right
+  value = new_v;
+  return true;
+}
+```
+
+- or, for the `compare_exchange_weak`, if exclusive access is hard to get, it could have been a timed out version. (Hardware do have ability to timeout on lock)
+
+
+```cpp
+bool compare_exchange_weak(T& old_v, T new_v) {
+  T tmp = value; // read current value of atomic without lock
+  if (tmp != old_v) { // guess wrong
+    old_v = tmp;
+    return false;
+  }
+  //-----------------------------------------
+  TimedLock l; // timed out lock!
+  if (!l.locked()) {
+    return false;
+  }
+  tmp = value; // read again because value could have changed
+  if (tmp != old_v) { // validate again and guess wrong
+    old_v = tmp;
+    return false;
+  }
+  // guess right
+  value = new_v;
+  return true;
+}
+```
+
+
 
 
 
