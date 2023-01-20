@@ -335,7 +335,7 @@ constexpr std::size_t hardware_destructive_interference_size = 64;
 ```
 
 - What we are interested is `hardware_destructive_interference_size`, the distance implies, if you are closer than this, you will have "destructive interference", e.g. one variable could lock the other one.
-- On the other hand, `hardware_constructive_interference_size` guarantee that, if you are closer than the value, then caching one variable must bring the other one into cache(line) together.
+- On the other hand, `hardware_constructive_interference_size` (seems to me just the same thing with different angle.) Say variable is aligned on position 0. Then, if another variable B is within the `hardware_constructive_interference_size` bytes, then we don't need to load from main memory as we've loaded the whole cacheline while accessing A. So it's "constructive".
 
 ## Strong and weak compare-and-swap
 
@@ -352,9 +352,12 @@ if (x == old_x) {
 }
 ```
 
-- `x.compare_exchange_weak(old_x, new_x);` means same thing, but can "spuriously fail" and return false even if `x == old_x`. But why would it?
+- `x.compare_exchange_weak(old_x, new_x);` means same thing, but can "spuriously fail" and return false even if `x == old_x`. 
 
-- CAS, conceptually in Pseudo-code. (Noted that all the "lock" in Psedudo code are some cacheline wise hardware lock)
+But why would it?
+
+- CAS, conceptually in Pseudo-code. is like below:
+- (Noted that all the "lock" in Psedudo code are some cacheline wise hardware lock)
 
 ```cpp
 
@@ -415,9 +418,17 @@ bool compare_exchange_weak(T& old_v, T new_v) {
 }
 ```
 
+Why would we want to do the weak version? Isn't it the case that it only speed up if we always guess wrong?
 
+- It's not good for the main thread that is trying to do the CAS - as if you guess wrongly, you are basically keep retrying.
+- The reason that we do this is because on this platform, it can time out on lock. It can be shown that overall this gives faster throughput overall as it allows some other thread to do their work faster.
+- The reason is likely because how expensive it is to transfer the exclusive ownership from one CPU to another.
+  - In timing out, it basically says "I'm on the remote CPU B" versus whoever holding the lock on CPU A.
+  - I'm going to give up and let someone else to try. And maybe that "someone else" is on the same CPU A as well.
+  - Hence they get the lock faster because letting the lock to transfer to the remote CPU B is much more expensive.
+  - And then when I (on the remote CPU B) get the lock (compare passed), it should mean that all the other guys working on CPU A have gave up and transfer the lock to CPU B.
+  - So overall, it's always worse for the one working on CPU B and keep retrying. But it's better in an aggregated way for everybody in case of strong contention.
+- But remember, you have to "opt-in"/volunteer to do this using the `compare_exchange_weak` call. If you use `compare_exchange_strong`, the hardware will just trying to get the lock even if the lock is currently holding by other CPU. And for the one using `compare_exchange_weak`, you are basically accepting the fact that your thread might run slower, and overall, somebody somewhere else is running faster to make up of it.
 
-
-
-=============TEMPORARY @ around 44:24=============================
+=============TEMPORARY @ around 50:48=============================
 
