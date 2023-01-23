@@ -430,5 +430,257 @@ Why would we want to do the weak version? Isn't it the case that it only speed u
   - So overall, it's always worse for the one working on CPU B and keep retrying. But it's better in an aggregated way for everybody in case of strong contention.
 - But remember, you have to "opt-in"/volunteer to do this using the `compare_exchange_weak` call. If you use `compare_exchange_strong`, the hardware will just trying to get the lock even if the lock is currently holding by other CPU. And for the one using `compare_exchange_weak`, you are basically accepting the fact that your thread might run slower, and overall, somebody somewhere else is running faster to make up of it.
 
-=============TEMPORARY @ around 50:48=============================
+## Atomic wait and notify (C++20)
+
+```cpp
+// std::atomic<T> x;
+
+// thread 1
+x.wait(current_x); // block till someone notify
+// equals to ...
+// while (x == current_x) sleep();
+```
+
+```cpp
+// thread 2
+x.notify_all(); // interrupt sleep
+```
+
+- Not pure atomic, `wait` used a system call `futex`, so it's not done through hardware.
+
+
+## Atomic variables are rarely used by themselves
+
+```cpp
+// atomic queue
+
+int q[N];
+std::atomic<size_t> front;
+void push(int x) {
+  size_t my_slot = front.fetch_add(1);
+  q[my_slot] = x; // my_slot is exclusive, no other thread could have seen the
+                  // same value because of the atomic
+}
+```
+
+- Atomic variable is an index to (non-atomic) memory
+- The question is, is above enough? No, it won't. `q[N]` are just plain ints, there is no guaranteed that the change we make in one thread would be visible to other thread, unless it flushes to main memory.
+- Same thing happens to CAS, consider:
+
+```cpp
+struct node { int value; node* next; };
+std::atomic<node*> head;
+void push_front(int x) {
+  node* new_node = new node;
+  new_node->value = x;
+  node* old_head = head;
+  // create a new_node, and keep pointing its next to old_head
+  // as long as old_head is still the old value we thought. And
+  // when this happens, we exchange head to new_node
+  do { new_node->next = old_head; }
+  while (!head.compare_exchange_strong(old_head, new_node));
+}
+```
+
+- The atomic variable is a pointer to (non-atomic) memory
+
+## Atomic variables as gateways to memory access (generalized pointers)
+
+"Publishing protocol"
+
+- I have a memory location. I want to publish a new piece of data on the location in a concurrent system to everybody.
+- First, we prepare the data, but we don't publish the data yet. How?
+- I use a `my unique p` pointer to point to the new data first. But the `atomic p` hasn't. So no one else can access `my unique p` at the moment.
+
+![](../pics/concurrency_atomic_as_gateway1.JPG)
+
+- When I'm done preparing the data, I atomically repoint the pointer
+
+![](../pics/concurrency_atomic_as_gateway2.JPG)
+
+- Atomics are used to get exclusive access to memory or to reveal memory to other threads.
+- But most memory is not atomic. What guarantees that other threads see this memory in the desired state?
+- For acquiring exclusive access: data maybe prepared by other threads, must be completed.
+- For releasing into shared access: data is prepared by the owner thread, so it must become visible to everyone.
+- So the rest of memory is not atomic, only the memory is atomic.
+
+The problem comes - what if one thread change something in cache 1, the other thread also change something in cache 2, both of them hasn't been flushed into main memory?
+
+- So atomic is not enough...
+
+## Memory barriers (a.k.a memory ordering): the "other side/the second part" of atomics
+
+- I can't chose to associated a memory barrier to an atomic operation, and memory barriers are things to guarantee visibility of all other memory that I have updated (not just the atomic operation)
+
+- Memory barriers control how changes to memory made by one CPU become visible to other CPUs
+- Visibility of non-atomic changes is not guaranteed
+
+```cpp
+node* new_node = new node(...args...);
+head.store(new_node);
+```
+
+- All threads see that list head changed. But what do they see as node data?
+
+- Synchronization of data access is not possible if we cannot control the order of memory access.
+- This is global control, across all CPUs.
+- Such control is provided by memory barriers, which are implemented by the hardware
+- Memory barriers are invoked through processor-specific instructions (or modifiers on other instruction)
+  - Barriers are often "attributes" on read/write operations, ensuring the specified order of reads and writes
+
+![](../pics/concurrency_barrier_none.JPG)
+
+## Acquire barrier
+
+- Acquire barrier guarantees that all memory operations scheduled after the barrier in the program order become visible after the barrier.
+  - "All operations" not "all reads" or "all writes" but both read and writes
+  - "All operations" not just operations on the same variable that the barrier was on
+
+- Reads and writes cannot be reordered from after to before the barrier
+  - Only for the thread that issued the barrier
+
+
+![](../pics/concurrency_barrier_acquire.JPG)
+
+
+## Release barrier
+
+- Release barrier guarantees that all memory operations scheduled before the barrier in the program order become visible before the barrier.
+- Reads and writes cannot be reordered from before to after the the barrier
+- Only for the thread that issued the barrier
+
+![](../pics/concurrency_barrier_release.JPG)
+
+## Acquire-release protocol (publishing protocol)
+
+- Acquire and release barriers are often used together
+- Thread 1 writes atomic variable x with release barrier
+- Thread 2 reads atomic variable x with acquire barrier
+- All memory writes that happen in thread 1 before the barrier (in program order) become visible in thread 2 after the barrier
+- Thread 1 prepares data (does some writes) then releases (publishes) it by updating atomic variable x
+- Thread 2 acquires atomic variable x and the data is guaranteed to be visible
+
+![](../pics/concurrency_acquire_release_protocol.JPG)
+
+## Barrier and lock
+
+Acquire and release barriers are used in locks
+
+```cpp
+Lock L;          // std::atomic<int> l(0);
+L.lock();        // while (l.exchange(1, std::memory_order_acquire));
+++x;             // ++x;
+L.unlock();      // l.store(0, std::memory_order_release);
+```
+
+- You have exchange to ensure when `while` breaks, you are that only one who exchange the value from 0 to 1
+- Then the `acquire` barrier means:
+  - anything you do AFTER the barrier is guaranteed to see the memory state of at least how it was at the moment you do that atomic operation.
+  - You can see the later state of the memory, you just can't see the earlier state.
+  - Why is it not a problem you can see the later state? What if someone else change, say `x`, after you acquire?
+  - Will, that can't happen, as long as everyone takes the lock (or, exchange with acquire) before accessing `x`. So `x` can't be changed because of the exclusion that atomic guarantees.
+  - So whatever someone else do to `x` before the barrier, it's guaranteed to be visible to me.
+  - And nobody can do anything to `x` after the barrier, if everyone correctly acquire the barrier before accessing.
+  - If there is some other thread somewhere accessing without acquiring the lock correctly, then it's all off. Your program has a UB.
+- When you want to give up, you can just store 0 as you are the only one who exchange 0 with 1.
+- Also, you put the `release` barrier to ...
+  - guarantee that all the changes you made in between the critical section, will become visible to anybody else who acquire the lock after you.
+  - Still, the same, only those who do their work to acquire can get such guarantee. If you don't, there is no guarantee about what you will get.
+
+![](../pics/concurrency_barrier_and_lock.JPG)
+
+## Bidirectional barriers
+
+- Acquire-release (`std::memory_order_acq_rel`) combines acquire and release barriers
+  - no operation can move across barrier
+  - only if both threads use the same atomic variable.
+- Sequential consistency (`std::memory_order_seq_cst`) removes that requirement and establishes single total modification order of atomic variables.
+
+
+## Why does CAS have two memory orders?
+
+It's because underlying it's like:
+
+```cpp
+
+bool compare_exchange_strong(T& old_v, T new_v,
+                             memory_order on_success,
+                             memory_order on_failure) {
+  T tmp = value.load(on_failure);
+  if (tmp != old_v) { old_v = tmp; return false; }
+  Lock L;
+  tmp = value;
+  if (tmp != old_v) { old_v = tmp; return false; }
+  value.store(new_v, on_success);
+  return true;
+}
+```
+
+## C++ memory model caveats
+
+- Hardware platforms have their own memory model (on X86, every load is acquire-load)
+- Compiler cannot generate code with weaker memory order, but compiler can do its own reordering.
+- `load()` operations may not use `std::memory_order_release` (it will compile, but it's UB, according to standard)
+- `store()` operations may not use `std::memory_order_acquire` (it will compile, but it's UB, according to standard)
+  - directly or in combination `std::memory_order_acq_rel`
+- `std::memory_order_seq_cst` is OK even on platforms where it's the same as `std::memory_order_acq_rel`
+- You need acquire-write bidirectional barrier, you have to use `exchange`
+
+## Default memory order
+
+```cpp
+// std::memory_order_seq_cst (the strongest order)
+y = x.load();
+x.fetch_add(42);
+// same for the overloaded operations
+y = x;
+x += 42;
+```
+
+```cpp
+// can't change the memory order for the operators
+// can specify memory order for functions to be weaker than the default
+// e.g. can't do
+// y = x.load(std::memory_order_acquire)
+// x.fetch_add(42, std::memory_order_relaxed)
+```
+
+## Why change memory order?
+
+- Performance (audience #1: computers)
+- Expressing intent (audience #2: other programmers)
+- As programmers who address two audiences
+
+## Memory barriers and performance
+
+![](../pics/concurrency_barrier_performance.JPG)
+
+- Memory barriers may be more expensive than atomic operation themselves
+- Caution: not all platform provide all barriers, so performance measurements may be misleading
+- On x86:
+  - all loads are acquire-loads, all stores are release-stores
+  - but adding the other barrier is expensive
+  - all read-modify-write operations are acquire-release
+  - `acq_rel` and `seq_cst` are the same thing.
+
+## Memory order express programmer's intent
+
+- Lock-free code is hard to write (It's harder to write if you want it work correctly)
+- It's also hard to read, so clarity matters (Also to the writer, to reason that it is correct)
+- Memory order specification is important to express why the atomic operations are used and what the programmer wanted to happen.
+
+```cpp
+//What you wrote:
+std::atomic<size_t> count;
+count.fetch_add(1, std::memory_order_relaxed);
+```
+
+- What others read:
+- `count` is incremented concurrently, not used to index any memory or as a reference count (no other memory access depends on it) - this is some sort of counter
+  - Note: on x86, fetch_add is actually memory_order_acq_rel
+  - But note: the compiler could know the difference and reorder some operations across fetch_add
+
+
+=============TEMPORARY @ around 01:06:11=============================
+
 
