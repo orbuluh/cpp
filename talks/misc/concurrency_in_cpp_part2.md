@@ -669,16 +669,132 @@ x += 42;
 - It's also hard to read, so clarity matters (Also to the writer, to reason that it is correct)
 - Memory order specification is important to express why the atomic operations are used and what the programmer wanted to happen.
 
+## Intention of using `std::memory_order_relax`
+
 ```cpp
 //What you wrote:
 std::atomic<size_t> count;
-count.fetch_add(1, std::memory_order_relaxed);
+count.fetch_add(1, std::memory_order_relax);
 ```
 
-- What others read:
-- `count` is incremented concurrently, not used to index any memory or as a reference count (no other memory access depends on it) - this is some sort of counter
-  - Note: on x86, fetch_add is actually memory_order_acq_rel
+What others read:
+
+- `count` is incremented concurrently, not used to index any memory or as a reference count (no other memory access depends on it)
+  - Because if it were, you would want to release or acquire it.
+  - This is some sort of counter itself
+- Note: on x86, `fetch_add` is actually memory_order_acq_rel
   - But note: the compiler could know the difference and reorder some operations across fetch_add
+
+
+## Intention of using `std::memory_order_release`
+
+```cpp
+//What you wrote:
+std::atomic<size_t> count;
+count.fetch_add(1, std::memory_order_release);
+```
+
+What others read:
+
+- `count` indexes some memory that was prepared by this thread and is now released to other threads ...
+- I know there should be some data depends on the count, hence we need a release here.
+- It could be something like this:
+
+```cpp
+T data[max_count];
+initialize(data[count.load(std::memory_order_relax)]); // nobody can see new data yet
+count.fetch_add(1, std::memory_order_release); // now they can see it
+```
+
+## Intention of using `++`
+
+```cpp
+//What you wrote:
+std::atomic<size_t> count;
+++count;
+```
+
+What you meant:
+
+- count one of several atomic variables used to access the same memory and kept in sync by some very tricky code.
+
+What others read:
+
+- I have no idea what I am doing but it seems to work; using a lock would probably work just as well but this is way cooler!
+
+## Sometimes intent is not easy to express
+
+```cpp
+struct C {
+  C(const std::vector<int>& v) {
+    // for some reason, we can't just initialize in member list in one shot
+    for (x : v) {
+      if (x > 0) {
+        ++n;
+      }
+    }
+  }
+private:
+  std::atomic<int> n{};
+};
+```
+
+- Not easy to express because we don't have non-atomic operation on atomics
+- For example, by definition, in the constructor, only one thread can see the object that hasn't been constructed yet. Nobody else knows its existence, so why am I using an atomic counter? What am I protecting against?
+- Well, I'm not protecting anything, I just can't do anything else.
+- Why is constructor doing atomic operations? Can anther thread see the object before it is constructed? You hope not, but sometimes it happens
+- How do you express that?
+  - `atomic_init()`: non-atomic initialization of atomic variables
+  - `atomic_ref`: make non-atomic object into atomic (C++20)
+
+## C++ and `std::atomic`
+
+- Atomics basically are your memory model made visible.
+- They are not always fastest, but they can make code significantly faster.
+- And usually if you want to make code explicitly faster, you have to take explicit control of the memory barriers.
+  - Memory barriers is essential for interaction nof threads through memory, and it significantly affect performance
+- Atomic variables and operations on them
+  - Member function operations (use them) and operators
+
+## When to use `std::atomic` in your C++ code?
+
+- High performance concurrent lock-free data structures (Prove it by measuring performance!)
+- Data structures that are difficult or expensive to implement with locks (lists, trees)
+- When drawbacks of locks are important (deadlocks, priority conflicts, latency problems)
+- When concurrent synchronization can be achieved by the cheapest atomic operations (load and store, or atomic counter)
+
+
+## Parallel algorithms (C++17)
+
+New versions of STL algorithms (not all but some), you might have a new version with extra first argument `execution_policy`
+
+```cpp
+std::algorithm(execution_policy, ...);
+```
+
+where execution policies are:
+
+- `std::execution::par`
+- `std::execution::seq`
+- `std::execution::par_unseq`
+- `std::execution::unseq` (C++20)
+
+Example:
+
+```cpp
+std::vector<double> v;
+...// add data to v
+std::for_each(std::execution::par, v.begin(), v.end(), [](double& x) { ++x; });
+```
+
+## Caveat of std parallel algorithm ... compilers are not self-sufficient
+
+- You need to install precisely the right version of  Intel Thread Building Blocks (TBB)
+  - gcc-10 will not use the same TBB as gcc-11
+  - getting the latest one doesn't make it right for everybody
+  - same for clang
+- Once you get it, note...
+  - Parallel algorithms do not use C++ own thread machinery
 
 
 =============TEMPORARY @ around 01:06:11=============================
