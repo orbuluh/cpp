@@ -796,7 +796,273 @@ std::for_each(std::execution::par, v.begin(), v.end(), [](double& x) { ++x; });
 - Once you get it, note...
   - Parallel algorithms do not use C++ own thread machinery
 
+## How well is std::algorithm?
 
-=============TEMPORARY @ around 01:06:11=============================
+- check out [code](../../low-latency/benchmark_playground/std_parallel_algo.h)
+- very well if there is enough data
+  - Loop should be long enough
+  - Each iteration of the loop should be expensive enough
+  - what is enough depends on algorithm and the library version
+
+## If you use parallel STL...
+
+- It's not using pthread but some intel TBB, hardware aware mechanism thread.
+- Always measure performance gains for your algorithms and data
+- Algorithms that may allocate memory don't scale well
+
+```cpp
+std::vector<double> v(N);
+std::vector<double> vv;
+vv.reserve(N);
+// this copy doesn't scale at all. It actually runs sequentially
+copy(execution::par, v.begin(), v.end(), back_inserter(vv));
+
+// but this do:
+std::vector<double> vvv(N);
+copy(execution::par, v.begin(), v.end(), vvv.begin());
+
+// under the hood, they put some implementation in std::vector so that when the
+// execution::par is passed, they know how to separate vector into chunks and do
+// the parallelization
+```
+
+- Each call uses all available CPUs, concurrent calls to parallel STL algorithms don't run any faster
+- Always measure performance gains for your algorithm and data when using std parallel
+
+## No control over the granularity of parallelism (done by the library)
+
+- Each call uses all available CPUs?
+  - The standard does not say anything about the implementation
+  - Particularly, if you run your own thread on top of the parallel algorithm, you typically don't get more scale because CPU has been exhausted.
+- What do the policies do? The policies really define data dependencies between tasks
+- Parallel policy implies that the tasks can be executed in any order
+- It is up to the programmer to assert the correct policy
+- Although it's something, these are likely not the executors you are looking for.
+
+## What are unsequenced policies?
+
+- Unsequenced policy allows computations to be interleaved within a single thread, allowing additional optimization such as vectorization.
+- Vectorizing compilers do this already, so?...
+
+```cpp
+double much_computing(double x);
+
+vector<double> v; // add data to v
+double res = 0;
+mutex res_lock;
+
+for_each(execution::par, v.begin(), v.end(), [&](double& x) {
+  double term = much_computing(x);
+  lock_guard guard(res_lock);
+  res += term; // protected by the lock
+});
+```
+
+- interleaved execution allows one thread to process multiple vector elements at the same time
+- processing each element involves acquiring the lock
+- one thread acquiring the same lock twice is guaranteed deadlock
+- standard term for such operations is **vectorization-unsafe**
+
+## Parallel STL guidelines
+
+- Environment is volatile and performance varies version to version
+- Parallel policy is generally very effective
+  - Needs enough data to give speedup
+  - Processing large data volumes may be memory-bound
+- Output iterators do not parallelize well
+- Performance gains vary between algorithms
+  - some algorithms do not have a parallel version (`std:accumulate`) but may have a parallel equivalent
+- Implementation determines which hardware resources are used
+  - probably does not benefit from higher-level parallelism
+- Always measure the impact on performance
+  - Ideally, both individual algorithms and overall result
+
+## Coroutines
+
+- Coroutines are functions that can be interrupted and resumed
+- Use of coroutines
+  - Event-driven programs
+  - work stealing
+  - simplify writing asynchronous code
+
+## What are coroutines
+
+- Coroutines are functions that can be interrupted and resumed
+- In general, there are two types of coroutines:
+  - **stackful** coroutines (a.k.a fibers): the state is stored on the stack
+    - (just like regular functions)
+    - powerful and flexible
+  - **stackless** coroutine: the state is stored on the heap
+    - no stack frame of their own
+    - more efficient and lightweight
+- **C++20 coroutines are stackless**
+
+## Stackful v.s. stackless coroutines
+
+Stackful coroutines can be suspended anywhere
+
+- Even after they call other functions
+- they resume where they were suspended
+
+Stackless coroutines can be suspended only at the top level
+
+- Once a function is called, it must complete
+- They resume where they were suspended (always inside the coroutine body)
+- Can call another coroutine which can suspend itself
+
+## Regular functions stack
+
+![](../pics/concurrency_regular_fnc_stack.JPG)
 
 
+## Coroutine mechanics
+
+- `std::coroutine_handle<???>` is like a smart pointer that points to something allocated on the heap,, that is called activation frame
+
+![](../pics/concurrency_coroutine_mechanics_1.JPG)
+
+- Note: `coro` can be suspended
+
+![](../pics/concurrency_coroutine_mechanics_2.JPG)
+
+- Note: you can call a regular function `g()` from the `coro()` coroutine function. But, you lost the ability to suspend `coro()` because `g()` is now on the top of the stack, and it doesn't know anything about coroutine. E.g. you can only suspend coroutine from top level of the stack.
+
+![](../pics/concurrency_coroutine_mechanics_3.JPG)
+![](../pics/concurrency_coroutine_mechanics_4.JPG)
+
+## What happened if we suspended?
+
+- If we suspended the coroutine, the bit of state that owns the state of the stack are copied into activation frame's suspension point.
+- And the control transfers back to the caller.
+- The caller has the coroutine handle which can refers to the activation frame.
+- The caller keeps running, and the activation frame sits there and coroutine is not running.
+- 
+![](../pics/concurrency_coroutine_mechanics_5.JPG)
+
+![](../pics/concurrency_coroutine_mechanics_6.JPG)
+
+## Resumes coroutine
+
+- Anybody having the handle can then resume the coroutine.
+- Once `H.resume()` is called, the activation frame is accessed through the handle, the stack of coroutine is reconstructed from the activation frame, and coroutine starts running
+- In the example here, the resumed `H` is like a child stack of `h()`, not `g()`
+
+![](../pics/concurrency_coroutine_mechanics_7.JPG)
+
+- Suspending a coroutine is explicit (cooperative multitasking). Nobody else can suspend coroutine, coroutine has to suspend itself.
+- Functions have with stack frames, coroutines have handle objects.
+  - The lifetime of the coroutine is the lifetime of the handle.
+- Coroutine state persists as long as the handle is alive
+  - The resume can be anywhere (it can even be from other thread)
+- After the coroutine is suspended, the control is returned to the caller
+  - Caller continues to run as if the coroutine had completed
+- The coroutine can be resumed from any location
+  - not just from the caller
+  - coroutine can even be resumed from a different thread
+  - coroutine is resumed from the point of suspension and continues to run
+
+## Coroutines in C++20
+
+- Standard: `#include <coroutines>`
+- GCC: `--std=c++20 -fcoroutines, #include <coroutines>`
+- MSVC: `/std:c++20, #include <coroutines>`
+- CLANG-13: `--std=c++20 -stdlib=libc++ -fcoroutines-ts, #include <experimental/coroutines>, namespace std::experimental`
+
+- There is no special syntax to declare a coroutine (coroutine is a function)
+- What makes a coroutine a coroutine is suspend by `co_await` or `co_yield`
+- Coroutines must have specific return types
+  - The return types are not standard types
+  - The requirements on the return types are in the standard
+  - No assistance in the standard library
+- The C++20 standard provides the framework for coroutines
+  - Without a coroutine library, the code is very verbose (You are not expected to write it more than once)
+  - Multiple third-party libraries, no standard ones
+  - Compiler support remains "cutting edge"
+- The standard requires a lot of boilerplate code
+- Coroutines are almost certainly very useful
+  - We're not exactly sure what for
+  - Design patterns (recognized solutions to common problems) have not yet emerged in the community
+  - Likely applications are work stealing, lazy execution, asynchronous execution, and some cool thing we haven't yet thought of.
+
+## Coroutine example: Lazy generator
+
+```cpp
+generator<int> // magic return type
+coro() {
+  for (int i = 0;; ++i) {
+    co_yield i; // return value
+    // when h(); is called below, it resume to here.
+  }
+}
+
+int main() {
+  auto h = coro().h_; // handle with reference to activation frame
+  auto& promise = h.promise();
+  for (int i = 0; i < 3; ++i) {
+    std::cout << "result: " promise.value_ /*from magic co_yield*/ << '\n';
+    h(); // resume coroutine
+  }
+  h.destroy();
+}
+```
+
+## `generator` details
+
+- Name "generator" is not special, most coroutine libraries will have a type like this.
+- Must contain nested type "promise_type"
+  - Maybe a type alias
+  - Standard lists requirements on promise_type
+- Must store the coroutine handle
+
+```cpp
+template <typename T>
+struct generator {
+  struct promise_type {
+    T value_ = -1;
+    generator get_return_object() {
+      using handle_type = std::Coroutine_handle<promise_type>;
+      return generator{handle_type::from_promise(*this)};
+    }
+    std::suspend_never initial_suspend() { return {}; }
+    std::suspend_never final_suspend() noexcept { return {}; }
+    void unhandled_exception() {}
+    std::suspend_always yield_value(T value) {
+      value_ = value;
+      return {};
+    }
+    void return_void() {}
+  };
+  std::coroutine_handle<promise_type> h_;
+};
+```
+
+## Coroutine handle `std::coroutine_handle<>`
+
+- Is associated with the activation frame
+- Is accessed through the return type (Isn't always stored in the return object)
+- Callable, invoking the handle resumes the coroutine
+- Destroying the handle destroys the coroutine state (activation frame)
+
+## Coroutine promise
+
+- Has absolutely nothing to do with std::promise
+- Must be named promise_type inside the return type of the coroutine
+- Standard defines interface requirements (method names, signatures, and noexcept)
+
+```cpp
+  struct promise_type {
+    X get_return_object();
+    std::suspend_never initial_suspend();
+    std::suspend_never final_suspend() noexcept;
+    void unhandled_exception();
+    void return_void();
+  };
+```
+
+- `get_return_object()`: constructs return object from the promise
+- `yield_value(T)`: called by `co_yield` to store the return value in the promise object
+- `initial_suspend()`: called the first time coroutine is suspended
+- `final_suspend()`: called by `co_return`
+- `return_void()`: called if the coroutine reaches the end
+- `unhandled_exception()`: called if an exception escapes the coroutine
+- The programmer does not call these methods directly, the compiler does.
