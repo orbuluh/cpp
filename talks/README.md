@@ -11,7 +11,6 @@
 - [CppCon 2021] Back to Basics: Move Semantics - Nicolai Josuttis [:cinema:](https://youtu.be/Bt3zcJZIalk) [:scroll:](cppcon-2021/back_to_basics_move_semantics.md)
 - [CppCon 2018] 105 STL Algorithms in Less Than an Hour - Jonathan Boccara [:cinema:](https://youtu.be/2olsGf6JIkU) [:scroll:](cppcon-2018/105_stl_algorithms.md)
 
-
 ## Software design
 
 - [CppCon 2020] Breaking Dependencies: The SOLID Principles - Klaus Iglberger [:cinema:](https://youtu.be/Ntraj80qN2k) [:scroll:](cppcon-2020/breaking_deps_the_solid_principles.md)
@@ -32,6 +31,12 @@
 ## Compile
 
 - [CppCon 2021] Back to Basics: Compiling and Linking - Ben Saks [:cinema:](https://youtu.be/cpkDQaYttR4) [:scroll:](cppcon-2021/compiling_and_linking.md)
+
+
+## Philosophical (?)
+
+- [CppCon 2015] Value Semantics: It ain't about the syntax!, Part I - John Lakos [:cinema:](https://youtu.be/W3xI1HJUy7Q) [:scroll:](cppcon-2015/value_semantics_aint_about_the_syntax_part_1.md)
+
 
 ---
 
