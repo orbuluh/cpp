@@ -32,6 +32,10 @@
 
 - [CppCon 2021] Back to Basics: Compiling and Linking - Ben Saks [:cinema:](https://youtu.be/cpkDQaYttR4) [:scroll:](cppcon-2021/compiling_and_linking.md)
 
+## Embedded system
+
+- [CppCon 2020] Memory-Mapped Devices as Objects - Dan Saks [:cinema:](https://youtu.be/uwzuAGtAEFk) [:scroll:](cppcon-2020/memory_mapped_devices_as_objects.md)
+
 
 ## Philosophical (?)
 
