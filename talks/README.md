@@ -22,6 +22,11 @@
 - [CppNow 2022] Concurrency in C++: A Programmer’s Overview (part 2 of 2) - Fedor Pikus [:cinema:](https://youtu.be/R0V4xJ9HZpA) [:scroll:](misc/concurrency_in_cpp_part2.md)
   - Also check: Lightning Talk: A Spinlock Implementation - Fedor Pikus - CppNow 2022 [:cinema:](https://youtu.be/rmGJc9PXpuE)
 
+## Techniques
+
+- [CppCon 2022] Breaking Dependencies - C++ Type Erasure - The Implementation Details - Klaus Iglberger [:cinema:](https://youtu.be/qn6OqefuH08) [:scroll:](cppcon-2022/type_erasure_implementation_details.md)
+
+
 ## Tooling
 
 - [CppNow 2017] Effective CMake - Daniel Pfeifer [:cinema:](https://youtu.be/bsXLMQ6WgIk) [:scroll:](misc/effective_cmake.md)
