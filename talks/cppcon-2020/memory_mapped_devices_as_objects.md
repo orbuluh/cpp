@@ -497,5 +497,109 @@ protected:                  // not standard layout
 };
 ```
 
+All non-static data members of a standard-layout class must all be declared:
 
-================== tmp @ 41:04==================
+- in the most derived class, or
+- in the same base class
+
+For example, suppose you have 2 devices with a common register layout, you can put all the registers in a common standard-layout class...
+
+```cpp
+class IOP { // standard layout
+protected:
+  device_register IOPMOD;
+  device_register IOPCON;
+  device_register IOPDATA;
+};
+
+// private inheritance because we don't want the user of LEDs and switches to
+// access the registers
+
+class LEDs : private IOP { // standard layout too
+  // as long as there is no additional non-static data
+};
+
+class switches : private IOP { // standard layout too
+  // as long as there is no additional non-static data
+};
+```
+
+However, the derived class won't be standard-layout if it **both inherits and declares non-static data members**
+
+- There is no guarantee whether the base class part or the derived class part goes in any particular order, so you lose the standard layout guarantee
+
+```cpp
+class IOP { // standard layout
+protected:
+  device_register IOPMOD;
+  device_register IOPCON;
+};
+
+class switches : private IOP { // NOT standard layout too
+private:
+  device_register IOPDATA;
+};
+```
+
+## No need to guess: `is_standard_layout`
+
+Use `static_assert` and `<type_traits>`  to verify that each memory-mapped class is standard layout
+
+```cpp
+#include <type_traits>
+
+class timer {
+  //...
+};
+
+static_assert(
+  is_standard_layout_v<timer>,
+  "timer isn't standard layout"
+);
+```
+
+## Standard layout guarantees
+
+For standard-layout classes, C++ guarantees only that:
+
+- The first non-static data member is at offset zero
+- Every other non-static data member has an offset greater than the data member declared just before it.
+  - e.g. you know that within a given access section, all the data member are layout in the order of how you wrote them.
+
+Say, `UART` is a standard-layout class
+
+- `UART`'s first non-static data member, ULCON, will be at offset zero.
+
+But is this sufficient? What about the offsets of other data members?
+
+- No, it's not sufficient. Why? Because there could be padding.
+
+## Padding
+
+- The layout guarantees assure that the first non-static data member doesn't have padding bytes **before** it.
+- However, every non-static data member may have padding bytes **after** it.
+- This added padding could quietly push some data members to greater offsets.
+- What can you do if the compiler inserts padding you don't want?
+
+## Packing
+
+- Pack means remove the padding
+- There is no standard way, but you could do this in some compiler
+
+```cpp
+#pragma pack(push, 1) // turn padding off
+class UART {
+  //...
+};
+#pragma pack(pop)     // turn it back on
+```
+
+- or others support non-standard type attributes such as:
+
+```cpp
+class UART __attribute__(packed) { // turn padding off
+  //...
+};                                 // just for this type
+```
+
+================== tmp @ 47:25==================
