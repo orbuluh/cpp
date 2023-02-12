@@ -602,4 +602,223 @@ class UART __attribute__(packed) { // turn padding off
 };                                 // just for this type
 ```
 
-================== tmp @ 47:25==================
+## Using static assertions to verify layout
+
+- Misaligned data members in device classes often lead to runtime failures
+- Use `static_assert` to detect misaligned data members in memory-mapped device classes
+- `offsetof(t, m)` (defined in <cstddef>) returns the offset in bytes of member `m` from the beginning of class type `t`
+- If `t` isn't a standard-layout class, the behavior is undefined
+
+```cpp
+class UART {
+  // ...
+};
+
+static_assert(offsetof(UART, UCON) == 4, "~~~");
+static_assert(offsetof(UART, ULCON) == 8, "~~~");
+```
+
+- Checking the offset of each member can be tedious, this might be all you need:
+
+```cpp
+static_assert(
+  sizeof(UART) == 6 * sizeof(device_register),
+  "UART contains extra padding bytes"
+);
+```
+
+## Nested types and constants
+
+- Some UART member functions have parameter types specific to the class
+- These types should be public class members
+
+```cpp
+class UART {
+public:
+  enum baud_rate {
+    BR_9600 = 162 << 4,
+    BR_19200 = 80 << 4,
+  };
+};
+```
+
+- Note that this public enumeration in the class is purely compile time. It does not disturbed the layout of the class. The class will still be standard layout
+
+
+## Constructors
+
+- UART objects should be initialized before use
+- A constructor is the way to go, as it provides guaranteed initialization.
+- That is, if class UART has a constructor, the compiler guarantees to initialize every UART object by calling a constructor
+- E.g. you can't create an object without involving one of the constructor
+
+```cpp
+class UART {
+public:
+  UART(baud_rate br = BR_9600) {
+    disable();
+    set_speed(br);
+    enable();
+  }
+};
+```
+
+- Unfortunately, all of the memory-mapped placement techniques that we've discussed invalidate the guarantee
+- The placement notations provide **non-defining declarations, which don't invoke constructors**
+- To see this, let's look at reference placement in details...
+  - Remember that a memory-mapped objects isn't a normal object
+  - For example, you don't define an object of the UART type, you just setup a reference to an existing location using `reinterpret_cast`
+  - This denies the compiler an opportunity to generate a constructor call automatically
+- `UART &com0 = *reinterpret_cast<UART*>(0x3FFD000);`
+  - The cast invalidates the initialization guarantee.
+  - The reference definition locates the UART object, but doesn't initialize it
+- Fortunately, you can construct the UART object by using a placement new-expression...
+
+## Constructors and new-expressions
+
+- A new-expression allocates memory by calling an `operator new`
+- C++ provides a default implementation for global `operator new`
+- It's declared in standard header `<new>` as: `void* operator new(size_t n);`
+  - Parameter `n` represents the size (in bytes) of the requested storage.
+- A new-expression is actually a 2-step process:
+  - 1. call an operator new to allocate storage for the object
+  - 2. Apply a constructor to the allocated storage
+- `operator new` and the constructor can be overloaded
+- The compiler uses name lookup and overload resolution to select the functions called by a given new-expression
+- A typical new-expression has the form:
+
+```cpp
+p = new T(v); // or {v} in modern C++
+```
+
+- It translates into something (sort of) like:
+
+```cpp
+p = static_cast<T*>(operator new(sizeof(T)));
+p->T(v); // not real C++, conceptually means "apply to `*p` the `T` constructor
+         // that accepts argument `v`" (not real C++)
+```
+
+- C++ provides a version of `operator new` that you can use to place an object at a specified location:
+
+```cpp
+void* operator new(size_t, void* p) noexcept {
+  // The `noexcept` specifier means it doesn't propagate exceptions.
+  return p; // It ignores its first parameter and simply returns its second.
+}
+```
+
+- It seems like ... "you give me an pointer `*p` as second argument to the new operator, and all I do is return that pointer". Would this even be useful?? It's useful when you invoke expression like this:
+
+
+```cpp
+// a general form of "placement new-expression"
+p = new (region) T(v); // or {v}
+```
+
+- Then it translates into something along the lines of:
+
+```cpp
+p = static_cast<T*>(operator new(sizeof(T), region));
+p->T(v);
+```
+
+- So in effect, it constructs a `T` object in the storage addressed by `region`
+- Placement operator new is often an inline function, which allows some optimization of simplifying
+
+```cpp
+p = static_cast<T*>(operator new(sizeof(T), region));
+p->T(v);
+```
+
+to
+
+```cpp
+p = region; // e.g. take the region and store at p
+p->T(v);    // then apply the constructor
+```
+
+- In effect, it applies the constructor to the storage at `region`
+
+- So, you can use placement new to invoke the `UART` constructor:
+
+```cpp
+UART *const com0 = reinterpret_cast<UART*>(0x3FFD000);
+com0 = new (com0) UART;
+```
+
+- In fact, assigning the new-expression to `com0` isn't necessary:
+
+```cpp
+UART *const com0 = reinterpret_cast<UART*>(0x3FFD000);
+new (com0) UART;
+```
+
+- You can fold both statements into a single one:
+
+```cpp
+UART *const com0 = new (reinterpret_cast<UART*>(0x3FFD000)) UART;
+```
+
+- But it's not clear that it's an improvement.
+- Placement-new works with reference-placement as well:
+
+```cpp
+UART &com0 = *reinterpret_cast<UART*>(0x3FFD000);
+new (&com0) UART;
+```
+
+- Again, if the constructor accepts arguments, `placement new` will accept them and pass them along.
+
+```cpp
+UART &com0 = *reinterpret_cast<UART*>(0x3FFD000);
+new (&com0) UART(UART::BR_19200);
+```
+
+- The key thing is, this doesn't really solve our initialization problems, though. Because you still do this in 2 steps.
+- What we want to do here, is:
+  - Using placement-new permits initialization, but doesn't guarantee it
+  - It's the user's responsibility to call the constructor
+- And, class-specific `operator new` offers a remedy
+
+## Class-specific new
+
+- Use class-specific `operator new` to guarantee initialization for memory-mapped objects
+- C++ lets you declare `operator new` as a class member.
+- If `T` is a class with a member `operator new` then this uses `T`'s `operator new`
+
+```cpp
+p = new T(v); // or {v}
+              // ==> this expression won't call the global operator new
+              // it will look into the class to find the class specific one
+```
+
+- A member `operator new` is a `static` member, even if not declared so explicitly.
+- A member `operator new` can place a device at a specified memory-mapped address:
+
+```cpp
+class UART {
+public:
+  void* operator new(size_t) {
+    return reinterpret_cast<void*>(0x3FFD000);
+  }
+};
+```
+
+- This is an inline function because it's defined within its class definition. (even if it's not a `constexpr`, compiler will optimize this)
+- Now, you can create a UART object using a conventional new-expression in one step:
+
+```cpp
+UART* const com0 = new UART;
+```
+
+- It "places" a default-initialized UART object in its memory-mapped location
+- This new-expression initializes the UART by calling a different constructor:
+
+
+```cpp
+UART* const com0 = new UART{UART::br_38400};
+```
+
+
+================== tmp @ 56:55==================
