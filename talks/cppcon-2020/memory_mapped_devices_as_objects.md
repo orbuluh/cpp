@@ -806,19 +806,133 @@ public:
 ```
 
 - This is an inline function because it's defined within its class definition. (even if it's not a `constexpr`, compiler will optimize this)
-- Now, you can create a UART object using a conventional new-expression in one step:
+- Now, you can create a `UART` object using a conventional new-expression in one step:
 
 ```cpp
 UART* const com0 = new UART;
 ```
 
-- It "places" a default-initialized UART object in its memory-mapped location
-- This new-expression initializes the UART by calling a different constructor:
-
+- It "places" a default-initialized `UART` object in its memory-mapped location
+- This new-expression initializes the `UART` by calling a different constructor:
 
 ```cpp
-UART* const com0 = new UART{UART::br_38400};
+UART* const com0 = new UART{UART::br_38400}; // can pass argument as wll
 ```
+
+## "Reference-placement with initialization"
+
+- Alternatively, you can bind a reference to the placed `UART`
+
+```cpp
+UART& com0 = *new UART;
+```
+
+- The *(dereference) makes for an unusual-looking new-expression, but it makes `com0` look like a `UART`, not a "pointer to UART":
+
+```cpp
+com0.put(c); // not com0->put(c);
+```
+
+## What about the other UARTs?
+
+- What if the hardware supports more than one UART, say 4?
+- This `operator new` supports only one:
+
+```cpp
+class UART {
+public:
+  void* operator new(size_t) {
+    return reinterpret_cast<void*>(0x3FFD000);
+  }
+};
+```
+
+- Actually, you can augment `operator new` with additional parameters
+- Here, the additional paramenter specifies the UART number:
+
+```cpp
+class UART {
+public:
+  void* operator new(size_t, int n) {
+    auto address = 0x3FFD000 + n * 0x1000;
+    return reinterpret_cast<void*>(address);
+  }
+};
+
+// then you can write:
+
+UART& com0 = *new(0) UART; // use UART 0
+UART& com2 = *new(2) UART; // use UART 2
+```
+
+- The issue is, unfortunately, it compiles for invalid values.
+
+```cpp
+UART& com2 = *new (42) UART;  // shouldn't compile but it did
+```
+
+- You can't prevent this with a static assertion.
+- You could use a run-time check to restrict the placement argument
+- Even better, you can use an enumeration type to catch the error at compile time.
+
+```cpp
+class UART {
+public:
+  // use a constrained type!!!
+  enum uart_number { zero, one, two, three };
+  void* operator new(size_t, uart_number n) {
+    auto address = 0x3FFD000 + n * 0x1000;
+    return reinterpret_cast<void*>(address);
+  }
+};
+
+// then you can write:
+
+UART& com0 = *new(UART::zero) UART; // use UART 0
+UART& com2 = *new(UART::two) UART; // use UART 2
+```
+
+- With this enum defined, your UART number is limited to only zero (=0) to three (=3).
+- Ant this will no longer compile:
+
+```cpp
+UART& com2 = *new (42) UART;  // won't compile now, catch error in compile time!
+```
+
+## Can we make class `operator new` to `constexpr`?
+
+```cpp
+class UART {
+public:
+  enum uart_number { zero, one, two, three };
+  constexpr void* operator new(size_t, uart_number n) { // CAN'T DO THIS
+    auto address = 0x3FFD000 + n * 0x1000;
+    return reinterpret_cast<void*>(address);
+  }
+};
+```
+
+- No we can't... why? `reinterpret_cast` can't appear in constant expression
+- By the same token, it can't appear in the body of a `constexpr` function.
+
+## Summary
+
+:heavy_check_mark: Make interfaces easy to use correctly and hard to use incorrectly
+
+:heavy_check_mark: Program in a style that turns potential run-time errors into compile-time errors
+
+:heavy_check_mark: Declare memory-mapped device registers as non-public class data members
+
+:heavy_check_mark: Declare public functions with restrictive interfaces that prevent invalid  operations on those registers.
+
+:heavy_check_mark: Build volatility into the device classes, at the register level if possible
+
+:heavy_check_mark: Use `static_assert` and `<type_traits>` to verify that each memory-mapped class is standard-layout
+
+:heavy_check_mark: Use `static_assert` to detect misaligned data members in memory-mapped device classes
+
+:heavy_check_mark: Use class-specific `operator new` to guarantee initialization for memory-mapped objects
+
 
 
 ================== tmp @ 56:55==================
