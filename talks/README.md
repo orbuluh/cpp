@@ -10,6 +10,7 @@
 - [CppCon 2022] Back to Basics: C++ Smart Pointers - David Olsen [:cinema:](https://youtu.be/YokY6HzLkXs) [:scroll:](cppcon-2022/back_to_basics_c++_smart_pointers.md)
 - [CppCon 2021] Back to Basics: Move Semantics - Nicolai Josuttis [:cinema:](https://youtu.be/Bt3zcJZIalk) [:scroll:](cppcon-2021/back_to_basics_move_semantics.md)
 - [CppCon 2018] 105 STL Algorithms in Less Than an Hour - Jonathan Boccara [:cinema:](https://youtu.be/2olsGf6JIkU) [:scroll:](cppcon-2018/105_stl_algorithms.md)
+- [CppCon 2022] The Hidden Performance Price of C++ Virtual Functions - Ivica Bogosavljevic  [:cinema:](https://youtu.be/n6PvvE_tEPk) [:scroll:](cppcon-2022/hidden_performance_price_of_virtual.md)
 
 ## Software design
 
