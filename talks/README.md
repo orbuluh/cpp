@@ -11,7 +11,7 @@
 - [CppCon 2021] Back to Basics: Move Semantics - Nicolai Josuttis [:cinema:](https://youtu.be/Bt3zcJZIalk) [:scroll:](cppcon-2021/back_to_basics_move_semantics.md)
 - [CppCon 2018] 105 STL Algorithms in Less Than an Hour - Jonathan Boccara [:cinema:](https://youtu.be/2olsGf6JIkU) [:scroll:](cppcon-2018/105_stl_algorithms.md)
 - [CppCon 2022] The Hidden Performance Price of C++ Virtual Functions - Ivica Bogosavljevic  [:cinema:](https://youtu.be/n6PvvE_tEPk) [:scroll:](cppcon-2022/hidden_performance_price_of_virtual.md)
-
+- [CppCon 2019] Back to Basics: Understanding Value Categories - Ben Saks [:cinema:](https://youtu.be/XS2JddPq7GQ) [:scroll:](cppcon-2019/understanding_value_categories.md)
 ## Software design
 
 - [CppCon 2020] Breaking Dependencies: The SOLID Principles - Klaus Iglberger [:cinema:](https://youtu.be/Ntraj80qN2k) [:scroll:](cppcon-2020/breaking_deps_the_solid_principles.md)
