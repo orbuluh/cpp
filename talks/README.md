@@ -26,7 +26,7 @@
 ## Techniques
 
 - [CppCon 2022] Breaking Dependencies - C++ Type Erasure - The Implementation Details - Klaus Iglberger [:cinema:](https://youtu.be/qn6OqefuH08) [:scroll:](cppcon-2022/type_erasure_implementation_details.md)
-
+- [CppCon 2020] Dynamic Polymorphism with Metaclasses and Code Injection - Sy Brand [:cinema:](https://youtu.be/8c6BAQcYF_E) [:scroll:](cppcon-2020/dynamic_polymorphism_with_metaclasses_and_code_injection.md)
 
 ## Tooling
 
