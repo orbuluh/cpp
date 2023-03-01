@@ -28,7 +28,12 @@
 - [CppCon 2022] Breaking Dependencies - C++ Type Erasure - The Implementation Details - Klaus Iglberger [:cinema:](https://youtu.be/qn6OqefuH08) [:scroll:](cppcon-2022/type_erasure_implementation_details.md)
 - [CppCon 2020] Dynamic Polymorphism with Metaclasses and Code Injection - Sy Brand [:cinema:](https://youtu.be/8c6BAQcYF_E) [:scroll:](cppcon-2020/dynamic_polymorphism_with_metaclasses_and_code_injection.md)
 
-## Tooling
+
+## GDB
+
+- [CppNow 2018] Debugging Linux C++ - Greg Law [:cinema:](https://youtu.be/V1t6faOKjuQ) [:scroll:](cppcon-2018/debugging_linux_cpp.md)
+
+## CMake
 
 - [CppNow 2017] Effective CMake - Daniel Pfeifer [:cinema:](https://youtu.be/bsXLMQ6WgIk) [:scroll:](misc/effective_cmake.md)
 - [CppCon 2017] Using Modern CMake Patterns to Enforce a Good Modular Design - Mathieu Ropert [:cinema:](https://youtu.be/eC9-iRN2b04) [:scroll:](cppcon-2017/modern_cmake_patterns.md)
