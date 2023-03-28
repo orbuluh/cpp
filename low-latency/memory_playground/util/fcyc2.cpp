@@ -3,31 +3,41 @@
 
 /* Compute time used by a function f that takes two integer args */
 #include "fcyc2.h"
+#include "clock.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/times.h>
 
-#include "clock.h"
+#include <utility>
 
-static double *values = nullptr;
+static double* values = nullptr;
 int sampleCount = 0;
-double *samples = nullptr;
+double* samples = nullptr;
 
 constexpr bool KEEP_SAMPLES = true;
 constexpr bool KEEP_VALS = true;
 constexpr bool DEBUG = false;
 
 /* Start new sampling process */
-static void init_sampler(int k, int maxSamples) {
+static void init_sampler(const TestParams &params) {
   if (values) free(values);
-  values = static_cast<double *>(calloc(k, sizeof(double)));
+  values = static_cast<double* >(calloc(params.k, sizeof(double)));
   if constexpr (KEEP_SAMPLES) {
     if (samples) free(samples);
     /* Allocate extra for wraparound analysis */
-    samples = static_cast<double *>(calloc(maxSamples + k, sizeof(double)));
+    samples = static_cast<double* >(
+        calloc(params.maxSamples + params.k, sizeof(double)));
   }
   sampleCount = 0;
+}
+
+static void debugPrint(int k) {
+  if constexpr (DEBUG) {
+    printf(" %d smallest values: [", k);
+    for (int i = 0; i < k; i++)
+      printf("%.0f%s", values[i], i == k - 1 ? "]\n" : ", ");
+  }
 }
 
 /* Add new sample.  */
@@ -46,9 +56,7 @@ void add_sample(double val, int k) {
   sampleCount++;
   /* Insertion sort */
   while (pos > 0 && values[pos - 1] > values[pos]) {
-    double temp = values[pos - 1];
-    values[pos - 1] = values[pos];
-    values[pos] = temp;
+    std::swap(values[pos - 1], values[pos]);
     pos--;
   }
 }
@@ -62,15 +70,21 @@ double err(int k) {
   return (values[k - 1] - values[0]) / values[0];
 }
 
-/* Have k minimum measurements converged within epsilon? */
-int has_converged(int k_arg, double epsilon_arg, int maxSamples) {
-  if ((sampleCount >= k_arg) &&
-      ((1 + epsilon_arg) * values[0] >= values[k_arg - 1])) {
+/* What is convergence status for k minimum measurements within epsilon
+   Returns 0 if not converged, #samples if converged, and -1 if can't
+   reach convergence
+
+   e.g. Have k minimum measurements converged within epsilon?
+*/
+int has_converged(const TestParams &params) {
+  if ((sampleCount >= params.k) &&
+      ((1 + params.epsilon) * values[0] >= values[params.k - 1])) {
     return sampleCount;
   }
-  if ((sampleCount >= maxSamples)) return -1;
+  if ((sampleCount >= params.maxSamples)) return -1;
   return 0;
 }
+
 
 /* Code to clear cache
 
@@ -93,8 +107,9 @@ static int sink;
 
 static void flushCache() {
   int x = sink;
-  int i;
-  for (i = 0; i < ASIZE; i += STRIDE) x += stuff[i];
+  for (int i = 0; i < ASIZE; i += STRIDE) {
+    x += stuff[i];
+  }
   /*
   Reason of doing `sink = x`:
 
@@ -105,44 +120,28 @@ static void flushCache() {
   sink = x;
 }
 
-static void debugPrint(int k) {
-  if constexpr (DEBUG) {
-    printf(" %d smallest values: [", k);
-    for (int i = 0; i < k; i++)
-      printf("%.0f%s", values[i], i == k - 1 ? "]\n" : ", ");
-  }
-}
-
-double fcyc2_full(test_funct testFnc, int param1, int param2,
-                  bool shouldFlushCache, int k, double epsilon, int maxSamples,
-                  bool compensate) {
-  double result;
-  init_sampler(k, maxSamples);
-  if (compensate) {
+double fcyc2_full(TestFncT testFnc, int param1, int param2,
+                  const TestParams &params) {
+  init_sampler(params);
+  if (params.compensate) {
     do {
-      double cyc;
-      if (shouldFlushCache) flushCache();
+      if (params.shouldFlushCache) flushCache();
       testFnc(param1, param2); /* warm cache */
       cycle_counter::start_comp_counter();
       testFnc(param1, param2);
-      cyc = cycle_counter::get_comp_counter();
-      add_sample(cyc, k);
-    } while (!has_converged(k, epsilon, maxSamples) &&
-             sampleCount < maxSamples);
+      add_sample(cycle_counter::get_comp_counter(), params.k);
+    } while (!has_converged(params) && sampleCount < params.maxSamples);
   } else {
     do {
-      double cyc;
-      if (shouldFlushCache) flushCache();
+      if (params.shouldFlushCache) flushCache();
       testFnc(param1, param2); /* warm cache */
       cycle_counter::start_counter();
       testFnc(param1, param2);
-      cyc = cycle_counter::get_counter();
-      add_sample(cyc, k);
-    } while (!has_converged(k, epsilon, maxSamples) &&
-             sampleCount < maxSamples);
+      add_sample(cycle_counter::get_counter(), params.k);
+    } while (!has_converged(params) && sampleCount < params.maxSamples);
   }
-  debugPrint(k);
-  result = values[0];
+  debugPrint(params.k);
+  double result = values[0];
   if constexpr (!KEEP_VALS) {
     free(values);
     values = nullptr;
@@ -150,23 +149,26 @@ double fcyc2_full(test_funct testFnc, int param1, int param2,
   return result;
 }
 
-double fcyc2(test_funct testFnc, int param1, int param2,
+double fcyc2(TestFncT testFnc, int param1, int param2,
              bool shouldFlushCache) {
-  return fcyc2_full(testFnc, param1, param2, shouldFlushCache, 3, 0.01, 300,
-                    false);
+  TestParams params;
+  params.shouldFlushCache = shouldFlushCache;
+  params.maxSamples = 300;
+  return fcyc2_full(testFnc, param1, param2, params);
 }
 
 /******************* Version that uses gettimeofday *************/
 
-static double Mhz = 0.0;
-
 #include <sys/time.h>
 
+static double Mhz = 0.0;
 static struct timeval tstart;
 
 /* Record current time */
 void start_counter_tod() {
-  if (Mhz == 0) Mhz = cycle_counter::mhz_full(0, 10);
+  if (Mhz == 0) {
+    Mhz = cycle_counter::mhz_full(0, 10);
+  }
   gettimeofday(&tstart, nullptr);
 }
 
@@ -183,13 +185,14 @@ double get_counter_tod() {
 /** Special counters that compensate for timer interrupt overhead */
 
 static double cyc_per_tick = 0.0;
+static clock_t start_tick = 0;
 
-#define NEVENT 100
-#define THRESHOLD 1000
-#define RECORDTHRESH 3000
+static constexpr auto NEVENT = 100;
+static constexpr auto THRESHOLD = 1000;
+static constexpr auto RECORDTHRESH = 3000;
 
 /* Attempt to see how much time is used by timer interrupt */
-static void callibrate(int verbose) {
+static void calibrate(bool verbose = false) {
   double oldt;
   struct tms t;
   clock_t oldc;
@@ -222,11 +225,9 @@ static void callibrate(int verbose) {
   if (verbose) printf("Setting cyc_per_tick to %f\n", cyc_per_tick);
 }
 
-static clock_t start_tick = 0;
-
 void start_comp_counter_tod() {
   struct tms t;
-  if (cyc_per_tick == 0.0) callibrate(0);
+  if (cyc_per_tick == 0.0) calibrate();
   times(&t);
   start_tick = t.tms_utime;
   start_counter_tod();
@@ -247,34 +248,26 @@ double get_comp_counter_tod() {
   return ctime;
 }
 
-double fcyc2_full_tod(test_funct testFnc, int param1, int param2,
-                      bool shouldFlushCache, int k, double epsilon,
-                      int maxSamples, bool compensate) {
-  double result;
-  init_sampler(k, maxSamples);
-  if (compensate) {
+double fcyc2_full_tod(TestFncT testFnc, int param1, int param2,
+                      const TestParams &params) {
+  init_sampler(params);
+  if (params.compensate) {
     do {
-      double cyc;
-      if (shouldFlushCache) flushCache();
+      if (params.shouldFlushCache) flushCache();
       start_comp_counter_tod();
       testFnc(param1, param2);
-      cyc = get_comp_counter_tod();
-      add_sample(cyc, k);
-    } while (!has_converged(k, epsilon, maxSamples) &&
-             sampleCount < maxSamples);
+      add_sample(get_comp_counter_tod(), params.k);
+    } while (!has_converged(params) && sampleCount < params.maxSamples);
   } else {
     do {
-      double cyc;
-      if (shouldFlushCache) flushCache();
+      if (params.shouldFlushCache) flushCache();
       start_counter_tod();
       testFnc(param1, param2);
-      cyc = get_counter_tod();
-      add_sample(cyc, k);
-    } while (!has_converged(k, epsilon, maxSamples) &&
-             sampleCount < maxSamples);
+      add_sample(get_counter_tod(), params.k);
+    } while (!has_converged(params) && sampleCount < params.maxSamples);
   }
-  debugPrint(k);
-  result = values[0];
+  debugPrint(params.k);
+  double result = values[0];
   if constexpr (!KEEP_VALS) {
     free(values);
     values = nullptr;
@@ -282,8 +275,10 @@ double fcyc2_full_tod(test_funct testFnc, int param1, int param2,
   return result;
 }
 
-double fcyc2_tod(test_funct testFnc, int param1, int param2,
+double fcyc2_tod(TestFncT testFnc, int param1, int param2,
                  bool shouldFlushCache) {
-  return fcyc2_full_tod(testFnc, param1, param2, shouldFlushCache, 3, 0.01, 20,
-                        false);
+  TestParams params;
+  params.shouldFlushCache = shouldFlushCache;
+  params.maxSamples = 20;
+  return fcyc2_full_tod(testFnc, param1, param2, params);
 }

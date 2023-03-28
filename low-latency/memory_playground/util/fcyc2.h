@@ -4,12 +4,7 @@
 /* Find number of cycles used by function that takes 2 arguments */
 
 /* Function to be tested takes two integer arguments */
-typedef int (*test_funct)(int, int);
-
-/* Compute time used by function f  */
-double fcyc2(test_funct f, int param1, int param2, bool shouldFlushCache);
-
-/*********  These routines are used to help with the analysis *********/
+typedef int (*TestFncT)(int, int);
 
 /*
 Parameters:
@@ -17,28 +12,22 @@ Parameters:
   epsilon: What is tolerance
   maxSamples: How many samples until give up?
 */
+struct TestParams {
+  bool shouldFlushCache = false;
+  int k = 3;
+  double epsilon = 0.01;
+  int maxSamples = 20;
+  bool compensate = false;
+};
 
-/* Full version of fcyc with control over parameters */
-double fcyc2_full(test_funct f, int param1, int param2, bool shouldFlushCache, int k,
-                  double epsilon, int maxSamples, bool compensate);
+/* Compute time used by function f */
+double fcyc2(TestFncT f, int param1, int param2, bool shouldFlushCache);
+double fcyc2_full(TestFncT f, int param1, int param2,
+                  const TestParams& params);
 
-/* Get current minimum */
-double get_min();
 
-/* What is convergence status for k minimum measurements within epsilon
-   Returns 0 if not converged, #samples if converged, and -1 if can't
-   reach convergence
-*/
+/*************  Use time of day (tod) as clocking methods *****************/
 
-int has_converged(int k, double epsilon, int maxSamples);
-
-/* What is error of current measurement */
-double err(int k);
-
-/*************  Try other clocking methods *****************/
-
-/* Full version that uses the time of day clock */
-double fcyc2_full_tod(test_funct f, int param1, int param2, bool shouldFlushCache,
-                      int k, double epsilon, int maxSamples, bool compensate);
-
-double fcyc2_tod(test_funct f, int param1, int param2, bool shouldFlushCache);
+double fcyc2_tod(TestFncT f, int param1, int param2, bool shouldFlushCache);
+double fcyc2_full_tod(TestFncT f, int param1, int param2,
+                      const TestParams& params);

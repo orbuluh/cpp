@@ -11,10 +11,10 @@ https://www.cs.cmu.edu/afs/cs/academic/class/15213-f05/code/mem/mountain
 #include "util/clock.h" /* routines to access the cycle counter */
 #include "util/fcyc2.h" /* measurement routines */
 
-#define MINBYTES (1 << 14) /* First working set size */
-#define MAXBYTES (1 << 27) /* Last working set size */
-#define MAXSTRIDE 15       /* Stride x8 bytes */
-#define MAXELEMS MAXBYTES / sizeof(long)
+static constexpr auto MINBYTES = (1 << 14); /* First working set size */
+static constexpr auto MAXBYTES = (1 << 27); /* Last working set size */
+static constexpr auto MAXSTRIDE = 15;       /* Stride x8 bytes */
+static constexpr auto MAXELEMS = MAXBYTES / sizeof(long);
 
 namespace memory_mountain {
 
@@ -83,9 +83,14 @@ int memReadTest(int numOfElems, int stride) {
 }
 
 /* run - Run memReadTest(numOfElems, stride) and return read throughput (MB/s).
- *  "size" is in bytes
- *  "stride" is in array elements
+ *  `size` is in bytes
+ *  `stride` is in array elements
  *  Mhz is CPU clock frequency in Mhz.
+ *
+ *  Expect that:
+ *  - Smaller values of `size` result in a smaller working set size, and thus
+ *    better temporal locality.
+ *  - Smaller values of `stride` result in better spatial locality.
  */
 double measureThroughput(int size, int stride, double Mhz) {
   const int numOfElems = size / sizeof(double);
