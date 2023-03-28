@@ -8,9 +8,11 @@ project(memory_exp VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+add_subdirectory(util)
+
 add_executable(memory_exp main.cpp)
 
-#target_link_libraries(memory_exp LINK_PUBLIC ${EXTRA_LIBS})
+target_link_libraries(memory_exp LINK_PUBLIC util)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
