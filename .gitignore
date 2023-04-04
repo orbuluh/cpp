@@ -36,6 +36,7 @@ build/**
 **/build/**
 CMakeFiles/**
 **CMakeFiles/**
+**/Testing/**
 
 # vscode
 .cache/**
