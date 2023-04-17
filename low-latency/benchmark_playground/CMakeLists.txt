@@ -1,6 +1,8 @@
 set(CMAKE_C_COMPILER    "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER  "/usr/bin/clang++")
 
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -mavx2")
+
 cmake_minimum_required(VERSION 3.14)
 project(BMPlayGround VERSION 0.1.0)
 
@@ -25,11 +27,11 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 FetchContent_MakeAvailable(googlebenchmark)
 
+find_package(TBB REQUIRED)
 
 #option(BENCHMARK_DOWNLOAD_DEPENDENCIES "Allow the downloading and in-tree building of unmet dependencies" ON)
 add_executable(BMPlayGround main.cpp)
-target_link_libraries(BMPlayGround benchmark::benchmark gtest)
-#target_link_libraries(BMPlayGround LINK_PUBLIC ${EXTRA_LIBS})
+target_link_libraries(BMPlayGround benchmark::benchmark gtest TBB::tbb)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

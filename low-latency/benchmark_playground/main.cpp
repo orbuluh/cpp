@@ -8,7 +8,9 @@
 //#include "cache_behavior_item_6.h"
 //#include "cache_behavior_item_7.h"
 //#include "concurrency_comp.h"
-#include "atomic_sharing.h"
+//#include "atomic_sharing.h"
+#include "std_parallel_algo.h"
+//#include "simd_ops.h"
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // NOTE: some of the benchmark is using large array. If you run and getting
@@ -16,6 +18,5 @@
 // small (default ~8MB), run `ulimit -s` to check, and run `ulimit -s unlimited`
 // to loose the constraint!
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 
 BENCHMARK_MAIN();
