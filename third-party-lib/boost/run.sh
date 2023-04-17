@@ -8,5 +8,5 @@ if [ ! -d "$bld_folder" ]; then
 fi
 cd "$cur_dir"
 cmake --build build
-echo "execute...\nvvvvvvvvvvvvv\n"
+echo "---------------------------"
 ./build/playground

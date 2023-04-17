@@ -7,8 +7,9 @@ namespace opt = boost::program_options;
 using UnknownOptionException = boost::wrapexcept<boost::program_options::unknown_option>;
 
 void runBoostDemo() {
+    boost_asio::demo();
     //boost_any::demo();
-    boost_msm::demo();
+    //boost_msm::demo();
 }
 
 int main(int argc, char* argv[]) {
