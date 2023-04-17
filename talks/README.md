@@ -12,6 +12,7 @@
 - [CppCon 2018] 105 STL Algorithms in Less Than an Hour - Jonathan Boccara [:cinema:](https://youtu.be/2olsGf6JIkU) [:scroll:](cppcon-2018/105_stl_algorithms.md)
 - [CppCon 2022] The Hidden Performance Price of C++ Virtual Functions - Ivica Bogosavljevic  [:cinema:](https://youtu.be/n6PvvE_tEPk) [:scroll:](cppcon-2022/hidden_performance_price_of_virtual.md)
 - [CppCon 2019] Back to Basics: Understanding Value Categories - Ben Saks [:cinema:](https://youtu.be/XS2JddPq7GQ) [:scroll:](cppcon-2019/understanding_value_categories.md)
+
 ## Software design
 
 - [CppCon 2020] Breaking Dependencies: The SOLID Principles - Klaus Iglberger [:cinema:](https://youtu.be/Ntraj80qN2k) [:scroll:](cppcon-2020/breaking_deps_the_solid_principles.md)
@@ -28,7 +29,6 @@
 - [CppCon 2022] Breaking Dependencies - C++ Type Erasure - The Implementation Details - Klaus Iglberger [:cinema:](https://youtu.be/qn6OqefuH08) [:scroll:](cppcon-2022/type_erasure_implementation_details.md)
 - [CppCon 2020] Dynamic Polymorphism with Metaclasses and Code Injection - Sy Brand [:cinema:](https://youtu.be/8c6BAQcYF_E) [:scroll:](cppcon-2020/dynamic_polymorphism_with_metaclasses_and_code_injection.md)
 
-
 ## GDB
 
 - [CppNow 2018] Debugging Linux C++ - Greg Law [:cinema:](https://youtu.be/V1t6faOKjuQ) [:scroll:](cppcon-2018/debugging_linux_cpp.md)
@@ -38,31 +38,34 @@
 - [CppNow 2017] Effective CMake - Daniel Pfeifer [:cinema:](https://youtu.be/bsXLMQ6WgIk) [:scroll:](misc/effective_cmake.md)
 - [CppCon 2017] Using Modern CMake Patterns to Enforce a Good Modular Design - Mathieu Ropert [:cinema:](https://youtu.be/eC9-iRN2b04) [:scroll:](cppcon-2017/modern_cmake_patterns.md)
 
-
 ## Compile
 
 - [CppCon 2021] Back to Basics: Compiling and Linking - Ben Saks [:cinema:](https://youtu.be/cpkDQaYttR4) [:scroll:](cppcon-2021/compiling_and_linking.md)
+
+
+## Ranges
+
+- [Meeting C++ 2022] Belle Views on C++ Ranges, their Details and the Devil - Nico Josuttis [:cinema:](https://youtu.be/O8HndvYNvQ4) [:scroll:](misc/belle_views_on_cpp_ranges.md)
+
 
 ## Embedded system
 
 - [CppCon 2020] Memory-Mapped Devices as Objects - Dan Saks [:cinema:](https://youtu.be/uwzuAGtAEFk) [:scroll:](cppcon-2020/memory_mapped_devices_as_objects.md)
 
-
 ## Philosophical (?)
 
 - [CppCon 2015] Value Semantics: It ain't about the syntax!, Part I - John Lakos [:cinema:](https://youtu.be/W3xI1HJUy7Q) [:scroll:](cppcon-2015/value_semantics_aint_about_the_syntax_part_1.md)
 
-
 ---
 
 TODOs
+
 - [CppCon 2019] Back to Basics: Object-Oriented Programming - Jon Kalb [:cinema:](https://youtu.be/32tDTD9UJCE)
 - [GoingNative 2013] Inheritance Is The Base Class of Evil - Sean Parent [:cinema:](https://youtu.be/2bLkxj6EVoM)
 - [CppCon 2020] Dynamic Polymorphism with Metaclasses and Code Injection - Sy Brand [:cinema:](https://youtu.be/8c6BAQcYF_E)
 - [CppCon 2019] What is C++ - Chandler Carruth, Titus Winters [:cinema:](https://youtu.be/LJh5QCV4wDg)
 - [CppCon 2019] “There Are No Zero-cost Abstractions” - Chandler Carruth [:cinema:](https://youtu.be/rHIkrotSwcc)
 - [CppCon 2019] “Algorithm Intuition (part 1 of 2)” - Conor Hoekstra [:cinema:](https://youtu.be/pUEnO6SvAMo)
-
 
 ---
 
