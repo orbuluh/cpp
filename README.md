@@ -12,15 +12,11 @@
 
 [Low latency topics](low-latency/README.md)
 
-[Template (meta) related](template-meta/README.md)
+[Compile time techniques](compile-time/README.md)
 
 ---
 
-[Boost quick reference](boost/README.md)
-
 [Third party lib quick reference](third-party-lib/README.md)
-
-[GNU playground](gnu/README.md)
 
 ---
 
