@@ -562,3 +562,63 @@ std::binary_semaphore = std::counting_semaphore<1>;
 
 
 ### Example: A bounded buffer using semaphores
+
+- (Not circular but a fixed size queue)
+- The `do_push` function is a helper method to add items to the buffer.
+  - It first acquires an empty slot using `n_empty_slots_.acquire()`, which might block if there are no available empty slots.
+  - The item is then added to the buffer at the current write position, and the write position is updated accordingly.
+  - If an exception occurs during the process, the empty slot is released with `n_empty_slots_.release()` before re-throwing the exception.
+  - Finally, `n_full_slots_`.release() is called to indicate that there is one more full slot in the buffer.
+
+
+- The `pop` function is responsible for retrieving an item from the buffer.
+  - It first acquires a full slot using `n_full_slots_.acquire()`, potentially blocking if there are no full slots available.
+  - The item is then moved from the buffer at the current read position, and the read position is updated accordingly.
+  - If an exception occurs, the full slot is released with `n_full_slots_.release()` before re-throwing the exception.
+  - Finally, `n_empty_slots_.release()` is called to indicate that there is one more empty slot in the buffer. The function returns the retrieved item.
+
+```cpp
+template <class T, int N>
+class BoundedBuffer {
+  std::array<T, N> buf_;
+  std::size_t read_pos_{};
+  std::size_t write_pos_{};
+  std::mutex m_;
+  std::counting_semaphore<N> n_empty_slots_{N};
+  std::counting_semaphore<N> n_full_slots_{0};
+  void do_push(auto&& item) {
+    // Take one of the empty slots (might block), consumer in pop might wake it
+    n_empty_slots_.acquire();                 // <------------------------------
+    try {
+      auto lock = std::unique_lock{m_};
+      buf_[write_pos_] = std::forward<decltype(item)>(item);
+      write_pos_ = (write_pos_ + 1) % N;
+    } catch (...) {
+      n_empty_slots_.release();               // <------------------------------
+      throw;
+    }
+    // Increment and signal consumer in pop() that there is one more full slot
+    n_full_slots_.release();                  // <------------------------------
+  }
+
+ public:
+  void push(const T& item) { do_push(item); }
+  void push(T&& item) { do_push(std::move(item)); }
+  auto pop() {
+    // Take one of the full slots (might block)
+    n_full_slots_.acquire();                  // <------------------------------
+    auto item = std::optional<T>{};
+    try {
+      auto lock = std::unique_lock{m_};
+      item = std::move(buf_[read_pos_]);
+      read_pos_ = (read_pos_ + 1) % N;
+    } catch (...) {
+      n_full_slots_.release();                // <------------------------------
+      throw;
+    }
+    // Increment and signal do_push that there is one more empty slot
+    n_empty_slots_.release();                 // <------------------------------
+    return std::move(*item);
+  }
+};
+```

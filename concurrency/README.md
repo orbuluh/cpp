@@ -1,8 +1,10 @@
-# [Concurrency in Action (CIA)](https://www.manning.com/books/c-plus-plus-concurrency-in-action) notes
+# Concurrency
+
+## [Concurrency in Action (CIA)](https://www.manning.com/books/c-plus-plus-concurrency-in-action) notes
 
 - [Ch2. Managing threads](CIA/ch2.managing_threads/README.md)
 
-# Random reads
+## Random reads
 
 - [Common mistakes](common_mistakes.md)
   - [Deadlock](deadlock.md)
@@ -10,3 +12,8 @@
 - [Memory model](memory_model.md)
 - [Memory order](memory_order.md)
 - [Memory barrier](memory_barrier.md)
+
+
+## [C++ High Performance](https://www.amazon.com/High-Performance-Master-optimizing-functioning/dp/1839216549)
+
+- [Ch. 11: Concurrency](CHP/README.md)
