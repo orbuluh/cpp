@@ -22,6 +22,7 @@
 - [`std::stringstream`](stingstream.md)
 - [`std::chrono`](chrono_ops.md)
 - [`std::regex`](regex.md)
+- [`std::initializer_list`](initializer.md)
 
 ### `algorithm`
 
