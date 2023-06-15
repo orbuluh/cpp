@@ -1,18 +1,20 @@
 # [C++: The more I learn, the less I know](basics/README.md)
 
-[Core guidelines notes](core-guidelines/README.md)
+## :scroll:Notes
 
-[C++ weekly notes](c++weekly/README.md)
-
-[C++ online talks notes](talks/README.md)
+- [Core guidelines](core-guidelines/README.md)
+- [C++ weekl](c++weekly/README.md)
+- [C++ online talks](talks/README.md)
 
 ---
 
-[Concurrency](concurrency/README.md)
+## Specific topics
 
-[Low latency topics](low-latency/README.md)
+- [Concurrency](concurrency/README.md)
+- [Low latency topics](low-latency/README.md)
+- [Compile time techniques](compile-time/README.md)
+- [C++17 features](cpp-17/README.md)
 
-[Compile time techniques](compile-time/README.md)
 
 ---
 
