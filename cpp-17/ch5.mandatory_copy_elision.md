@@ -1,5 +1,13 @@
 # [C++17 - The complete guide, Ch 5: Mandatory Copy Elision or Passing  Unmaterialized Objects](http://www.cppstd17.com/index.html)
 
+> GPT: Copy elision and return value optimization (RVO) are related concepts but not exactly the same.
+> - Copy elision refers to a compiler optimization technique where the creation of unnecessary temporary objects during certain value computations is avoided. In other words, it allows the compiler to omit the copy or move operations that would typically be required to construct or assign objects in certain scenarios. Copy elision can occur in various situations, including function return values, object initialization, and exception handling.
+> - Return value optimization (RVO), on the other hand, specifically focuses on optimizing the construction of objects returned from functions. It is a specific form of copy elision that eliminates the need for copying or moving the return value of a function by directly constructing the object in its final destination. RVO is an optimization technique aimed at improving the performance of function return operations by avoiding unnecessary object copies or moves.
+> - So, while copy elision is a broader concept encompassing various optimizations, RVO is a specific type of copy elision that optimizes function return values. In practice, RVO is one of the most common and well-known forms of copy elision, as it can significantly reduce the overhead associated with returning objects from functions.
+> - It's worth noting that C++17 introduced a mandatory form of copy elision known as "mandatory copy elision." This allows the omission of certain copy or move operations even when they have observable side effects, under specific circumstances defined by the standard. This further enhances the potential for optimizations like RVO in compliant C++17 (and later) compilers.
+
+---
+
 - Since the first standard, C++ has permitted the omission (elision) of certain copy operations even if this might impact the behavior of a program (e.g., skipping a print statement in the copy constructor).
 - One such case is when a temporary object is used to initialize a new object. This happens especially when **a temporary is passed to or returned from a function by value.**
 
