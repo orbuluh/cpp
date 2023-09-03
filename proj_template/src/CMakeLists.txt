@@ -1,5 +1,8 @@
-add_executable(${PROJECT_NAME} main.cpp)
+set(LIB_NAME template_lib)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ../util)
+add_library(${LIB_NAME} template_lib.cpp)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE util)
+target_include_directories(${LIB_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/util)
+target_include_directories(${LIB_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include)
+
+target_link_libraries(${LIB_NAME} PRIVATE util)

@@ -6,6 +6,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/release")
 
 enable_testing()
 
-add_subdirectory(src)
 add_subdirectory(util)
+add_subdirectory(src)
+add_subdirectory(app)
 add_subdirectory(test)
