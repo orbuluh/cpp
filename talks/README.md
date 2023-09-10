@@ -47,6 +47,11 @@
 
 - [Meeting C++ 2022] Belle Views on C++ Ranges, their Details and the Devil - Nico Josuttis [:cinema:](https://youtu.be/O8HndvYNvQ4) [:scroll:](misc/belle_views_on_cpp_ranges.md)
 
+## Reflections
+
+- [CppCon 2022] Reflection in C++ - Past, Present, and Hopeful Future - Andrei Alexandrescu [:cinema:](https://youtu.be/YXIVw6QFgAI?si=doyKfj0Z2vX_M5DS) [:scroll:](cppcon-2022/reflection_in_cpp.md)
+
+
 
 ## Embedded system
 
