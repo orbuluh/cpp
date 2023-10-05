@@ -9,4 +9,5 @@
 - [Ch 6: Lambda Extensions](ch6.lambda_extention.md)
 - [Ch 7: New Attributes and Attribute Features](ch7.new_attributes.md)
 - [Ch 9: Class Template Argument Deduction](ch9.class_template_argument_deduction.md)
+- [Ch 10: Compile-Time if](ch10.compile_time_if.md)
 - [Ch 25: Other Utility Functions and Algorithms](ch25.other_utility_n_algos.md)
