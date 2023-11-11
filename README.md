@@ -1,10 +1,9 @@
 # [C++: The more I learn, the less I know](basics/README.md)
 
-## :scroll:Notes
+## [:scroll:Notes](https://js-notes.vercel.app/cpp)
 
 - [Core guidelines](core-guidelines/README.md)
 - [C++ weekl](c++weekly/README.md)
-- [C++ online talks](talks/README.md)
 
 ---
 
