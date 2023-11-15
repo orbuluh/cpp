@@ -1,11 +1,6 @@
 # Low latency topics
 
-## Notes
-
-- [Benchmark userguide](notes/benchmark_userguide.md)
-- [Cache effects](notes/cache_effects.md)
-  - [Topic: Cache consistency and false sharing](notes/false_sharing.md)
-- [SIMD Vectorization](notes/simd_vectorization.md)
+[Notes](https://js-notes.vercel.app/cpp/topics/low_latency)
 
 ## Benchmark playground
 
