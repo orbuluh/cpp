@@ -49,18 +49,18 @@ include(FetchContent)
 find_package(Boost REQUIRED)
 # Adds Boost::boost
 
-# Formatting library
-FetchContent_Declare(
-  fmtlib
-  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-  GIT_TAG 5.3.0)
-FetchContent_MakeAvailable(fmtlib)
-# Adds fmt::fmt
-
-# The compiled library code is here
+find_package(fmt QUIET)
+if(NOT fmt_FOUND)
+  # If the system library is not found, use FetchContent to download it
+  FetchContent_Declare(
+    fmtlib
+    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+    GIT_TAG 5.3.0)
+  FetchContent_MakeAvailable(fmt)
+endif()
 
 add_subdirectory(util)
-add_subdirectory(src)
+add_subdirectory(some_lib)
 
 # The executable code is here
 
