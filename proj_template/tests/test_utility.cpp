@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "ch3_typelists/typelists.hpp"
 #include "util/utility.h"
 
 TEST(utility_test, get_value) { EXPECT_EQ(util::get_value(), 42); }
