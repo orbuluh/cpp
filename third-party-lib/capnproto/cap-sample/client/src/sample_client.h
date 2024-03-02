@@ -5,7 +5,7 @@
 #include <thread>
 #include <vector>
 
-#include "interface/sample.capnp.h"
+#include "sample.capnp.h"
 
 /**
  *  @class SampleClient

@@ -3,7 +3,7 @@
 
 #include <future>
 
-#include "interface/sample.capnp.h"
+#include "sample.capnp.h"
 #include "sample_server.h"
 
 /**

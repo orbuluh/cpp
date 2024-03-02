@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "interface/sample.capnp.h"
+#include "sample.capnp.h"
 
 using Client2ServerEvent = Sample::Server;
 
