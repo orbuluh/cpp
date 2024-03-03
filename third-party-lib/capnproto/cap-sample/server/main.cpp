@@ -18,10 +18,6 @@ void dummy_internal_function(SampleServer* server) {
   }
 }
 
-/**
- * @fn main
- * @brief Entry point.
- */
 int main() {
   auto server = new SampleServer();
   std::thread another_thread([server]() { dummy_internal_function(server); });

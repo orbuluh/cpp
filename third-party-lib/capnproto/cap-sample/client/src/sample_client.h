@@ -29,16 +29,7 @@ class SampleClient {
   };
 
  public:
-  /**
-   * @fn SampleClient
-   * @brief Constructor
-   */
   SampleClient();
-
-  /**
-   * @fn ~SampleClient
-   * @brief Destructor
-   */
   ~SampleClient();
 
   /**
