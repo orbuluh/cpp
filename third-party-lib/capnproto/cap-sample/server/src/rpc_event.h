@@ -11,7 +11,7 @@ using Client2ServerEvent = Sample::Server;
  *  @class Server2ClientEvent
  *  @brief This class defines the event interface from server to client.
  *  @details All the interfaces defined at this class have to implement by both
- * `RPCEvent` and `SampleServer`.
+ * `RPCServer` and `SampleServer`.
  */
 class Server2ClientEvent {
  public:
@@ -23,14 +23,14 @@ class Server2ClientEvent {
 };
 
 /**
- *  @class RPCEvent
+ *  @class RPCServer
  *  @brief This class defines the event interface from server to client.
  */
-class RPCEvent : public Client2ServerEvent,
-                 public Server2ClientEvent,
-                 public kj::Refcounted {
+class RPCServer : public Client2ServerEvent,
+                  public Server2ClientEvent,
+                  public kj::Refcounted {
  public:
-  RPCEvent();
+  RPCServer();
   kj::Promise<void> initialize(InitializeContext context);
   kj::Promise<void> subscribe(SubscribeContext context);
 

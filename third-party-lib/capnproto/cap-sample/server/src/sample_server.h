@@ -15,7 +15,7 @@ class SampleServer : public Server2ClientEvent {
   virtual void push_message_request();
 
  private:
-  kj::Own<RPCEvent> m_RPCEventImpl;
+  kj::Own<RPCServer> m_RPCServerImpl;
   kj::Maybe<const kj::Executor&> m_AsyncExecutor;
   kj::AsyncIoContext m_AsynIoContext;
 };

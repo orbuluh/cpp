@@ -34,7 +34,7 @@ const static std::vector<int> TARGET_SIGNALS = {
 };
 
 SampleServer::SampleServer()
-    : m_RPCEventImpl(kj::refcounted<RPCEvent>()),
+    : m_RPCServerImpl(kj::refcounted<RPCServer>()),
       m_AsynIoContext(kj::setupAsyncIo()) {
   for (auto signal : TARGET_SIGNALS) {
     kj::UnixEventPort::captureSignal(signal);
@@ -42,7 +42,7 @@ SampleServer::SampleServer()
 }
 
 void SampleServer::start(std::string server_adder) {
-  capnp::TwoPartyServer server(kj::addRef(*m_RPCEventImpl));
+  capnp::TwoPartyServer server(kj::addRef(*m_RPCServerImpl));
   m_AsyncExecutor = kj::getCurrentThreadExecutor();
   auto address = m_AsynIoContext.provider->getNetwork()
                      .parseAddress(server_adder)
@@ -76,6 +76,6 @@ void SampleServer::push_message_request() {
       std::cout << "executor does not live" << std::endl;
       return;
     }
-    val->executeSync([&]() { m_RPCEventImpl->push_message_request(); });
+    val->executeSync([&]() { m_RPCServerImpl->push_message_request(); });
   }
 }
