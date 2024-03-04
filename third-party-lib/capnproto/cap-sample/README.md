@@ -2,8 +2,6 @@
 
 ## [capnproto rpc](https://capnproto.org/cxxrpc.html)
 
-## [capnproto rpc](https://capnproto.org/cxxrpc.html)
-
 - While multiple threads are allowed, each thread must have its own event loop.
 - KJ discourages fine-grained interaction between threads as synchronization is expensive and error-prone.
 - threads are encouraged to communicate through Cap’n Proto RPC.

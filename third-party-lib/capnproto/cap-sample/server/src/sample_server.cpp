@@ -4,7 +4,8 @@
 #include <kj/async-io.h>
 #include <kj/async-unix.h>
 
-#include <numeric>
+#include <iostream>
+#include <numeric>  // for std::accumulate
 #include <vector>
 
 const static std::vector<int> TARGET_SIGNALS = {
@@ -33,20 +34,18 @@ const static std::vector<int> TARGET_SIGNALS = {
     // SIGPROF,
 };
 
-SampleServer::SampleServer()
-    : m_RPCServerImpl(kj::refcounted<RPCServer>()),
-      m_AsynIoContext(kj::setupAsyncIo()) {
+SampleServer::SampleServer() : asyncIoContext_(kj::setupAsyncIo()) {
   for (auto signal : TARGET_SIGNALS) {
     kj::UnixEventPort::captureSignal(signal);
   }
 }
 
 void SampleServer::start(std::string server_adder) {
-  capnp::TwoPartyServer server(kj::addRef(*m_RPCServerImpl));
-  m_AsyncExecutor = kj::getCurrentThreadExecutor();
-  auto address = m_AsynIoContext.provider->getNetwork()
+  capnp::TwoPartyServer server(kj::addRef(*this));
+  asyncExecutor_ = kj::getCurrentThreadExecutor();
+  auto address = asyncIoContext_.provider->getNetwork()
                      .parseAddress(server_adder)
-                     .wait(m_AsynIoContext.waitScope);
+                     .wait(asyncIoContext_.waitScope);
   auto listener = address->listen();
   auto listenPromise = server.listen(*listener);
 
@@ -57,25 +56,51 @@ void SampleServer::start(std::string server_adder) {
                       kj::mv(never_done_casted),
                       [&](kj::Promise<siginfo_t>& _on_signal, int signal) {
                         return _on_signal.exclusiveJoin(
-                            m_AsynIoContext.unixEventPort.onSignal(signal));
+                            asyncIoContext_.unixEventPort.onSignal(signal));
                       })
           .then([](siginfo_t a) {
             std::cout << a.si_signo << std::endl;
             return a;
           });
-  on_signal.wait(m_AsynIoContext.waitScope);
+  on_signal.wait(asyncIoContext_.waitScope);
 }
 
-void SampleServer::taskFailed(kj::Exception&& exception) {
-  kj::throwFatalException(kj::mv(exception));
-}
-
-void SampleServer::push_message_request() {
-  KJ_IF_MAYBE (val, m_AsyncExecutor) {
-    if (val->isLive() == false) {
+void SampleServer::broadcastEvents() {
+  KJ_IF_MAYBE (executor_ptr, asyncExecutor_) {
+    if (!executor_ptr->isLive()) {
       std::cout << "executor does not live" << std::endl;
       return;
     }
-    val->executeSync([&]() { m_RPCServerImpl->push_message_request(); });
+    executor_ptr->executeSync([this]() { this->broadcastEventsImpl(); });
+  }
+}
+
+kj::Promise<void> SampleServer::initialize(InitializeContext context) {
+  std::cout << "[SERVER]" << __PRETTY_FUNCTION__ << " called" << std::endl;
+  return kj::READY_NOW;
+}
+
+kj::Promise<void> SampleServer::subscribe(SubscribeContext context) {
+  std::cout << "[SERVER]" << __PRETTY_FUNCTION__ << " called" << std::endl;
+  try {
+    auto subscriber = context.getParams().getSubscriber();
+    subscribed_clients_.add(subscriber);
+  } catch (kj::Exception e) {
+    std::cout << e.getDescription().cStr() << std::endl;
+  }
+
+  return kj::READY_NOW;
+}
+
+void SampleServer::broadcastEventsImpl() {
+  std::cout << "[SERVER]" << __PRETTY_FUNCTION__ << " called" << std::endl;
+
+  // If called before running PRC server, m_RPCServerHandler has no subscribers.
+  // So It's unnecessary to check running.
+  for (auto subscriber : subscribed_clients_) {
+    std::cout << "[SERVER]" << __PRETTY_FUNCTION__ << " called a subscriber"
+              << std::endl;
+    auto request = subscriber.pushMessageRequest();
+    auto result = request.send();
   }
 }

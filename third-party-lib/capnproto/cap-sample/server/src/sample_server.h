@@ -1,21 +1,30 @@
+#pragma once
 
 #include <kj/async-io.h>
+#include <unistd.h>
 
-#include "rpc_event.h"
+#include <string>
 
-class SampleServer : public Server2ClientEvent {
+#include "sample.capnp.h"
+
+class SampleServer : public Sample::Server, public kj::Refcounted {
  public:
   SampleServer();
   void start(std::string server_adder);
 
  public:
-  virtual void taskFailed(kj::Exception&& exception);
+  // from Sample::Server
+  kj::Promise<void> initialize(InitializeContext context);
+  kj::Promise<void> subscribe(SubscribeContext context);
 
  public:
-  virtual void push_message_request();
+  void broadcastEvents();
 
  private:
-  kj::Own<RPCServer> m_RPCServerImpl;
-  kj::Maybe<const kj::Executor&> m_AsyncExecutor;
-  kj::AsyncIoContext m_AsynIoContext;
+  void broadcastEventsImpl();
+
+ private:
+  kj::Vector<Sample::Subscriber::Client> subscribed_clients_;
+  kj::Maybe<const kj::Executor&> asyncExecutor_;
+  kj::AsyncIoContext asyncIoContext_;
 };

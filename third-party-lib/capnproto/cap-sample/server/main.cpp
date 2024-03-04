@@ -1,30 +1,17 @@
-#include <capnp/ez-rpc.h>
-#include <kj/async-io.h>
+#include <atomic>
 
-#include <future>
-
-#include "sample.capnp.h"
 #include "sample_server.h"
 
-/**
- * @fn dummy_internal_function
- * @brief A dummy function for running any server features.
- */
-bool is_continue = true;
-void dummy_internal_function(SampleServer* server) {
-  while (is_continue) {
-    server->push_message_request();
-    sleep(1);
-  }
-}
-
 int main() {
-  auto server = new SampleServer();
-  std::thread another_thread([server]() { dummy_internal_function(server); });
+  std::atomic<bool> keep_run = true;
+  auto server = kj::refcounted<SampleServer>();
+  kj::Thread another_thread([&]() {
+    while (keep_run) {
+      server->broadcastEvents();
+      sleep(1);
+    }
+  });
   server->start("unix:sample.sock");
-  is_continue = false;
-  another_thread.join();
-  delete server;
-
+  keep_run = false;
   return 0;
 }
