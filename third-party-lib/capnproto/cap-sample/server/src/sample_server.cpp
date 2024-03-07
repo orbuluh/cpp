@@ -34,17 +34,18 @@ const static std::vector<int> TARGET_SIGNALS = {
     // SIGPROF,
 };
 
-SampleServer::SampleServer() : asyncIoContext_(kj::setupAsyncIo()) {
+SampleServer::SampleServer()
+    : asyncIoContext_(kj::setupAsyncIo()),
+      asyncExecutor_(kj::getCurrentThreadExecutor()) {
   for (auto signal : TARGET_SIGNALS) {
     kj::UnixEventPort::captureSignal(signal);
   }
 }
 
-void SampleServer::start(std::string server_adder) {
+void SampleServer::start(std::string_view server_adder) {
   capnp::TwoPartyServer server(kj::addRef(*this));
-  asyncExecutor_ = kj::getCurrentThreadExecutor();
   auto address = asyncIoContext_.provider->getNetwork()
-                     .parseAddress(server_adder)
+                     .parseAddress(server_adder.data())
                      .wait(asyncIoContext_.waitScope);
   auto listener = address->listen();
   auto listenPromise = server.listen(*listener);

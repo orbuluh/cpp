@@ -3,14 +3,14 @@
 #include <kj/async-io.h>
 #include <unistd.h>
 
-#include <string>
+#include <string_view>
 
 #include "sample.capnp.h"
 
 class SampleServer : public Sample::Server, public kj::Refcounted {
  public:
   SampleServer();
-  void start(std::string server_adder);
+  void start(std::string_view server_adder);
 
  public:
   // from Sample::Server
