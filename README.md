@@ -2,8 +2,7 @@
 
 ## [:scroll:Notes](https://js-notes.vercel.app/cpp)
 
-
-- [C++ weekl](c++weekly/README.md)
+- [C++ weekly](c++weekly/README.md)
 
 ---
 
@@ -14,7 +13,7 @@
 
 ---
 
-[Third party lib quick reference](third-party-lib/README.md)
+[Open source libs playground](open-source-lib/README.md)
 
 ---
 
