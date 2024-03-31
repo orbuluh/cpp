@@ -3,20 +3,30 @@
 #include <kj/debug.h>
 #include <math.h>
 
+#include <functional>
 #include <iostream>
 #include <thread>
 
 #include "protocol.capnp.h"
 
-class EventHandler final : public ClientHandle::Server {
-  // Implementation of the Feature1 Cap'n Proto interface.
+template <typename DataT>
+class OnDataHandler final : public DataSubscriberHandle<DataT>::Server,
+                            public kj::Refcounted {
  public:
-  kj::Promise<void> onServiceEvent(OnServiceEventContext context) override {
-    auto event = context.getParams().getEvent();
-    std::cout << "client receive event: " << event.getSomeString().cStr()
-              << '\n';
+  using RpcContext =
+      typename DataSubscriberHandle<DataT>::Server::OnSubscribedDataContext;
+  using DataHandlerT = std::function<void(RpcContext)>;
+  OnDataHandler(DataHandlerT&& callback)
+      : on_data_callback_(std::move(callback)) {}
+
+ public:
+  kj::Promise<void> onSubscribedData(RpcContext context) override {
+    on_data_callback_(context);
     return kj::READY_NOW;
   }
+
+ public:
+  DataHandlerT on_data_callback_;
 };
 
 int main(int argc, const char* argv[]) {
@@ -49,13 +59,43 @@ int main(int argc, const char* argv[]) {
 
   // The server exports a "bootstrap" capability implementing the
   // `AddOneFeature` interface.
-  ServiceCommunication::Client service_handle =
-      client.bootstrap().castAs<ServiceCommunication>();
-  auto request = service_handle.makeSubscriptionRequest();
-  ClientHandle::Client client_handle(kj::heap<EventHandler>());
-  request.setClientHandle(client_handle);
-  auto response_promise = request.send();
-  response_promise.wait(waitScope);
+  DataProviderInterface::Client service_handle =
+      client.bootstrap().castAs<DataProviderInterface>();
+
+  //
+  auto foo_request = service_handle.makeSubscriptionRequest<FooData>();
+  foo_request.setDataType(DataType::FOO_DATA);
+
+  auto on_foo_data_handler =
+      kj::refcounted<OnDataHandler<FooData>>([](auto rpc_context) {
+        auto event = rpc_context.getParams().getDataFromPublisher();
+        std::cout << "client receive event: " << event.getFooString().cStr()
+                  << '\n';
+      });
+  typename DataSubscriberHandle<FooData>::Client self_foo_handle(
+      kj::addRef(*on_foo_data_handler));
+  foo_request.setSubscriberHandle(self_foo_handle);
+
+  auto foo_response_promise = foo_request.send();
+  foo_response_promise.wait(waitScope);
+  //
+  auto bar_request = service_handle.makeSubscriptionRequest<BarData>();
+  bar_request.setDataType(DataType::BAR_DATA);
+
+  auto on_bar_data_handler =
+      kj::refcounted<OnDataHandler<BarData>>([](auto rpc_context) {
+        auto event = rpc_context.getParams().getDataFromPublisher();
+        std::cout << "client receive event: " << event.getBarString().cStr()
+                  << '\n';
+      });
+  typename DataSubscriberHandle<BarData>::Client self_bar_handle(
+      kj::addRef(*on_bar_data_handler));
+  bar_request.setSubscriberHandle(self_bar_handle);
+
+  auto bar_response_promise = bar_request.send();
+  bar_response_promise.wait(waitScope);
+
+  //---------------------------------------------------------------
   kj::NEVER_DONE.wait(waitScope);
   return 0;
 }

@@ -5,5 +5,7 @@ project(cap-sample CXX)
 find_package(CapnProto CONFIG REQUIRED)
 
 add_subdirectory(protocol)
+
 add_subdirectory(simple-client)
+
 add_subdirectory(simple-server)

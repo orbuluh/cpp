@@ -8,31 +8,85 @@
 
 #include "protocol.capnp.h"
 
-class SampleService final : public ServiceCommunication::Server,
-                            public kj::Refcounted {
+class DataProvider final
+    : public DataProviderInterface::Server,
+      public kj::TaskSet::ErrorHandler,  // to handle fail send
+      public kj::Refcounted  // as capnp::TwoPartyServer would need a reference
+{
  public:
-  SampleService(kj::WaitScope& waitScopeFromMain,
-                kj::Own<kj::ConnectionReceiver>& listenerFromMain)
-      : waitScope_(waitScopeFromMain),
-        listener_(listenerFromMain),
-        executor_(kj::getCurrentThreadExecutor()) {}
+  DataProvider(kj::Own<kj::ConnectionReceiver>& listenerFromMain,
+               kj::WaitScope& waitScopeFromMain)
+      : listener_(listenerFromMain),
+        wait_scope_(waitScopeFromMain),
+        executor_(kj::getCurrentThreadExecutor()),
+        sent_promises_(*this) {}
 
+ private:
+  template <typename DataT>
+  auto GetDataHandle(MakeSubscriptionContext context) {
+    return std::move(context.getParams()
+                         .getSubscriberHandle()
+                         .castAs<DataSubscriberHandle<DataT>>());
+  }
+
+ public:
   kj::Promise<void> makeSubscription(MakeSubscriptionContext context) override {
-    clients_.add(context.getParams().getClientHandle());
-    std::cout << "received subscription\n";
+    auto data_type = context.getParams().getDataType();
+    switch (data_type) {
+      case DataType::FOO_DATA:
+        foo_clients_.add(GetDataHandle<FooData>(context));
+        break;
+      case DataType::BAR_DATA:
+        bar_clients_.add(GetDataHandle<BarData>(context));
+        break;
+      default:
+        std::cout << "Unknown data subscription request\n";
+    }
     return kj::READY_NOW;
   }
 
+ public:
+  void taskFailed(kj::Exception&& exception) override {
+    // you can see this when you close clients
+    (void)exception;
+    std::cout << "taskFailed triggers ...\n";
+  }
+
+ public:
   void start() {
     // Start the RPC server.
     std::thread t([this]() {
       while (true) {
-        executor_.executeSync([&]() {
-          for (auto& client : clients_) {
-            auto event_request = client.onServiceEventRequest();
-            event_request.getEvent().setSomeString("blbblaa");
-            auto event_promise = event_request.send();
-            // event_promise.wait(waitScope_);
+        executor_.executeSync([this]() {
+          for (auto& client : foo_clients_) {
+            auto event_request = client.onSubscribedDataRequest();
+            event_request.getDataFromPublisher().setFooString("foo");
+            sent_promises_.add(event_request.send().then(
+                [](auto resp) { (void)resp; },
+                [](auto&& exception) {
+                  std::cout
+                      << "Send failed: " << exception.getDescription().cStr()
+                      << '\n';
+                  std::cout << "failed to send Foo\n";
+                  // rethrow to trigger taskFailed for demonstration
+                  // you can also just do a subscriber clean up here
+                  kj::throwRecoverableException(kj::mv(exception));
+                }));
+          }
+          for (auto& client : bar_clients_) {
+            auto event_request = client.onSubscribedDataRequest();
+            event_request.getDataFromPublisher().setBarString("bar");
+            sent_promises_.add(event_request.send().then(
+                [](auto resp) { (void)resp; },
+                [](auto&& exception) {
+                  std::cout
+                      << "Send failed: " << exception.getDescription().cStr()
+                      << '\n';
+                  std::cout << "failed to send Bar\n";
+                  // rethrow to trigger taskFailed for demonstration
+                  // you can also just do a subscriber clean up here
+                  kj::throwRecoverableException(kj::mv(exception));
+                }));
           }
         });
 
@@ -43,14 +97,16 @@ class SampleService final : public ServiceCommunication::Server,
 
     capnp::TwoPartyServer server(kj::addRef(*this));
     // Run forever, accepting connections and handling requests.
-    server.listen(*listener_).wait(waitScope_);
-    t.join();
+    server.listen(*listener_).wait(wait_scope_);
   }
 
  private:
-  kj::Vector<ClientHandle::Client> clients_;
-  kj::WaitScope& waitScope_;
   kj::Own<kj::ConnectionReceiver>& listener_;
+  kj::Vector<DataSubscriberHandle<FooData>::Client> foo_clients_;
+  kj::Vector<DataSubscriberHandle<BarData>::Client> bar_clients_;
+  kj::WaitScope& wait_scope_;
+  kj::TaskSet sent_promises_;
+
   const kj::Executor& executor_;
 };
 
@@ -84,7 +140,6 @@ int main(int argc, const char* argv[]) {
   } else {
     std::cout << "Listening on port " << port << "..." << std::endl;
   }
-  auto sample_service = kj::refcounted<SampleService>(io.waitScope, listener);
-
-  sample_service->start();
+  auto data_provider = kj::refcounted<DataProvider>(listener, io.waitScope);
+  data_provider->start();
 }

@@ -1,13 +1,31 @@
 @0xf0db9d3189f09c3f;
 
-struct SomeEvent {
-  someString @0 :Text;
+struct FooData {
+  fooString @0 :Text;
 }
 
-interface ClientHandle {
-  onServiceEvent @0 (event :SomeEvent) -> ();
+struct BarData {
+  barString @0 :Text;
 }
 
-interface ServiceCommunication {
-  makeSubscription @0 (clientHandle :ClientHandle) -> ();
+enum DataType {
+  fooData @0;
+  barData @1;
+}
+
+interface DataSubscriberHandle(T) {
+  # Note:
+  # DataSubscriberHandle::Service is data subscriber
+  # DataSubscriberHandle::Client is data provider
+
+  onSubscribedData @0 (dataFromPublisher: T) -> ();
+}
+
+interface DataProviderInterface {
+  # Note:
+  # DataProviderInterface::Service is data provider
+  # DataProviderInterface::Client is data subscriber
+
+  makeSubscription @0 [T] (dataType: DataType,
+                           subscriberHandle: DataSubscriberHandle(T)) -> ();
 }
